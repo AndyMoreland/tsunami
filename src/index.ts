@@ -135,6 +135,7 @@ function processTsunamiCommand(command: Command): void {
 }
 
 function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunction<string>): void {
+  log("Incoming command: ", JSON.stringify(data, null, 2));
   try {
     let command = parseCommand(data);
     if (isTsunamiCommand(command)) {
@@ -144,9 +145,11 @@ function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunctio
       cb();
     } else {
       log("Proxying to tsserver: ", JSON.stringify(command, null, 2));
+      /* Pass the re-string-form'd object straight through. */
       cb(null, JSON.stringify(command) + "\n");
     }
   } catch (e) {
+    log(e);
     cb(e);
   }
 }
