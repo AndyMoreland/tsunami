@@ -39,7 +39,6 @@ export class ImportSorter {
   }
 
   private emitImport = (importStatement: ts.ImportDeclaration): string => {
-    console.log("Source file is: ", importStatement.getSourceFile());
     let output = importStatement.getText();
     return output.replace(/\n/g, "");
   }
