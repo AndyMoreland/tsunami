@@ -38,21 +38,27 @@ export class ImportSorter {
     }
   }
 
-  private emitImport = (importStatement: ts.ImportDeclaration): string => {
+  static emitImport(importStatement: ts.ImportDeclaration): string {
     let output = importStatement.getText();
+    output = output.replace(/'/g, "\"");
+    output = output.replace(/"$/, "\";");
     return output.replace(/\n/g, "");
+  }
+
+  static emitModuleSpecifier(moduleSpecifier: ts.Expression): string {
+    return moduleSpecifier.getText().replace(/'/g, "\"");
   }
 
   private createNewImportBlock() {
     let sortedDecs = this.importDeclarations.sort((a, b) => {
-      if (a.moduleSpecifier.getText() == b.moduleSpecifier.getText()) {
+      if (ImportSorter.emitModuleSpecifier(a.moduleSpecifier) == ImportSorter.emitModuleSpecifier(b.moduleSpecifier)) {
         return 0;
       }
-      return (a.moduleSpecifier.getText() >= b.moduleSpecifier.getText()) ? 1 : -1;
+      return (ImportSorter.emitModuleSpecifier(a.moduleSpecifier) >= ImportSorter.emitModuleSpecifier(b.moduleSpecifier)) ? 1 : -1;
     });
 
     let prefix = this.firstImportPosition != 0 ? "\n" : "";
-    return prefix + sortedDecs.map(this.emitImport).join("\n");
+    return prefix + sortedDecs.map(ImportSorter.emitImport).join("\n");
   }
 
   readImportStatements(): void {
