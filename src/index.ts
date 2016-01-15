@@ -70,7 +70,7 @@ function isOrganizeImportsCommand(command: Command): command is OrganizeImportsC
 }
 
 function log(...args: any[]): void {
-  fs.appendFileSync("/Users/amoreland/tsunami/log.txt", "\n\n" + args.join(", "));
+  fs.appendFile("/Users/amoreland/tsunami/log.txt", "\n\n" + args.join(", "));
   /* console.log.apply(console, ["log: "].concat(args)); */
 }
 
@@ -107,7 +107,7 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): void
 }
 
 function processOrganizeImportsCommand(command: OrganizeImportsCommand): void {
-  let response: Response<Error> = getBlankResponseForCommand(command);
+  let response: Response<string> = getBlankResponseForCommand(command);
   response.seq = 1;
 
   try {
@@ -115,13 +115,14 @@ function processOrganizeImportsCommand(command: OrganizeImportsCommand): void {
     let importSorter = new ImportSorter(sourceFile);
     importSorter.sortFileImports((err?: Error) => {
       if (err) { log(err); }
-      response.body = err;
+      response.body = "" + err;
+      writeOutput(response);
     });
   } catch (e) {
     log(e);
-    response.body = e;
+    response.body = "" + e;
+    writeOutput(response);
   }
-  writeOutput(response);
 }
 
 function processTsunamiCommand(command: Command): void {
