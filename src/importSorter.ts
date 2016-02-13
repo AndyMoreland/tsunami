@@ -40,6 +40,7 @@ export class ImportSorter {
 
   static emitImport(importStatement: ts.ImportDeclaration): string {
     let output = importStatement.getText();
+    /* let namedBindings = <ts.NamedImports>importStatement.importClause.namedBindings; */
     output = output.replace(/'/g, "\"");
     output = output.replace(/"$/, "\";");
     return output.replace(/\n/g, "");
@@ -81,9 +82,3 @@ export class ImportSorter {
     }
   }
 }
-
-/*
-let absoluteFilepath = "/Users/amoreland/tsunami/src/index.ts";
-let sorter = new ImportSorter(ts.createSourceFile(absoluteFilepath, fs.readFileSync(absoluteFilepath).toString(), ts.ScriptTarget.ES5, true));
-sorter.sortFileImports(() => {});
-*/

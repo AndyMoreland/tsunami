@@ -1,15 +1,17 @@
 /// <reference path="../typings/node/node.d.ts" />
 
 import {ImportSorter} from "./importSorter";
-import {Indexer} from "./indexer";
+import {FileIndexer} from "./indexer";
 import * as JSONStream from "JSONStream";
 import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
 import * as ts from "typescript";
+import log from './log';
 
 export const SYMBOL_LOCATIONS = "SYMBOL_LOCATIONS";
 export const ORGANIZE_IMPORTS = "ORGANIZE_IMPORTS";
+export const RELOAD = "reload";
 
 interface Command {
   command: string;
@@ -26,6 +28,13 @@ interface FetchSymbolLocationsCommand extends Command {
 interface OrganizeImportsCommand extends Command {
   arguments: {
     filename: string;
+  }
+}
+
+interface ReloadCommand extends Command {
+  arguments: {
+    file: string;
+    tmpfile: string;
   }
 }
 
@@ -61,17 +70,20 @@ function isTsunamiCommand(command: Command): boolean {
   return isFetchSymbolLocationsCommand(command) || isOrganizeImportsCommand(command);
 }
 
+function isTsunamiWiretapCommand(command: Command): boolean {
+  return isReloadCommand(command);
+}
+
 function isFetchSymbolLocationsCommand(command: Command): command is FetchSymbolLocationsCommand {
   return command.command == SYMBOL_LOCATIONS;
 }
 
-function isOrganizeImportsCommand(command: Command): command is OrganizeImportsCommand {
-  return command.command == ORGANIZE_IMPORTS;
+function isReloadCommand(command: Command): command is ReloadCommand {
+  return command.command == RELOAD;
 }
 
-function log(...args: any[]): void {
-  fs.appendFile("/Users/amoreland/tsunami/log.txt", "\n\n" + args.join(", "));
-  /* console.log.apply(console, ["log: "].concat(args)); */
+function isOrganizeImportsCommand(command: Command): command is OrganizeImportsCommand {
+  return command.command == ORGANIZE_IMPORTS;
 }
 
 function writeOutput<T>(response: Response<T>) {
@@ -94,8 +106,8 @@ function getBlankResponseForCommand(command: Command): Response<any> {
   };
 }
 
-function getSourceFileFor(filename: string): ts.SourceFile {
-  return ts.createSourceFile(filename, fs.readFileSync(filename).toString(), ts.ScriptTarget.ES5, true);
+function getSourceFileFor(filename: string, sourceFileName?: string): ts.SourceFile {
+  return ts.createSourceFile(filename, fs.readFileSync(sourceFileName || filename).toString(), ts.ScriptTarget.ES5, true);
 }
 
 function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): void {
@@ -125,6 +137,14 @@ function processOrganizeImportsCommand(command: OrganizeImportsCommand): void {
   }
 }
 
+function processReloadCommand(command: ReloadCommand): void {
+  let indexer = new FileIndexer(getSourceFileFor(command.arguments.file, command.arguments.tmpfile));
+  indexer.indexFile();
+  let index = indexer.getDefinitionIndex();
+  log("Done indexing.");
+  log(JSON.stringify(index, null, 2));
+}
+
 function processTsunamiCommand(command: Command): void {
   if (isFetchSymbolLocationsCommand(command)) {
     log("Fetching symbols for prefix: ", command.arguments.prefix);
@@ -132,20 +152,27 @@ function processTsunamiCommand(command: Command): void {
   } else if (isOrganizeImportsCommand(command)) {
     log("Organizing imports for file: ", command.arguments.filename);
     processOrganizeImportsCommand(command);
+  } else if (isReloadCommand(command)) {
+    log("Reloading: ", command.arguments.file, command.arguments.tmpfile);
+    processReloadCommand(command);
   }
 }
 
 function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunction<string>): void {
-  log("Incoming command: ", JSON.stringify(data, null, 2));
+  // log("Incoming command: ", JSON.stringify(data, null, 2));
   try {
     let command = parseCommand(data);
     if (isTsunamiCommand(command)) {
-      log("Processing command with tsunami.");
+      // log("Processing command with tsunami.");
       processTsunamiCommand(command);
       /* Prevents propagation of command to tsserver.stdin */
       cb();
     } else {
-      log("Proxying to tsserver: ", JSON.stringify(command, null, 2));
+      if (isTsunamiWiretapCommand(command)) {
+        // log("Wiretapping command with tsunami.");
+        processTsunamiCommand(command);
+      }
+      // log("Proxying to tsserver: ", JSON.stringify(command, null, 2));
       /* Pass the re-string-form'd object straight through. */
       cb(null, JSON.stringify(command) + "\n");
     }
@@ -153,10 +180,6 @@ function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunctio
     log(e);
     cb(e);
   }
-}
-
-function indexProject(project) {
-  let indexer = new Indexer();
 }
 
 let tsserver: p.ChildProcess = p.spawn("node", ["/Users/amoreland/tsunami/node_modules/typescript/lib/tsserver.js"]);
