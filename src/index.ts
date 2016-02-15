@@ -7,11 +7,15 @@ import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
 import * as ts from "typescript";
-import log from './log';
+import {default as log, logWithCallback} from './log';
 
 export const SYMBOL_LOCATIONS = "SYMBOL_LOCATIONS";
 export const ORGANIZE_IMPORTS = "ORGANIZE_IMPORTS";
 export const RELOAD = "reload";
+
+process.on('uncaughtException', (err: any) => {
+    logWithCallback(err, (e: any, data: any) => process.exit());
+});
 
 interface Command {
   command: string;
@@ -56,7 +60,19 @@ interface Response<T> {
   body?: T;
 }
 
-interface FetchSymbolLocationsResponseBody {};
+interface SymbolLocation {
+    name: string;
+    location: {
+        filename: string;
+        pos: number;
+    };
+}
+
+interface FetchSymbolLocationsResponseBody {
+    symbolLocations: SymbolLocation[];
+};
+
+var fileIndexerMap: { [filename: string]: FileIndexer } = {};
 
 function parseCommand(data: {[index: string]: any}): Command {
   if (data["command"] !== undefined && data["seq"] !== undefined) {
@@ -111,11 +127,33 @@ function getSourceFileFor(filename: string, sourceFileName?: string): ts.SourceF
 }
 
 function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): void {
-  let response: Response<FetchSymbolLocationsResponseBody> = getBlankResponseForCommand(command);
-  response.seq = 1;
-  response.body = "hi";
+    let response: Response<FetchSymbolLocationsResponseBody> = getBlankResponseForCommand(command);
+    let symbolLocations: SymbolLocation[] = [];
 
-  writeOutput(response);
+    Object.keys(fileIndexerMap).forEach(filename => {
+        let definitions = fileIndexerMap[filename].getDefinitionIndex();
+        Object.keys(definitions).forEach(
+            symbolName => {
+                let definition = definitions[symbolName];
+                let symbolLocation =  {
+                    name: symbolName,
+                    location: {
+                        filename: definition.filename,
+                        pos: definition.location
+                    }
+                }
+                symbolLocations.push(symbolLocation);
+            });
+    });
+
+    log(symbolLocations);
+
+    response.seq = 1;
+    response.body = {
+        symbolLocations: symbolLocations
+    }
+
+    writeOutput(response);
 }
 
 function processOrganizeImportsCommand(command: OrganizeImportsCommand): void {
@@ -138,11 +176,13 @@ function processOrganizeImportsCommand(command: OrganizeImportsCommand): void {
 }
 
 function processReloadCommand(command: ReloadCommand): void {
-  let indexer = new FileIndexer(getSourceFileFor(command.arguments.file, command.arguments.tmpfile));
-  indexer.indexFile();
-  let index = indexer.getDefinitionIndex();
-  log("Done indexing.");
-  log(JSON.stringify(index, null, 2));
+    let indexer = new FileIndexer(getSourceFileFor(command.arguments.file, command.arguments.tmpfile));
+    log(fileIndexerMap, command.arguments.file);
+    fileIndexerMap[command.arguments.file] = indexer;
+    indexer.indexFile();
+    let index = indexer.getDefinitionIndex();
+    log("Done indexing.");
+    log(JSON.stringify(index, null, 2));
 }
 
 function processTsunamiCommand(command: Command): void {

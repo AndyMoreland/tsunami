@@ -13,7 +13,9 @@ process.argv.slice(2).forEach((filename) => {
   let fileIndexer = new FileIndexer(sourceFile);
   console.log("Indexing: ", filename);
   try {
-    fileIndexer.indexFile();
+      fileIndexer.indexFile();
+      let index = fileIndexer.getDefinitionIndex();
+      console.log(index);
   } catch (e) {
     console.log("Failed to index: ", filename);
   }
