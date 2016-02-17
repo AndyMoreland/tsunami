@@ -14,6 +14,10 @@ export class TsProject {
         return glob(path.join(this.projectRoot, "src", "**/*.ts"))
     }
 
+    public getCompilerOptions(): ts.CompilerOptions {
+        return this.tsconfig.compilerOptions as ts.CompilerOptions;
+    }
+
     public static constructFromFilename(tsconfigFolder: string): Promise<TsProject> {
         let filename = path.join(tsconfigFolder, "tsconfig.json");
 

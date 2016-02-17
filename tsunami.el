@@ -111,7 +111,7 @@
     (let ((empty-import-block-p (looking-at-p "}")))
       (insert-string (concat " " symbol-name))
       (if (not empty-import-block-p)
-          (insert-string ", ")
+          (insert-string ",")
         (insert-string " ")))))
 
 (defun tsunami--import-symbol (module-name symbol-name)
