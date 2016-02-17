@@ -29,6 +29,7 @@ export class TsProject {
                 return new TsProject(tsconfigFolder, config);
             })
             .catch(err => {
+                console.error("Couldn't read file: ", err, filename);
                 log("Couldn't read file: ", err, filename);
             });
     }
