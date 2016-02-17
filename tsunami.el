@@ -60,7 +60,10 @@
     symbol-locations))
 
 (defun tsunami--symbol-to-tuple (symbol)
-  `(,(tsunami--name-of-symbol symbol) . ,symbol))
+  `(,(concat (tsunami--name-of-symbol symbol)
+             "   --   "
+             (tsunami--filename-relative-to-buffer (plist-get (tsunami--location-of-symbol symbol) :filename)))
+    . ,symbol))
 
 (defun tsunami--symbol-locations-to-candidates (symbol-locations)
   (mapcdr 'tsunami--symbol-to-tuple symbol-locations))
@@ -68,14 +71,15 @@
 (defun tsunami--jump-to-matching-symbol (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
          (filename (plist-get location :filename))
-         (pos (plist-get location :pos)))
+         (pos (+ 1 (plist-get location :pos))))
     (find-file filename)
     (goto-char pos)))
 
 (defun tsunami--relative-filename-to-module-name (relative-filename)
-  (if (s-starts-with? "." relative-filename)
-      relative-filename
-    (concat "./" relative-filename)))
+  (let ((module-without-ts (replace-regexp-in-string "\\.tsx?" "" relative-filename)))
+    (if (s-starts-with? "." module-without-ts)
+        module-without-ts
+      (concat "./" module-without-ts))))
 
 (defun tsunami--buffer-contains-regexp (regexp)
   (save-excursion
@@ -116,11 +120,14 @@
         (tsunami--import-module-name module-name))
     (tsunami--add-symbol-to-import module-name symbol-name)))
 
+(defun tsunami--filename-relative-to-buffer (filename)
+  (file-relative-name filename (file-name-directory buffer-file-name)))
+
 (defun tsunami--import-symbol-location (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
          (symbol-name (tsunami--name-of-symbol candidate))
          (filename (plist-get location :filename))
-         (relative-filename (file-relative-name filename (file-name-directory buffer-file-name)))
+         (relative-filename (tsunami--filename-relative-to-buffer filename))
          (module-name (tsunami--relative-filename-to-module-name relative-filename)))
     (tsunami--import-symbol module-name symbol-name)))
 

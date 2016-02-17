@@ -10,7 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "JSONStream": "^1.0.7",
+    "bluebird": "^3.3.1",
     "event-stream": "^3.3.2",
+    "glob": "^7.0.0",
     "typescript": "^1.7.3"
   }
 }

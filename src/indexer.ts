@@ -1,8 +1,6 @@
 import log from "./log";
 import * as ts from "typescript";
 
-export const FISH = "hi";
-
 enum DefinitionType {
   CLASS_PROPERTY, CLASS_METHOD, FUNCTION, EXPORTED_VAR, INTERFACE, ENUM, CLASS
 }

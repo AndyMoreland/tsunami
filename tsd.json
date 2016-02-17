@@ -9,7 +9,16 @@
       "commit": "dc9dabe74a5be62613b17a3605309783a12ff28a"
     },
     "node/node.d.ts": {
-      "commit": "dc9dabe74a5be62613b17a3605309783a12ff28a"
+      "commit": "85af69c91599a6c904618545f0613970e1ff3f64"
+    },
+    "bluebird/bluebird.d.ts": {
+      "commit": "85af69c91599a6c904618545f0613970e1ff3f64"
+    },
+    "glob/glob.d.ts": {
+      "commit": "85af69c91599a6c904618545f0613970e1ff3f64"
+    },
+    "minimatch/minimatch.d.ts": {
+      "commit": "85af69c91599a6c904618545f0613970e1ff3f64"
     }
   }
 }

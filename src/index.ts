@@ -1,5 +1,6 @@
 /// <reference path="../typings/node/node.d.ts" />
 
+import { TsProject } from "./tsProject";
 import {ImportSorter} from "./importSorter";
 import {FileIndexer} from "./indexer";
 import * as JSONStream from "JSONStream";
@@ -175,14 +176,18 @@ function processOrganizeImportsCommand(command: OrganizeImportsCommand): void {
   }
 }
 
-function processReloadCommand(command: ReloadCommand): void {
-    let indexer = new FileIndexer(getSourceFileFor(command.arguments.file, command.arguments.tmpfile));
-    log(fileIndexerMap, command.arguments.file);
-    fileIndexerMap[command.arguments.file] = indexer;
+function reloadFile(filename: string, tmpfilename?: string) {
+    let indexer = new FileIndexer(getSourceFileFor(filename, tmpfilename));
+    /* log(fileIndexerMap, filename); */
+    fileIndexerMap[filename] = indexer;
     indexer.indexFile();
-    let index = indexer.getDefinitionIndex();
+    /* let index = indexer.getDefinitionIndex(); */
     log("Done indexing.");
-    log(JSON.stringify(index, null, 2));
+    /* log(JSON.stringify(index, null, 2)); */
+}
+
+function processReloadCommand(command: ReloadCommand): void {
+    reloadFile(command.arguments.file, command.arguments.tmpfile);
 }
 
 function processTsunamiCommand(command: Command): void {
@@ -225,6 +230,14 @@ function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunctio
 let tsserver: p.ChildProcess = p.spawn("node", ["/Users/amoreland/tsunami/node_modules/typescript/lib/tsserver.js"]);
 process.stdin.resume();
 log("Finished starting server.");
+
+let projectConfig = process.cwd();
+TsProject.constructFromFilename(projectConfig)
+    .then(tsProject => {
+        tsProject.getFileNames().then(files => {
+            files.forEach(file => reloadFile(file));
+        });
+    });
 
 process.stdin
   .pipe(JSONStream.parse(undefined))
