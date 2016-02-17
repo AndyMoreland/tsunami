@@ -123,21 +123,43 @@
 (defun tsunami--filename-relative-to-buffer (filename)
   (file-relative-name filename (file-name-directory buffer-file-name)))
 
+(defun tsunami--symbol-imported-p (module-name symbol-name)
+  (or
+   (tsunami--buffer-contains-regexp (concat "import {.*?" symbol-name ".*?} from '" module-name "'"))
+   (tsunami--buffer-contains-regexp (concat "import {.*?" symbol-name ".*?} from \"" module-name "\""))))
+
 (defun tsunami--import-symbol-location (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
          (symbol-name (tsunami--name-of-symbol candidate))
          (filename (plist-get location :filename))
          (relative-filename (tsunami--filename-relative-to-buffer filename))
          (module-name (tsunami--relative-filename-to-module-name relative-filename)))
-    (tsunami--import-symbol module-name symbol-name)))
+    (if (not (tsunami--symbol-imported-p module-name symbol-name))
+        (tsunami--import-symbol module-name symbol-name))))
 
-(defun tsunami--symbols-helm-source ()
+(defun tsunami--complete-with-candidate (candidate)
+  (let* ((symbol-name (tsunami--name-of-symbol candidate))
+         (bounds (bounds-of-thing-at-point 'symbol))
+         (start-of-thing-at-point (car bounds))
+         (end-of-thing-at-point (cdr bounds)))
+    (delete-region start-of-thing-at-point end-of-thing-at-point)
+    (insert-string symbol-name)))
+
+(defun tsunami--import-and-complete-symbol (candidate)
+  (tsunami--import-symbol-location candidate)
+  (tsunami--complete-with-candidate candidate))
+
+(defun tsunami--default-helm-actions ()
+  '(("Jump To `RET'" . tsunami--jump-to-matching-symbol)
+    ("Import" . tsunami--import-symbol-location)))
+
+(defun tsunami--symbols-helm-source (actions)
   "Define helm source for tsunami symbols."
   `((name . ,(concat "Searching for Symbols"))
     (candidates . ,(mapcar 'tsunami--symbol-to-tuple tsunami--matching-symbols))
     (volatile)
-    (action . (("Jump To `RET'" . tsunami--jump-to-matching-symbol)
-               ("Import" . tsunami--import-symbol-location)))))
+    (action . ,actions)))
+
 
 (defun tsunami-organize-imports ()
   "Organize the current file's imports."
@@ -153,13 +175,23 @@
   (interactive)
   (tsunami--command:fetch-all-symbols "fish" (lambda (response) (print response))))
 
-(defun helm-tsunami-symbols ()
+(defun tsunami--helm (actions &optional input)
   "Search for symbols in project using helm."
   (interactive)
   (progn
     (tsunami--invalidate-symbols-cache)
-    (helm :sources (tsunami--symbols-helm-source)
-          :buffer "*helm-tsunami-symbols*")))
+    (helm :sources (tsunami--symbols-helm-source actions)
+          :buffer "*helm-tsunami-symbols*"
+          :input input)))
+
+(defun tsunami-import-symbol-at-point ()
+  (interactive)
+  (let ((symbol (thing-at-point 'symbol t)))
+    (tsunami--helm '(("Import `RET'" . tsunami--import-and-complete-symbol)) symbol)))
+
+(defun helm-tsunami-symbols ()
+  (interactive)
+  (tsunami--helm (tsunami--default-helm-actions)))
 
 (provide 'tsunami)
 

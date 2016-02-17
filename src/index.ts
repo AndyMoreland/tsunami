@@ -18,7 +18,6 @@ export const RELOAD = "reload";
 let GLOBAL_DOCUMENT_REGISTRY: ts.DocumentRegistry = ts.createDocumentRegistry(true);
 let GLOBAL_TS_PROJECT: TsProject = null;
 
-
 /* HACK */
 process.on('uncaughtException', (err: any) => {
     logWithCallback(err, (e: any, data: any) => process.exit());
