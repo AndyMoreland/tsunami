@@ -128,6 +128,15 @@ function getBlankResponseForCommand(command: Command): Response<any> {
     };
 }
 
+function getErrorOutputForCommand(command: Command, error: Error): Response<string> {
+    let response: Response<string> = getBlankResponseForCommand(command);
+
+    response.success = false;
+    response.message = ""+error;
+
+    return response;
+}
+
 const fileVersionMap: { [filename: string]: number } = {};
 
 function getSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): ts.SourceFile {
@@ -220,30 +229,30 @@ function processTsunamiCommand(command: Command): void {
 
 function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunction<string>): void {
     // log("Incoming command: ", JSON.stringify(data, null, 2));
-    try {
-        let command = parseCommand(data);
-        if (isTsunamiCommand(command)) {
-            // log("Processing command with tsunami.");
+    let command = parseCommand(data);
+    if (isTsunamiCommand(command)) {
+        // log("Processing command with tsunami.");
+        try {
+            processTsunamiCommand(command);
+        } catch (e) {
+            /* Prevents propagation of command to tsserver.stdin */
+            log("Error processing tsunami command: ", JSON.stringify(command, null, 2), e);
+            writeOutput<string>(getErrorOutputForCommand(command, e));
+        }
+
+        cb();
+    } else {
+        if (isTsunamiWiretapCommand(command)) {
+            // log("Wiretapping command with tsunami.");
             try {
                 processTsunamiCommand(command);
-                cb();
             } catch (e) {
-                /* Prevents propagation of command to tsserver.stdin */
-                log("Error processing tsunami command: ", e);
-                cb();
+                log("Error wiretapping tsunami command: ", JSON.stringify(command, null, 2), e);
             }
-        } else {
-            if (isTsunamiWiretapCommand(command)) {
-                // log("Wiretapping command with tsunami.");
-                processTsunamiCommand(command);
-            }
-            // log("Proxying to tsserver: ", JSON.stringify(command, null, 2));
-            /* Pass the re-string-form'd object straight through. */
-            cb(null, JSON.stringify(command) + "\n");
         }
-    } catch (e) {
-        log(e);
-        cb(e);
+        // log("Proxying to tsserver: ", JSON.stringify(command, null, 2));
+        /* Pass the re-string-form'd object straight through. */
+        cb(null, JSON.stringify(command) + "\n");
     }
 }
 

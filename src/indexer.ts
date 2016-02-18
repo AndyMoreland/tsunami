@@ -45,7 +45,11 @@ export class FileIndexer {
     private indexVariableStatement(node: ts.VariableStatement): void {
         let firstDeclaration = node.declarationList.declarations.map(declaration => declaration)[0];
         // log("indexing Variable: ", firstDeclaration.name.getText());
-        this.addDefinitiontoIndex(this.getDefinitionForNode(firstDeclaration, firstDeclaration && firstDeclaration.name && firstDeclaration.name.getText(), DefinitionType.EXPORTED_VAR));
+        this.addDefinitiontoIndex(
+            this.getDefinitionForNode(
+                firstDeclaration,
+                firstDeclaration && firstDeclaration.name && firstDeclaration.name.getText(),
+                DefinitionType.EXPORTED_VAR));
     }
 
     private indexFunctionDeclaration(node: ts.FunctionDeclaration): void {
