@@ -27,12 +27,13 @@ export class FileIndexer {
         this.index[definition.text] = definition;
     }
 
-    private getDefinitionForNode(node: ts.Node, name: string, type: DefinitionType): Definition {
+    private getDefinitionForNode(node: ts.Node, name: string, type: DefinitionType, isDefault: boolean = false): Definition {
         return {
             text: name,
             location: node.getStart(),
             filename: this.sourceFile.fileName,
-            type: type
+            type: type,
+            default: this.isDefaultNode(node)
         };
     }
 
@@ -64,12 +65,12 @@ export class FileIndexer {
 
     private indexTypeAliasDeclaration(node: ts.TypeAliasDeclaration): void {
         // log("indexing Type Alias: ", node.name.getText());
-        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.ENUM));
+        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.TYPE));
     }
 
     private indexModuleDeclaration(node: ts.ModuleDeclaration): void {
         // log("indexing Module: ", node.name.getText());
-        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.ENUM));
+        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.MODULE));
     }
 
     private indexExportDeclaration(node: ts.Node): void {
@@ -93,8 +94,16 @@ export class FileIndexer {
         }
     }
 
+    private isDefaultNode(node: ts.Node): boolean {
+        return node.modifiers && node.modifiers.filter(modifierNode => modifierNode.kind == ts.SyntaxKind.DefaultKeyword).length > 0
+    }
+
+    private isExportedNode(node: ts.Node): boolean {
+        return node.modifiers && node.modifiers.filter(modifierNode => modifierNode.kind == ts.SyntaxKind.ExportKeyword).length > 0
+    }
+
     indexNode = (node: ts.Node) => {
-        if (node.modifiers && node.modifiers.filter(modifierNode => modifierNode.kind == ts.SyntaxKind.ExportKeyword).length > 0) {
+        if (this.isExportedNode(node)) {
             this.indexExportDeclaration(node);
         }
     }
