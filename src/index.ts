@@ -128,14 +128,18 @@ function getBlankResponseForCommand(command: Command): Response<any> {
     };
 }
 
+const fileVersionMap: { [filename: string]: number } = {};
+
 function getSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): ts.SourceFile {
     let sourceText = fs.readFileSync(sourceFileName || filename).toString();
-    let sourceFile = documentRegistry.acquireDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+Math.random());
+    fileVersionMap[filename] = 0;
+    let sourceFile = documentRegistry.acquireDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+fileVersionMap[filename]);
     return sourceFile;
 }
 
 function updateSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): ts.SourceFile {
     let sourceText = fs.readFileSync(sourceFileName || filename).toString();
+    fileVersionMap[filename] = fileVersionMap[filename] + 1;
     let sourceFile = documentRegistry.updateDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+Math.random());
     return sourceFile;
 }
@@ -159,8 +163,6 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): void
                 symbolLocations.push(symbolLocation);
             });
     });
-
-    log(symbolLocations);
 
     response.seq = 1;
     response.body = {
@@ -195,7 +197,7 @@ function reloadFile(documentRegistry: ts.DocumentRegistry, filename: string, tmp
     fileIndexerMap[filename] = indexer;
     indexer.indexFile();
     /* let index = indexer.getDefinitionIndex(); */
-    log("Done indexing.");
+    // log("Done indexing.");
     /* log(JSON.stringify(index, null, 2)); */
 }
 
@@ -222,9 +224,14 @@ function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunctio
         let command = parseCommand(data);
         if (isTsunamiCommand(command)) {
             // log("Processing command with tsunami.");
-            processTsunamiCommand(command);
-            /* Prevents propagation of command to tsserver.stdin */
-            cb();
+            try {
+                processTsunamiCommand(command);
+                cb();
+            } catch (e) {
+                /* Prevents propagation of command to tsserver.stdin */
+                log("Error processing tsunami command: ", e);
+                cb();
+            }
         } else {
             if (isTsunamiWiretapCommand(command)) {
                 // log("Wiretapping command with tsunami.");

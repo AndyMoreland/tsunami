@@ -11,7 +11,7 @@ export class TsProject {
     constructor(private projectRoot: string, private tsconfig: any) {}
 
     public getFileNames(): Promise<string[]> {
-        return glob(path.join(this.projectRoot, "src", "**/*.ts"))
+        return glob(path.join(this.projectRoot, "src", "**/*.@(ts|tsx)"))
     }
 
     public getCompilerOptions(): ts.CompilerOptions {
