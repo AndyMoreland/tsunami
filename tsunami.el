@@ -88,16 +88,15 @@
       (search-forward-regexp regexp (point-max) t))))
 
 (defun tsunami--module-imported-p (module-name)
-  (if (or
-       (tsunami--buffer-contains-regexp (concat "import .*? from '" module-name "'"))
-       (tsunami--buffer-contains-regexp (concat "import .*? from \"" module-name "\"")))
-      t
-    nil))
+  (let ((string-regexp (regexp-opt '("\"" "'"))))
+    (if (tsunami--buffer-contains-regexp (concat "import .*? from " string-regexp module-name string-regexp))
+        t
+      nil)))
 
 (defun tsunami--import-module-name (module-name)
   (save-excursion
     (goto-char (point-min))
-    (search-forward "import")
+    (search-forward "import" nil t)
     (beginning-of-line)
     (insert-string (concat "import {} from \"" module-name "\";\n"))))
 
@@ -105,7 +104,7 @@
   (save-excursion
     (goto-char (point-min))
     (search-forward "import")
-    (search-forward module-name)
+    (search-forward-regexp (concat module-name (regexp-opt '("\"" "'")) ";"))
     (beginning-of-line)
     (search-forward "{")
     (let ((empty-import-block-p (looking-at-p "}")))
@@ -124,9 +123,9 @@
   (file-relative-name filename (file-name-directory buffer-file-name)))
 
 (defun tsunami--symbol-imported-p (module-name symbol-name)
-  (or
-   (tsunami--buffer-contains-regexp (concat "import {.*?" symbol-name ".*?} from '" module-name "'"))
-   (tsunami--buffer-contains-regexp (concat "import {.*?" symbol-name ".*?} from \"" module-name "\""))))
+  (let ((string-regexp (regexp-opt '("\"" "'"))))
+    (tsunami--buffer-contains-regexp
+     (concat "import {.*?" symbol-name ".*?} from " string-regexp module-name string-regexp))))
 
 (defun tsunami--import-symbol-location (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
@@ -155,11 +154,12 @@
 
 (defun tsunami--symbols-helm-source (actions)
   "Define helm source for tsunami symbols."
-  `((name . ,(concat "Searching for Symbols"))
-    (candidates . ,(mapcar 'tsunami--symbol-to-tuple tsunami--matching-symbols))
-    (volatile)
-    (action . ,actions)))
-
+  (helm-build-sync-source
+      "Tsunami Symbols Source"
+    :candidates (mapcar 'tsunami--symbol-to-tuple tsunami--matching-symbols)
+    :volatile t
+    :fuzzy-match t
+    :action actions))
 
 (defun tsunami-organize-imports ()
   "Organize the current file's imports."
