@@ -147,6 +147,10 @@ function getSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: strin
 }
 
 function updateSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): ts.SourceFile {
+    if (fileVersionMap[filename] == null || fileVersionMap[filename] == undefined) {
+        return getSourceFileFor(documentRegistry, filename, sourceFileName);
+    }
+
     let sourceText = fs.readFileSync(sourceFileName || filename).toString();
     fileVersionMap[filename] = fileVersionMap[filename] + 1;
     let sourceFile = documentRegistry.updateDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+Math.random());
