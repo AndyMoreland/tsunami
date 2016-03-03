@@ -9,6 +9,9 @@ import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
 import * as ts from "typescript";
+import * as Promise from "bluebird";
+
+const readFilePromise = Promise.promisify(fs.readFile);
 
 export const SYMBOL_LOCATIONS = "SYMBOL_LOCATIONS";
 export const ORGANIZE_IMPORTS = "ORGANIZE_IMPORTS";
@@ -139,25 +142,29 @@ function getErrorOutputForCommand(command: Command, error: Error): Response<stri
 
 const fileVersionMap: { [filename: string]: number } = {};
 
-function getSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): ts.SourceFile {
-    let sourceText = fs.readFileSync(sourceFileName || filename).toString();
-    fileVersionMap[filename] = 0;
-    let sourceFile = documentRegistry.acquireDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+fileVersionMap[filename]);
-    return sourceFile;
+function getSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
+    return readFilePromise(sourceFileName || filename).then(file => {
+        let sourceText = file.toString();
+        fileVersionMap[filename] = 0;
+        let sourceFile = documentRegistry.acquireDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+fileVersionMap[filename]);
+        return sourceFile;
+    });
 }
 
-function updateSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): ts.SourceFile {
+function updateSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
     if (fileVersionMap[filename] == null || fileVersionMap[filename] == undefined) {
         return getSourceFileFor(documentRegistry, filename, sourceFileName);
     }
 
-    let sourceText = fs.readFileSync(sourceFileName || filename).toString();
-    fileVersionMap[filename] = fileVersionMap[filename] + 1;
-    let sourceFile = documentRegistry.updateDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+Math.random());
-    return sourceFile;
+    return readFilePromise(sourceFileName || filename).then(file => {
+        let sourceText = file.toString();
+        fileVersionMap[filename] = fileVersionMap[filename] + 1;
+        let sourceFile = documentRegistry.updateDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+Math.random());
+        return sourceFile;
+    });
 }
 
-function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): void {
+function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): Promise<void> {
     let response: Response<FetchSymbolLocationsResponseBody> = getBlankResponseForCommand(command);
     let symbolLocations: SymbolLocation[] = [];
 
@@ -183,51 +190,53 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): void
     }
 
     writeOutput(response);
+    return Promise.resolve(null);
 }
 
-function processOrganizeImportsCommand(command: OrganizeImportsCommand): void {
+function processOrganizeImportsCommand(command: OrganizeImportsCommand): Promise<void> {
     let response: Response<string> = getBlankResponseForCommand(command);
     response.seq = 1;
 
-    try {
-        let sourceFile = updateSourceFileFor(GLOBAL_DOCUMENT_REGISTRY, command.arguments.filename);
+    return updateSourceFileFor(GLOBAL_DOCUMENT_REGISTRY, command.arguments.filename).then(sourceFile => {
         let importSorter = new ImportSorter(sourceFile);
         importSorter.sortFileImports((err?: Error) => {
             if (err) { log(err); }
             response.body = "" + err;
             writeOutput(response);
         });
-    } catch (e) {
+    }).catch(e => {
         log(e);
         response.body = "" + e;
         writeOutput(response);
-    }
+    });
 }
 
-function reloadFile(documentRegistry: ts.DocumentRegistry, filename: string, tmpfilename?: string) {
-    let indexer = new FileIndexer(updateSourceFileFor(documentRegistry, filename, tmpfilename));
-    /* log(fileIndexerMap, filename); */
-    fileIndexerMap[filename] = indexer;
-    indexer.indexFile();
-    /* let index = indexer.getDefinitionIndex(); */
-    // log("Done indexing.");
-    /* log(JSON.stringify(index, null, 2)); */
+function reloadFile(documentRegistry: ts.DocumentRegistry, filename: string, tmpfilename?: string): Promise<void> {
+    return updateSourceFileFor(documentRegistry, filename, tmpfilename).then(sourceFile => {
+        let indexer = new FileIndexer(sourceFile);
+        /* log(fileIndexerMap, filename); */
+        fileIndexerMap[filename] = indexer;
+        indexer.indexFile();
+        /* let index = indexer.getDefinitionIndex(); */
+        // log("Done indexing.");
+        /* log(JSON.stringify(index, null, 2)); */
+    });
 }
 
-function processReloadCommand(command: ReloadCommand): void {
-    reloadFile(GLOBAL_DOCUMENT_REGISTRY, command.arguments.file, command.arguments.tmpfile);
+function processReloadCommand(command: ReloadCommand): Promise<void> {
+    return reloadFile(GLOBAL_DOCUMENT_REGISTRY, command.arguments.file, command.arguments.tmpfile);
 }
 
-function processTsunamiCommand(command: Command): void {
+function processTsunamiCommand(command: Command): Promise<void> {
     if (isFetchSymbolLocationsCommand(command)) {
         log("Fetching symbols for prefix: ", command.arguments.prefix);
-        processFetchSymbolLocations(command);
+        return processFetchSymbolLocations(command);
     } else if (isOrganizeImportsCommand(command)) {
         log("Organizing imports for file: ", command.arguments.filename);
-        processOrganizeImportsCommand(command);
+        return processOrganizeImportsCommand(command);
     } else if (isReloadCommand(command)) {
         log("Reloading: ", command.arguments.file, command.arguments.tmpfile);
-        processReloadCommand(command);
+        return processReloadCommand(command);
     }
 }
 
@@ -268,20 +277,26 @@ let tsProjectPromise = TsProject.constructFromFilename(projectConfig);
 tsProjectPromise.then(tsProject => {
     GLOBAL_TS_PROJECT = tsProject;
     tsProject.getFileNames().then(files => {
-        files.forEach(file => { getSourceFileFor(GLOBAL_DOCUMENT_REGISTRY, file); reloadFile(GLOBAL_DOCUMENT_REGISTRY, file) });
+        let promises = files.map(file => {
+            let p = getSourceFileFor(GLOBAL_DOCUMENT_REGISTRY, file).then(() => {
+                reloadFile(GLOBAL_DOCUMENT_REGISTRY, file);
+            });
+            return p;
+        });
 
-        let tsserver: p.ChildProcess = p.spawn("node", ["/Users/amoreland/tsunami/node_modules/typescript/lib/tsserver.js"]);
-        process.stdin.resume();
-        log("Finished starting server.");
+        return Promise.all(promises).then((files) => {
+            let tsserver: p.ChildProcess = p.spawn("node", ["/Users/amoreland/tsunami/node_modules/typescript/lib/tsserver.js"]);
+            process.stdin.resume();
+            log("Finished starting server.");
 
-        process.stdin
-               .pipe(JSONStream.parse(undefined))
-               .pipe(es.map(processPotentialTsunamiCommand))
-               .pipe(tsserver.stdin);
+            process.stdin
+                .pipe(JSONStream.parse(undefined))
+                .pipe(es.map(processPotentialTsunamiCommand))
+                .pipe(tsserver.stdin);
 
-        tsserver.stdout
+            tsserver.stdout
                 .pipe(es.map((data: any, cb: CallbackFunction<any>) => { log("Response: ", data); cb(null, data) }))
                 .pipe(process.stdout);
-
+        });
     });
 });
