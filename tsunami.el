@@ -149,13 +149,17 @@
          (if is-default-p
              " "
            (regexp-opt '(" }" "}" ", ")))))
-    (tsunami--buffer-contains-regexp
-     (concat "import "
-             import-specifier-left-regexp
-             symbol-name
-             import-specifier-right-regexp
-             " from "
-             string-regexp module-name string-regexp))))
+    (or
+     (tsunami--buffer-contains-regexp
+      (concat "import "
+              import-specifier-left-regexp
+              symbol-name
+              import-specifier-right-regexp
+              " from "
+              string-regexp module-name string-regexp))
+     (and is-default-p3
+          (tsunami--buffer-contains-regexp
+           (concat "import {.*?default as " symbol-name ".*?} from " string-regexp module-name string-regexp))))))
 
 (defun tsunami--json-is-falsy (value)
   (or
