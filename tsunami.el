@@ -98,43 +98,80 @@
     (goto-char (point-min))
     (search-forward "import" nil t)
     (beginning-of-line)
-    (insert-string (concat "import {} from \"" module-name "\";\n"))))
+    (insert (concat "import {} from \"" module-name "\";\n"))))
 
-(defun tsunami--add-symbol-to-import (module-name symbol-name)
-  (save-excursion
-    (goto-char (point-min))
+(defun tsunami--goto-import-block-for-module (module-name)
+  (goto-char (point-min))
     (search-forward "import")
     (search-forward-regexp (concat module-name (regexp-opt '("\"" "'")) ";"))
     (beginning-of-line)
-    (search-forward "{")
-    (let ((empty-import-block-p (looking-at-p "}")))
-      (insert-string (concat " " symbol-name))
-      (if (not empty-import-block-p)
-          (insert-string ",")
-        (insert-string " ")))))
+    (search-forward "{"))
 
-(defun tsunami--import-symbol (module-name symbol-name)
+(defun tsunami--add-symbol-to-import (module-name symbol-name)
+  (save-excursion
+    (tsunami--goto-import-block-for-module module-name)
+    (let ((empty-import-block-p (looking-at-p "}")))
+      (insert (concat " " symbol-name))
+      (if (not empty-import-block-p)
+          (insert ",")
+        (insert " ")))))
+
+(defun tsunami--default-import-symbol (module-name symbol-name)
+  (save-excursion
+    (tsunami--goto-import-block-for-module module-name)
+    (backward-char)
+    (delete-forward-char 2)
+    (insert symbol-name)))
+
+(defun tsunami--import-symbol (module-name symbol-name is-default-p)
   (let ((module-imported-p (tsunami--module-imported-p module-name)))
     (if (not module-imported-p)
         (tsunami--import-module-name module-name))
-    (tsunami--add-symbol-to-import module-name symbol-name)))
+    (if is-default-p
+        (tsunami--default-import-symbol module-name symbol-name)
+      (tsunami--add-symbol-to-import module-name symbol-name))))
 
 (defun tsunami--filename-relative-to-buffer (filename)
   (file-relative-name filename (file-name-directory buffer-file-name)))
 
-(defun tsunami--symbol-imported-p (module-name symbol-name)
-  (let ((string-regexp (regexp-opt '("\"" "'"))))
+;; FIXME: Needs to check for "{" or " " and " ", "," and "}" on either side.
+(defun tsunami--symbol-imported-p (module-name symbol-name is-default-p)
+  (let ((string-regexp (regexp-opt '("\"" "'")))
+        (import-specifier-left-regexp
+         (if is-default-p
+             " "
+           (regexp-opt '("{ " "{" ", "))))
+        (import-specifier-right-regexp
+         (if is-default-p
+             " "
+           (regexp-opt '(" }" "}" ", ")))))
     (tsunami--buffer-contains-regexp
-     (concat "import {.*?" symbol-name ".*?} from " string-regexp module-name string-regexp))))
+     (concat "import "
+             import-specifier-left-regexp
+             symbol-name
+             import-specifier-right-regexp
+             " from "
+             string-regexp module-name string-regexp))))
+
+(defun tsunami--json-is-falsy (value)
+  (or
+   (not value)
+   (eq :json-false value)
+   (eq :json-null value)))
+
+(defun tsunami--symbol-is-default-export-p (candidate)
+  (not
+   (tsunami--json-is-falsy (plist-get candidate :default))))
 
 (defun tsunami--import-symbol-location (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
          (symbol-name (tsunami--name-of-symbol candidate))
          (filename (plist-get location :filename))
          (relative-filename (tsunami--filename-relative-to-buffer filename))
-         (module-name (tsunami--relative-filename-to-module-name relative-filename)))
-    (if (not (tsunami--symbol-imported-p module-name symbol-name))
-        (tsunami--import-symbol module-name symbol-name))))
+         (module-name (tsunami--relative-filename-to-module-name relative-filename))
+         (is-default-p (tsunami--symbol-is-default-export-p candidate)))
+    (if (not (tsunami--symbol-imported-p module-name symbol-name is-default-p))
+        (tsunami--import-symbol module-name symbol-name is-default-p))))
 
 (defun tsunami--complete-with-candidate (candidate)
   (let* ((symbol-name (tsunami--name-of-symbol candidate))
@@ -142,7 +179,7 @@
          (start-of-thing-at-point (car bounds))
          (end-of-thing-at-point (cdr bounds)))
     (delete-region start-of-thing-at-point end-of-thing-at-point)
-    (insert-string symbol-name)))
+    (insert symbol-name)))
 
 (defun tsunami--import-and-complete-symbol (candidate)
   (tsunami--import-symbol-location candidate)
@@ -192,6 +229,17 @@
 (defun helm-tsunami-symbols ()
   (interactive)
   (tsunami--helm (tsunami--default-helm-actions)))
+
+
+
+(define-minor-mode tsunami-mode
+  "Toggle tsunami-mode" ;; doc
+  :init-value nil ;; init
+  :lighter "tsunami" ;; lighter
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "M-<return>") 'tsunami-import-symbol-at-point)
+            (define-key map (kbd "C-c C-i") 'helm-tsunami-symbols)
+            map))
 
 (provide 'tsunami)
 
