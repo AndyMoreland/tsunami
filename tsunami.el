@@ -138,25 +138,23 @@
 (defun tsunami--filename-relative-to-buffer (filename)
   (file-relative-name filename (file-name-directory buffer-file-name)))
 
-;; FIXME: Needs to check for "{" or " " and " ", "," and "}" on either side.
+;; TODO: unit test this, or extract into typescript logic.
 (defun tsunami--symbol-imported-p (module-name symbol-name is-default-p)
   (let ((string-regexp (regexp-opt '("\"" "'")))
         (import-specifier-left-regexp
          (if is-default-p
              ""
-           (regexp-opt '("{ " "{" ", "))))
+           (concat ".*?" (regexp-opt '("{ " "{" ", ")))))
         (import-specifier-right-regexp
          (if is-default-p
              ""
-           (regexp-opt '(" }" "}" ", ")))))
+           (concat (regexp-opt '(" }" "}" ", ")) ".*?"))))
     (or
      (tsunami--buffer-contains-regexp
       (concat "import "
-              ".*?"
               import-specifier-left-regexp
               symbol-name
               import-specifier-right-regexp
-              ".*?"
               " from "
               string-regexp module-name string-regexp))
      (and is-default-p
