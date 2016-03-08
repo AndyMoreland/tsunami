@@ -1,5 +1,7 @@
 /// <reference path="../typings/node/node.d.ts" />
 
+
+import { default as log, logWithCallback } from "./log";
 import { FileIndexer } from "./indexer";
 import {ImportSorter} from "./importSorter";
 import { TsProject } from "./tsProject";
@@ -280,12 +282,12 @@ tsProjectPromise.then(tsProject => {
     tsProject.getFileNames().then(files => {
         let promises = files.map(file => {
             let p = getSourceFileFor(GLOBAL_DOCUMENT_REGISTRY, file).then(() => {
-                reloadFile(GLOBAL_DOCUMENT_REGISTRY, file);
+                return reloadFile(GLOBAL_DOCUMENT_REGISTRY, file);
             });
             return p;
         });
 
-        return Promise.all(promises).then((files) => {
+        return Promise.all(promises).then(() => {
             let tsserver: p.ChildProcess = p.spawn("node", ["/Users/amoreland/tsunami/node_modules/typescript/lib/tsserver.js"]);
             process.stdin.resume();
             log("Finished starting server.");

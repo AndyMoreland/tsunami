@@ -107,11 +107,14 @@
     (beginning-of-line)
     (search-forward "{"))
 
-(defun tsunami--add-symbol-to-import (module-name symbol-name)
+(defun tsunami--add-symbol-to-import (module-name symbol-name is-default-p)
   (save-excursion
     (tsunami--goto-import-block-for-module module-name)
     (let ((empty-import-block-p (looking-at-p "}")))
-      (insert (concat " " symbol-name))
+      (insert
+       (if is-default-p
+           (concat " default as " symbol-name)
+         (concat " " symbol-name)))
       (if (not empty-import-block-p)
           (insert ",")
         (insert " ")))))
@@ -127,9 +130,10 @@
   (let ((module-imported-p (tsunami--module-imported-p module-name)))
     (if (not module-imported-p)
         (tsunami--import-module-name module-name))
-    (if is-default-p
+    (if (and is-default-p
+             (not module-imported-p))
         (tsunami--default-import-symbol module-name symbol-name)
-      (tsunami--add-symbol-to-import module-name symbol-name))))
+      (tsunami--add-symbol-to-import module-name symbol-name is-default-p))))
 
 (defun tsunami--filename-relative-to-buffer (filename)
   (file-relative-name filename (file-name-directory buffer-file-name)))
