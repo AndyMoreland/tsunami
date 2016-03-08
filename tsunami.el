@@ -143,21 +143,23 @@
   (let ((string-regexp (regexp-opt '("\"" "'")))
         (import-specifier-left-regexp
          (if is-default-p
-             " "
+             ""
            (regexp-opt '("{ " "{" ", "))))
         (import-specifier-right-regexp
          (if is-default-p
-             " "
+             ""
            (regexp-opt '(" }" "}" ", ")))))
     (or
      (tsunami--buffer-contains-regexp
       (concat "import "
+              ".*?"
               import-specifier-left-regexp
               symbol-name
               import-specifier-right-regexp
+              ".*?"
               " from "
               string-regexp module-name string-regexp))
-     (and is-default-p3
+     (and is-default-p
           (tsunami--buffer-contains-regexp
            (concat "import {.*?default as " symbol-name ".*?} from " string-regexp module-name string-regexp))))))
 
