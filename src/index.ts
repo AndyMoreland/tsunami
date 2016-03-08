@@ -1,8 +1,7 @@
 /// <reference path="../typings/node/node.d.ts" />
 
+import { FileIndexer } from "./indexer";
 import {ImportSorter} from "./importSorter";
-import {FileIndexer} from "./indexer";
-import {default as log, logWithCallback} from "./log";
 import { TsProject } from "./tsProject";
 import * as JSONStream from "JSONStream";
 import * as p from "child_process";
@@ -75,6 +74,7 @@ interface SymbolLocation {
         filename: string;
         pos: number;
     };
+    default?: boolean;
 }
 
 interface FetchSymbolLocationsResponseBody {
@@ -178,7 +178,8 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): Prom
                     location: {
                         filename: definition.filename,
                         pos: definition.location
-                    }
+                    },
+                    default: definition.default
                 }
                 symbolLocations.push(symbolLocation);
             });
