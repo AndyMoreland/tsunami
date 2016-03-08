@@ -15,7 +15,7 @@ export class ImportSorter {
     private sourceFile: ts.SourceFile;
     private firstImportPosition: number = -1;
     private lastImportPosition: number = -1;
-    private insideImport: ImportState = ImportState.NEVER_FOUND_IMPORT;
+    private importReadingState: ImportState = ImportState.NEVER_FOUND_IMPORT;
     private importDeclarations: ts.ImportDeclaration[] = [];
 
     constructor(sourceFile: ts.SourceFile) {
@@ -24,17 +24,17 @@ export class ImportSorter {
 
     private visitNode = (node: ts.Node) => {
         if (node.kind == ts.SyntaxKind.ImportDeclaration) {
-            if (this.insideImport == ImportState.LEFT_IMPORT_BLOCK) {
+            if (this.importReadingState == ImportState.LEFT_IMPORT_BLOCK) {
                 throw new NonContiguousImportBlockException();
             } else {
-                this.insideImport = ImportState.READING_IMPORTS
+                this.importReadingState = ImportState.READING_IMPORTS
             }
 
             this.firstImportPosition = this.firstImportPosition == -1 ? node.getStart() : this.firstImportPosition;
             this.importDeclarations.push(node as ts.ImportDeclaration);
             this.lastImportPosition = node.getEnd();
-        } else if (this.insideImport == ImportState.READING_IMPORTS) {
-            this.insideImport = ImportState.LEFT_IMPORT_BLOCK;
+        } else if (this.importReadingState == ImportState.READING_IMPORTS) {
+            this.importReadingState = ImportState.LEFT_IMPORT_BLOCK;
         }
     }
 
@@ -50,12 +50,35 @@ export class ImportSorter {
         return moduleSpecifier.getText().replace(/'/g, "\"");
     }
 
+    static computeProximity(specifier: string) {
+        if (specifier.slice(0, 3) == '"./') {
+            return 0;
+        }
+
+        if (specifier.slice(0, 4) != '"../') {
+            return 10000;
+        }
+
+        return (specifier.match(/..\//g) || []).length;
+    }
+
     private createNewImportBlock() {
         let sortedDecs = this.importDeclarations.sort((a, b) => {
-            if (ImportSorter.emitModuleSpecifier(a.moduleSpecifier) == ImportSorter.emitModuleSpecifier(b.moduleSpecifier)) {
+            let aSpecifier = ImportSorter.emitModuleSpecifier(a.moduleSpecifier);
+            let bSpecifier = ImportSorter.emitModuleSpecifier(b.moduleSpecifier);
+
+            let aProximity = ImportSorter.computeProximity(aSpecifier);
+            let bProximity = ImportSorter.computeProximity(bSpecifier);
+
+            if (aProximity != bProximity) {
+                return aProximity > bProximity ? -1 : 1;
+            }
+
+            if (aSpecifier == bSpecifier) {
                 return 0;
             }
-            return (ImportSorter.emitModuleSpecifier(a.moduleSpecifier) >= ImportSorter.emitModuleSpecifier(b.moduleSpecifier)) ? 1 : -1;
+
+            return aSpecifier >= bSpecifier ? 1 : -1;
         });
 
         let prefix = this.firstImportPosition != 0 ? "\n" : "";
@@ -67,7 +90,7 @@ export class ImportSorter {
     }
 
     sortFileImports(cb: (err?: Error) => void): void {
-        if (this.insideImport == ImportState.NEVER_FOUND_IMPORT) {
+        if (this.importReadingState == ImportState.NEVER_FOUND_IMPORT) {
             this.readImportStatements();
         }
 
