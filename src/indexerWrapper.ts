@@ -17,6 +17,6 @@ process.argv.slice(2).forEach((filename) => {
       let index = fileIndexer.getDefinitionIndex();
       console.log(index);
   } catch (e) {
-    console.log("Failed to index: ", filename);
+    console.error("Failed to index: ", filename);
   }
 });
