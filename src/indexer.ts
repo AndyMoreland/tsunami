@@ -82,7 +82,7 @@ export class FileIndexer {
         this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.MODULE));
     }
 
-    private indexExportDeclaration(node: ts.Node): void {
+    private indexExportedSymbol(node: ts.Node): void {
         // log("Found export declaration.");
         if (node.kind == ts.SyntaxKind.ClassDeclaration) {
             this.indexClassDeclaration(node as ts.ClassDeclaration);
@@ -103,6 +103,17 @@ export class FileIndexer {
         }
     }
 
+    private indexExportDeclaration(node: ts.ExportDeclaration): void {
+        if (node.exportClause && node.exportClause.elements) {
+            node.exportClause.elements
+                .forEach(specifier => this.indexExportSpecifier(specifier as ts.ExportSpecifier));
+        }
+    }
+
+    private indexExportSpecifier(node: ts.ExportSpecifier): void {
+        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name.getText(), DefinitionType.EXPORTED_VAR));
+    }
+
     private isDefaultNode(node: ts.Node): boolean {
         return node.modifiers && node.modifiers.filter(modifierNode => modifierNode.kind == ts.SyntaxKind.DefaultKeyword).length > 0
     }
@@ -113,7 +124,9 @@ export class FileIndexer {
 
     indexNode = (node: ts.Node) => {
         if (this.isExportedNode(node)) {
-            this.indexExportDeclaration(node);
+            this.indexExportedSymbol(node);
+        } else if (node.kind === ts.SyntaxKind.ExportDeclaration) {
+            this.indexExportDeclaration(node as ts.ExportDeclaration);
         }
     }
 
