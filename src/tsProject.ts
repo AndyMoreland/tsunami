@@ -8,10 +8,23 @@ import * as globAsync from "glob";
 const glob = Promise.promisify(globAsync) as (pattern: string, options?: any) => Promise<string[]>;
 
 export class TsProject {
-    constructor(private projectRoot: string, private tsconfig: any) {}
+    constructor(private projectRoot: string,
+                private tsconfig: any) {}
+
+    private getProjectFilenames(): Promise<string[]> {
+        return glob(path.join(this.projectRoot, "src", "**/*.@(ts|tsx)"));
+    }
+
+    private getModuleTypingsFilenames(): Promise<string[]> {
+        return glob(path.join(this.projectRoot, "node_modules", "**/*.d.ts"));
+    }
 
     public getFileNames(): Promise<string[]> {
-        return glob(path.join(this.projectRoot, "src", "**/*.@(ts|tsx)"))
+        return this.getProjectFilenames();
+    }
+
+    public getDependencyFilenames(): Promise<string[]> {
+        return this.getModuleTypingsFilenames();
     }
 
     public getCompilerOptions(): ts.CompilerOptions {
@@ -23,7 +36,7 @@ export class TsProject {
 
         return Promise.promisify(fs.readFile)(filename)
             .then(data => {
-                let config = JSON.parse(""+data);
+                let config = JSON.parse("" + data);
                 log("Configuration:", JSON.stringify(config, null, 2));
 
                 return new TsProject(tsconfigFolder, config);

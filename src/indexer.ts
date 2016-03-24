@@ -10,7 +10,7 @@ export interface Definition {
     location: number;
     filename: string;
     type: DefinitionType;
-    default: boolean
+    default: boolean;
 };
 
 interface FileDefinitionIndex {
@@ -38,8 +38,13 @@ export class FileIndexer {
     }
 
     private indexClassDeclaration(node: ts.ClassDeclaration): void {
-        // log("indexing class: ", node.name.getText());
-        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.CLASS));
+        try {
+            this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.CLASS));
+        } catch (e) {
+            log ("Node of death encountered.");
+            log (e.stack);
+            log (JSON.stringify(node, null, 2));
+        }
     }
 
     private indexVariableStatement(node: ts.VariableStatement): void {
@@ -118,7 +123,7 @@ export class FileIndexer {
         try {
             ts.forEachChild(this.sourceFile, this.indexNode);
         } catch (e) {
-            log("Failed during indexing of file ", this.sourceFile.fileName, ": ", e);
+            log("Failed during indexing of file ", this.sourceFile.fileName, ": ", e.stack);
         }
     }
 

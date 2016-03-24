@@ -1,7 +1,5 @@
 /// <reference path="../typings/node/node.d.ts" />
-
-
-import { default as log, logWithCallback } from "./log";
+import { logWithCallback, default as log } from "./log";
 import { FileIndexer } from "./indexer";
 import {ImportSorter} from "./importSorter";
 import { TsProject } from "./tsProject";
@@ -161,7 +159,7 @@ function updateSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: st
     return readFilePromise(sourceFileName || filename).then(file => {
         let sourceText = file.toString();
         fileVersionMap[filename] = fileVersionMap[filename] + 1;
-        let sourceFile = documentRegistry.updateDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+Math.random());
+        let sourceFile = documentRegistry.updateDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+fileVersionMap[filename]);
         return sourceFile;
     });
 }
@@ -214,15 +212,22 @@ function processOrganizeImportsCommand(command: OrganizeImportsCommand): Promise
     });
 }
 
+function indexDefinitionFile(documentRegistry: ts.DocumentRegistry, filename: string): Promise<void> {
+    return getSourceFileFor(documentRegistry, filename).then(() => {
+        return updateSourceFileFor(documentRegistry, filename).then(sourceFile => {
+            log("Indexing definition file:", sourceFile.fileName);
+            let indexer = new FileIndexer(sourceFile);
+            fileIndexerMap[filename] = indexer;
+            indexer.indexFile();
+        });
+    });
+}
+
 function reloadFile(documentRegistry: ts.DocumentRegistry, filename: string, tmpfilename?: string): Promise<void> {
     return updateSourceFileFor(documentRegistry, filename, tmpfilename).then(sourceFile => {
         let indexer = new FileIndexer(sourceFile);
-        /* log(fileIndexerMap, filename); */
         fileIndexerMap[filename] = indexer;
         indexer.indexFile();
-        /* let index = indexer.getDefinitionIndex(); */
-        // log("Done indexing.");
-        /* log(JSON.stringify(index, null, 2)); */
     });
 }
 
@@ -280,6 +285,18 @@ let tsProjectPromise = TsProject.constructFromFilename(projectConfig);
 tsProjectPromise.then(tsProject => {
     GLOBAL_TS_PROJECT = tsProject;
     tsProject.getFileNames().then(files => {
+        let tsserver: p.ChildProcess = p.spawn("node", ["/Users/amoreland/tsunami/node_modules/typescript/lib/tsserver.js"]);
+
+        process.stdin.resume();
+        process.stdin
+            .pipe(JSONStream.parse(undefined))
+            .pipe(es.map(processPotentialTsunamiCommand))
+            .pipe(tsserver.stdin);
+
+        tsserver.stdout
+            .pipe(es.map((data: any, cb: CallbackFunction<any>) => { log("Response: ", data); cb(null, data) }))
+            .pipe(process.stdout);
+
         let promises = files.map(file => {
             let p = getSourceFileFor(GLOBAL_DOCUMENT_REGISTRY, file).then(() => {
                 return reloadFile(GLOBAL_DOCUMENT_REGISTRY, file);
@@ -288,18 +305,13 @@ tsProjectPromise.then(tsProject => {
         });
 
         return Promise.all(promises).then(() => {
-            let tsserver: p.ChildProcess = p.spawn("node", ["/Users/amoreland/tsunami/node_modules/typescript/lib/tsserver.js"]);
-            process.stdin.resume();
             log("Finished starting server.");
+        });
+    });
 
-            process.stdin
-                .pipe(JSONStream.parse(undefined))
-                .pipe(es.map(processPotentialTsunamiCommand))
-                .pipe(tsserver.stdin);
-
-            tsserver.stdout
-                .pipe(es.map((data: any, cb: CallbackFunction<any>) => { log("Response: ", data); cb(null, data) }))
-                .pipe(process.stdout);
+    tsProject.getDependencyFilenames().then(files => {
+        files.map(file => {
+            indexDefinitionFile(GLOBAL_DOCUMENT_REGISTRY, file);
         });
     });
 });
