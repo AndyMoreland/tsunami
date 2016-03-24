@@ -59,14 +59,14 @@
          (symbol-locations (plist-get response :symbolLocations)))
     symbol-locations))
 
-(defun tsunami--symbol-to-tuple (symbol)
+(defun tsunami--symbol-to-helm-tuple (symbol)
   `(,(concat (tsunami--name-of-symbol symbol)
              "   --   "
              (tsunami--filename-relative-to-buffer (plist-get (tsunami--location-of-symbol symbol) :filename)))
     . ,symbol))
 
 (defun tsunami--symbol-locations-to-candidates (symbol-locations)
-  (mapcdr 'tsunami--symbol-to-tuple symbol-locations))
+  (mapcdr 'tsunami--symbol-to-helm-tuple symbol-locations))
 
 (defun tsunami--jump-to-matching-symbol (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
@@ -119,11 +119,11 @@
           (insert ",")
         (insert " ")))))
 
-(defun tsunami--default-import-symbol (module-name symbol-name)
+(defun tsunami--add-default-import-symbol (module-name symbol-name)
   (save-excursion
     (tsunami--goto-import-block-for-module module-name)
     (backward-char)
-    (delete-forward-char 2)
+    (delete-char 2)
     (insert symbol-name)))
 
 (defun tsunami--import-symbol (module-name symbol-name is-default-p)
@@ -132,7 +132,7 @@
         (tsunami--import-module-name module-name))
     (if (and is-default-p
              (not module-imported-p))
-        (tsunami--default-import-symbol module-name symbol-name)
+        (tsunami--add-default-import-symbol module-name symbol-name)
       (tsunami--add-symbol-to-import module-name symbol-name is-default-p))))
 
 (defun tsunami--filename-relative-to-buffer (filename)
@@ -201,7 +201,7 @@
   "Define helm source for tsunami symbols."
   (helm-build-sync-source
       "Tsunami Symbols Source"
-    :candidates (mapcar 'tsunami--symbol-to-tuple tsunami--matching-symbols)
+    :candidates (mapcar 'tsunami--symbol-to-helm-tuple tsunami--matching-symbols)
     :volatile t
     :fuzzy-match t
     :action actions))
@@ -237,8 +237,6 @@
 (defun helm-tsunami-symbols ()
   (interactive)
   (tsunami--helm (tsunami--default-helm-actions)))
-
-
 
 (define-minor-mode tsunami-mode
   "Toggle tsunami-mode" ;; doc
