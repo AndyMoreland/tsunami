@@ -4,6 +4,7 @@ import * as path from "path";
 import log from "./log";
 import * as Promise from "bluebird";
 import * as globAsync from "glob";
+import * as findRoot from "find-root";
 
 const glob = Promise.promisify(globAsync) as (pattern: string, options?: any) => Promise<string[]>;
 
@@ -23,8 +24,38 @@ export class TsProject {
         return this.getProjectFilenames();
     }
 
-    public getDependencyFilenames(): Promise<string[]> {
-        return this.getModuleTypingsFilenames();
+    private getTypingsFileForModuleName(baseDir: string, moduleName: string): Promise<string> {
+        let nodeModulesFolder = path.join(baseDir, "node_modules");
+        let moduleFolder = path.join(nodeModulesFolder, moduleName);
+        let modulePackage = path.join(moduleFolder, "package.json");
+
+        return Promise.promisify(fs.readFile)(modulePackage).then(data => {
+            let typingsFile = JSON.parse(data.toString()).typings;
+            if (!typingsFile) {
+                return null;
+            }
+
+            return path.join(moduleFolder, typingsFile);
+        });
+    }
+
+    public getDependencyFilenames(): Promise<{ [index: string]: string }> {
+        let packageJsonFolder = findRoot(this.projectRoot);
+        let packageJsonFilename = path.join(packageJsonFolder, "package.json");
+        log("Searching for dependencies in: ", packageJsonFilename);
+        return Promise.promisify(fs.readFile)(packageJsonFilename).then(data => {
+            let packageJson = JSON.parse(data.toString());
+            log(Object.keys(packageJson.dependencies));
+
+            let deps = packageJson.dependencies as { [index: string]: string };
+            let response: { [index: string]: string } = {};
+            return Promise.all(Object.keys(deps).map(dep => {
+                return this.getTypingsFileForModuleName(packageJsonFolder, dep).then(typingsFile => {
+                    response[dep] = typingsFile;
+                });
+            }))
+                .then(() => { return response; });
+        });
     }
 
     public getCompilerOptions(): ts.CompilerOptions {

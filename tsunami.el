@@ -54,6 +54,17 @@
 (defun tsunami--location-of-symbol (symbol)
   (plist-get symbol :location))
 
+(defun tsunami--is-from-external-module-p (symbol)
+  (not (tsunami--json-is-falsy
+        (plist-get (tsunami--location-of-symbol symbol) :isExternalModule))))
+
+(defun tsunami--get-module-name-for-import-for-symbol (symbol)
+  (let ((symbol-filename (plist-get (tsunami--location-of-symbol symbol) :filename)))
+    (print symbol-filename)
+    (if (tsunami--is-from-external-module-p symbol)
+        symbol-filename
+      (tsunami--filename-relative-to-buffer symbol-filename))))
+
 (defun tsunami--parse-symbols-response (response)
   (let* ((response (tsunami--get-response-body response))
          (symbol-locations (plist-get response :symbolLocations)))
@@ -62,7 +73,7 @@
 (defun tsunami--symbol-to-helm-tuple (symbol)
   `(,(concat (tsunami--name-of-symbol symbol)
              "   --   "
-             (tsunami--filename-relative-to-buffer (plist-get (tsunami--location-of-symbol symbol) :filename)))
+             (tsunami--get-module-name-for-import-for-symbol symbol))
     . ,symbol))
 
 (defun tsunami--symbol-locations-to-candidates (symbol-locations)
@@ -174,9 +185,7 @@
 (defun tsunami--import-symbol-location (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
          (symbol-name (tsunami--name-of-symbol candidate))
-         (filename (plist-get location :filename))
-         (relative-filename (tsunami--filename-relative-to-buffer filename))
-         (module-name (tsunami--relative-filename-to-module-name relative-filename))
+         (module-name (tsunami--get-module-name-for-import-for-symbol candidate))
          (is-default-p (tsunami--symbol-is-default-export-p candidate)))
     (if (not (tsunami--symbol-imported-p module-name symbol-name is-default-p))
         (tsunami--import-symbol module-name symbol-name is-default-p))))

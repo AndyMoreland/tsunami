@@ -82,6 +82,7 @@ interface FetchSymbolLocationsResponseBody {
 };
 
 var fileIndexerMap: { [filename: string]: FileIndexer } = {};
+var moduleIndexerMap: { [modulename: string]: FileIndexer } = {};
 
 function parseCommand(data: {[index: string]: any}): Command {
     if (data["command"] !== undefined && data["seq"] !== undefined) {
@@ -180,10 +181,29 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): Prom
                         pos: definition.location
                     },
                     default: definition.default
-                }
+                };
                 symbolLocations.push(symbolLocation);
             });
     });
+
+    Object.keys(moduleIndexerMap).forEach(moduleName => {
+        let definitions = moduleIndexerMap[moduleName].getDefinitionIndex();
+        Object.keys(definitions).forEach(
+            symbolName => {
+                let definition = definitions[symbolName];
+                let symbolLocation =  {
+                    name: symbolName,
+                    location: {
+                        filename: moduleName,
+                        pos: definition.location,
+                        isExternalModule: true
+                    },
+                    default: definition.default
+                };
+                symbolLocations.push(symbolLocation);
+            });
+    });
+
 
     response.seq = 1;
     response.body = {
@@ -212,12 +232,12 @@ function processOrganizeImportsCommand(command: OrganizeImportsCommand): Promise
     });
 }
 
-function indexDefinitionFile(documentRegistry: ts.DocumentRegistry, filename: string): Promise<void> {
+function indexDefinitionFile(documentRegistry: ts.DocumentRegistry, moduleName: string, filename: string): Promise<void> {
     return getSourceFileFor(documentRegistry, filename).then(() => {
         return updateSourceFileFor(documentRegistry, filename).then(sourceFile => {
             log("Indexing definition file:", sourceFile.fileName);
             let indexer = new FileIndexer(sourceFile);
-            fileIndexerMap[filename] = indexer;
+            moduleIndexerMap[moduleName] = indexer;
             indexer.indexFile();
         });
     });
@@ -277,8 +297,6 @@ function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunctio
     }
 }
 
-
-
 let projectConfig = process.cwd();
 
 let tsProjectPromise = TsProject.constructFromFilename(projectConfig);
@@ -309,9 +327,19 @@ tsProjectPromise.then(tsProject => {
         });
     });
 
-    tsProject.getDependencyFilenames().then(files => {
-        files.map(file => {
-            indexDefinitionFile(GLOBAL_DOCUMENT_REGISTRY, file);
+    try {
+        tsProject.getDependencyFilenames().then(deps => {
+            Object.keys(deps).forEach(dep => {
+                let typings = deps[dep];
+                if (typings) {
+                    indexDefinitionFile(GLOBAL_DOCUMENT_REGISTRY, dep, typings);
+                }
+            });
+
+            log("Dependency typings: ", JSON.stringify(deps, null, 2));
         });
-    });
+    } catch (e) {
+        log("Error during boot.");
+        log(e.stack);
+    }
 });
