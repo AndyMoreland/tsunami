@@ -63,21 +63,33 @@
     (print symbol-filename)
     (if (tsunami--is-from-external-module-p symbol)
         symbol-filename
-      (tsunami--filename-relative-to-buffer symbol-filename))))
+      (tsunami--relative-filename-to-module-name
+       (tsunami--filename-relative-to-buffer symbol-filename)))))
 
 (defun tsunami--parse-symbols-response (response)
   (let* ((response (tsunami--get-response-body response))
          (symbol-locations (plist-get response :symbolLocations)))
     symbol-locations))
 
-(defun tsunami--symbol-to-helm-tuple (symbol)
-  `(,(concat (tsunami--name-of-symbol symbol)
-             "   --   "
-             (tsunami--get-module-name-for-import-for-symbol symbol))
-    . ,symbol))
+(defvar tsunami--symbol-name-length 40)
+(defvar tsunami--module-name-length 60)
 
-(defun tsunami--symbol-locations-to-candidates (symbol-locations)
-  (mapcdr 'tsunami--symbol-to-helm-tuple symbol-locations))
+(defun tsunami--helm-display-name-for-symbol (symbol)
+  (let* ((name (s-truncate (- tsunami--symbol-name-length 2)
+                           (tsunami--name-of-symbol symbol)))
+         (name-padding (make-string
+                        (- tsunami--symbol-name-length (length name))
+                        ? ))
+         (module-name (s-truncate (- tsunami--module-name-length 2)
+                                  (tsunami--get-module-name-for-import-for-symbol symbol)))
+         (module-name-padding (make-string
+                               (- tsunami--module-name-length (length module-name))
+                               ? ))
+         (symbol-type (plist-get symbol :type)))
+    (concat name name-padding module-name module-name-padding symbol-type)))
+
+(defun tsunami--symbol-to-helm-tuple (symbol)
+  `(,(tsunami--helm-display-name-for-symbol symbol) . ,symbol))
 
 (defun tsunami--jump-to-matching-symbol (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
@@ -183,8 +195,7 @@
    (tsunami--json-is-falsy (plist-get candidate :default))))
 
 (defun tsunami--import-symbol-location (candidate)
-  (let* ((location (tsunami--location-of-symbol candidate))
-         (symbol-name (tsunami--name-of-symbol candidate))
+  (let* ((symbol-name (tsunami--name-of-symbol candidate))
          (module-name (tsunami--get-module-name-for-import-for-symbol candidate))
          (is-default-p (tsunami--symbol-is-default-export-p candidate)))
     (if (not (tsunami--symbol-imported-p module-name symbol-name is-default-p))
@@ -213,6 +224,7 @@
     :candidates (mapcar 'tsunami--symbol-to-helm-tuple tsunami--matching-symbols)
     :volatile t
     :fuzzy-match t
+    :filtered-candidate-transformer 'helm-adaptive-sort
     :action actions))
 
 (defun tsunami-organize-imports ()
@@ -246,6 +258,30 @@
 (defun helm-tsunami-symbols ()
   (interactive)
   (tsunami--helm (tsunami--default-helm-actions)))
+
+(defun tsunami--helm-projectile-build-dwim-source (candidates action)
+  "Dynamically build a Helm source definition for Projectile files based on context with CANDIDATES, executing ACTION."
+  (helm-build-in-buffer-source "Projectile files"
+    :data candidates
+    :fuzzy-match helm-projectile-fuzzy-match
+    :coerce 'helm-projectile-coerce-file
+    :action-transformer 'helm-find-files-action-transformer
+    :keymap helm-projectile-find-file-map
+    :help-message helm-ff-help-message
+    :mode-line helm-read-file-name-mode-line-string
+    :action action))
+
+(defun tsunami--helm-read-file-in-project (prompt)
+  (helm :sources (tsunami--helm-projectile-build-dwim-source
+                  (projectile-current-project-files)
+                  (lambda (x)
+                    (setq tsunami--my-helm-result x)))
+        :prompt prompt))
+
+(defun tsunami-refactor-move-symbol ()
+  (interactive)
+  (let ((destination-file (tsunami--helm-read-file-in-project "Select destination module:")))
+    (message destination-file)))
 
 (define-minor-mode tsunami-mode
   "Toggle tsunami-mode" ;; doc
