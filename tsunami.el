@@ -30,6 +30,7 @@
 (defvar helm-alive-p)
 
 (require 's)
+(require 'hydra)
 
 (defun tsunami--command:fetch-all-symbols (prefix cb)
   "Fetch all symbols."
@@ -54,13 +55,15 @@
 (defun tsunami--location-of-symbol (symbol)
   (plist-get symbol :location))
 
+(defun tsunami--type-of-symbol (symbol)
+  (plist-get symbol :type))
+
 (defun tsunami--is-from-external-module-p (symbol)
   (not (tsunami--json-is-falsy
         (plist-get (tsunami--location-of-symbol symbol) :isExternalModule))))
 
 (defun tsunami--get-module-name-for-import-for-symbol (symbol)
   (let ((symbol-filename (plist-get (tsunami--location-of-symbol symbol) :filename)))
-    (print symbol-filename)
     (if (tsunami--is-from-external-module-p symbol)
         symbol-filename
       (tsunami--relative-filename-to-module-name
@@ -74,19 +77,19 @@
 (defvar tsunami--symbol-name-length 40)
 (defvar tsunami--module-name-length 60)
 
+(defun tsunami--padded-format (length)
+  (concat "%-" (number-to-string length) "." (number-to-string length) "s"))
+
 (defun tsunami--helm-display-name-for-symbol (symbol)
-  (let* ((name (s-truncate (- tsunami--symbol-name-length 2)
-                           (tsunami--name-of-symbol symbol)))
-         (name-padding (make-string
-                        (- tsunami--symbol-name-length (length name))
-                        ? ))
-         (module-name (s-truncate (- tsunami--module-name-length 2)
-                                  (tsunami--get-module-name-for-import-for-symbol symbol)))
-         (module-name-padding (make-string
-                               (- tsunami--module-name-length (length module-name))
-                               ? ))
-         (symbol-type (plist-get symbol :type)))
-    (concat name name-padding module-name module-name-padding symbol-type)))
+  (let* ((name (tsunami--name-of-symbol symbol))
+         (module-name (tsunami--get-module-name-for-import-for-symbol symbol))
+         (symbol-type (tsunami--type-of-symbol symbol)))
+    (format
+     (concat (tsunami--padded-format tsunami--symbol-name-length)
+             " "
+             (tsunami--padded-format tsunami--module-name-length)
+             " %s")
+     name module-name symbol-type)))
 
 (defun tsunami--symbol-to-helm-tuple (symbol)
   `(,(tsunami--helm-display-name-for-symbol symbol) . ,symbol))
@@ -112,16 +115,21 @@
 
 (defun tsunami--module-imported-p (module-name)
   (let ((string-regexp (regexp-opt '("\"" "'"))))
-    (if (tsunami--buffer-contains-regexp (concat "import .*? from " string-regexp module-name string-regexp))
-        t
-      nil)))
+    (when (tsunami--buffer-contains-regexp (concat "import .*? from " string-regexp module-name string-regexp))
+        t)))
 
 (defun tsunami--import-module-name (module-name)
+  (goto-char (point-min))
+  (search-forward "import" nil t)
+  (beginning-of-line)
+  (insert (concat "import __ from \"" module-name "\";\n"))
+  (search-backward "__")
+  (delete-char 2))
+
+(defun tsunami--import-module-name-and-insert-brackets (module-name)
   (save-excursion
-    (goto-char (point-min))
-    (search-forward "import" nil t)
-    (beginning-of-line)
-    (insert (concat "import {} from \"" module-name "\";\n"))))
+    (tsunami--import-module-name module-name)
+    (insert "{}")))
 
 (defun tsunami--goto-import-block-for-module (module-name)
   (goto-char (point-min))
@@ -152,7 +160,7 @@
 (defun tsunami--import-symbol (module-name symbol-name is-default-p)
   (let ((module-imported-p (tsunami--module-imported-p module-name)))
     (if (not module-imported-p)
-        (tsunami--import-module-name module-name))
+        (tsunami--import-module-name-and-insert-brackets module-name))
     (if (and is-default-p
              (not module-imported-p))
         (tsunami--add-default-import-symbol module-name symbol-name)
@@ -194,12 +202,19 @@
   (not
    (tsunami--json-is-falsy (plist-get candidate :default))))
 
+(defun tsunami--import-external-module (module-name)
+  (unless (tsunami--module-imported-p module-name)
+    (tsunami--import-module-name module-name)
+    (insert-string (concat "* as " module-name))))
+
 (defun tsunami--import-symbol-location (candidate)
-  (let* ((symbol-name (tsunami--name-of-symbol candidate))
+  (let* ((symbol-type (tsunami--type-of-symbol candidate))
          (module-name (tsunami--get-module-name-for-import-for-symbol candidate))
+         (symbol-name (tsunami--name-of-symbol candidate))
          (is-default-p (tsunami--symbol-is-default-export-p candidate)))
-    (if (not (tsunami--symbol-imported-p module-name symbol-name is-default-p))
-        (tsunami--import-symbol module-name symbol-name is-default-p))))
+    (cond ((equal "EXTERNAL_MODULE" symbol-type) (tsunami--import-external-module module-name))
+          (t (if (not (tsunami--symbol-imported-p module-name symbol-name is-default-p))
+                 (tsunami--import-symbol module-name symbol-name is-default-p))))))
 
 (defun tsunami--complete-with-candidate (candidate)
   (let* ((symbol-name (tsunami--name-of-symbol candidate))
@@ -236,10 +251,6 @@
                                          (if (equal "null" (plist-get arg :body))
                                              (revert-buffer t t)
                                            (message "Failed to organize imports."))))))
-
-(defun tsunami-fetch-all-symbols ()
-  (interactive)
-  (tsunami--command:fetch-all-symbols "fish" (lambda (response) (print response))))
 
 (defun tsunami--helm (actions &optional input)
   "Search for symbols in project using helm."
@@ -282,6 +293,28 @@
   (interactive)
   (let ((destination-file (tsunami--helm-read-file-in-project "Select destination module:")))
     (message destination-file)))
+
+;; Should interactively edit both occurrences -- use multiple cursors?
+(defun tsunami-refactor-extract-local (new-name)
+  (interactive "MNew Name")
+  (when (region-active-p)
+    (let ((start (region-beginning))
+          (end (region-end)))
+      (save-excursion
+        (kill-region start end)
+        (insert new-name)
+        ;; (iedit-add-region-as-occurrence start (+ start (length new-name)))
+        (open-line-above)
+        (yank)
+        (indent-according-to-mode)
+        (back-to-indentation)
+        (insert (concat "const " new-name " = "))
+        (back-to-indentation)
+        (forward-word)
+        (forward-char)
+        ;; (iedit-add-region-as-occurrence (point) (+ (point) (length new-name)))
+        (end-of-line)
+        (insert ";")))))
 
 (define-minor-mode tsunami-mode
   "Toggle tsunami-mode" ;; doc
