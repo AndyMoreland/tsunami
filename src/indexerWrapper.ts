@@ -1,8 +1,8 @@
 /// <reference path="../typings/node/node.d.ts" />
 
+import { FileIndexer } from "./FileIndexer";
 import * as fs from "fs";
 import * as ts from "typescript";
-import { FileIndexer } from './indexer';
 
 function getSourceFileFor(filename: string): ts.SourceFile {
   return ts.createSourceFile(filename, fs.readFileSync(filename).toString(), ts.ScriptTarget.ES5, true);

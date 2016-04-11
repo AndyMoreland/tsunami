@@ -8,7 +8,7 @@ class ImportIndexerVisitor {
     constructor(private indexer: ImportIndexer) {}
 
     public visitNode = (node: ts.Node) => {
-        if (node.kind == ts.SyntaxKind.ImportDeclaration) {
+        if (node.kind === ts.SyntaxKind.ImportDeclaration) {
             let importNode = node as ts.ImportDeclaration;
             let moduleSpecifier = importNode.moduleSpecifier.getText()
                 .replace(/"/g, "")
@@ -16,7 +16,7 @@ class ImportIndexerVisitor {
 
             this.moduleSpecifiers.push(this.indexer.resolveModuleName(moduleSpecifier));
         }
-    }
+    };
 
     public getModuleSpecifiers() {
         return this.moduleSpecifiers;
@@ -38,7 +38,7 @@ export class ImportIndexer {
 
     public resolveModuleName(moduleName: string): string {
         /* Node module */
-        if (moduleName[0] != '.' && moduleName[0] != '/') {
+        if (moduleName[0] !== "." && moduleName[0] !== "/") {
             return moduleName;
         } else {
             return path.resolve(path.dirname(this.sourceFile.fileName), moduleName);
@@ -66,7 +66,7 @@ export class ReferenceFinder {
     constructor(private tsProject: TsProject, private getSourceFileFor: (filename: string) => ts.SourceFile) {}
 
     /* Absolute path to file or node module name */
-    findModulesImportingModule(moduleName: string): Promise<string[]> {
+    public findModulesImportingModule(moduleName: string): Promise<string[]> {
         return this.tsProject.getFileNames()
             .then(files => {
                 let filteredFiles = files.filter(file => {

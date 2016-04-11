@@ -1,14 +1,16 @@
 /// <reference path="../typings/node/node.d.ts" />
+import * as Promise from "bluebird";
+import { ModuleIndexer } from "./ModuleIndexer";
+import { FileIndexer } from "./FileIndexer";
+import { DefinitionType, Indexer } from "./Indexer";
 import { logWithCallback, default as log } from "./log";
-import { FileIndexer } from "./indexer";
-import {ImportSorter} from "./importSorter";
+import { ImportSorter } from "./importSorter";
 import { TsProject } from "./tsProject";
 import * as JSONStream from "JSONStream";
 import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
 import * as ts from "typescript";
-import * as Promise from "bluebird";
 
 const readFilePromise = Promise.promisify(fs.readFile);
 
@@ -21,7 +23,7 @@ let GLOBAL_DOCUMENT_REGISTRY: ts.DocumentRegistry = ts.createDocumentRegistry(tr
 let GLOBAL_TS_PROJECT: TsProject = null;
 
 /* HACK */
-process.on('uncaughtException', (err: any) => {
+process.on("uncaughtException", (err: any) => {
     logWithCallback(err, (e: any, data: any) => process.exit());
 });
 
@@ -34,20 +36,20 @@ interface Command {
 interface FetchSymbolLocationsCommand extends Command {
     arguments: {
         prefix: string;
-    }
+    };
 }
 
 interface OrganizeImportsCommand extends Command {
     arguments: {
         filename: string;
-    }
+    };
 }
 
 interface ReloadCommand extends Command {
     arguments: {
         file: string;
         tmpfile: string;
-    }
+    };
 }
 
 interface CallbackFunction<T> {
@@ -74,6 +76,7 @@ interface SymbolLocation {
         filename: string;
         pos: number;
     };
+    type: string;
     default?: boolean;
 }
 
@@ -81,8 +84,8 @@ interface FetchSymbolLocationsResponseBody {
     symbolLocations: SymbolLocation[];
 };
 
-var fileIndexerMap: { [filename: string]: FileIndexer } = {};
-var moduleIndexerMap: { [modulename: string]: FileIndexer } = {};
+var fileIndexerMap: { [filename: string]: Indexer } = {};
+var moduleIndexerMap: { [modulename: string]: Indexer } = {};
 
 function parseCommand(data: {[index: string]: any}): Command {
     if (data["command"] !== undefined && data["seq"] !== undefined) {
@@ -101,15 +104,15 @@ function isTsunamiWiretapCommand(command: Command): boolean {
 }
 
 function isFetchSymbolLocationsCommand(command: Command): command is FetchSymbolLocationsCommand {
-    return command.command == SYMBOL_LOCATIONS;
+    return command.command === SYMBOL_LOCATIONS;
 }
 
 function isReloadCommand(command: Command): command is ReloadCommand {
-    return command.command == RELOAD;
+    return command.command === RELOAD;
 }
 
 function isOrganizeImportsCommand(command: Command): command is OrganizeImportsCommand {
-    return command.command == ORGANIZE_IMPORTS;
+    return command.command === ORGANIZE_IMPORTS;
 }
 
 function writeOutput<T>(response: Response<T>) {
@@ -120,6 +123,8 @@ function writeOutput<T>(response: Response<T>) {
 
     process.stdout.write("Content-Length: " + outputLength + "\n\n");
     process.stdout.write(output + "\n");
+
+    return Promise.resolve<void>(null);
 }
 
 function getBlankResponseForCommand(command: Command): Response<any> {
@@ -136,7 +141,7 @@ function getErrorOutputForCommand(command: Command, error: Error): Response<stri
     let response: Response<string> = getBlankResponseForCommand(command);
 
     response.success = false;
-    response.message = ""+error;
+    response.message = "" + error;
 
     return response;
 }
@@ -147,20 +152,25 @@ function getSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: strin
     return readFilePromise(sourceFileName || filename).then(file => {
         let sourceText = file.toString();
         fileVersionMap[filename] = 0;
-        let sourceFile = documentRegistry.acquireDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+fileVersionMap[filename]);
+        let sourceFile = documentRegistry.acquireDocument(filename,
+                                                          GLOBAL_TS_PROJECT.getCompilerOptions(),
+                                                          ts.ScriptSnapshot.fromString(sourceText), "" + fileVersionMap[filename]);
         return sourceFile;
     });
 }
 
 function updateSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
-    if (fileVersionMap[filename] == null || fileVersionMap[filename] == undefined) {
+    if (fileVersionMap[filename] == null || fileVersionMap[filename] === undefined) {
         return getSourceFileFor(documentRegistry, filename, sourceFileName);
     }
 
     return readFilePromise(sourceFileName || filename).then(file => {
         let sourceText = file.toString();
         fileVersionMap[filename] = fileVersionMap[filename] + 1;
-        let sourceFile = documentRegistry.updateDocument(filename, GLOBAL_TS_PROJECT.getCompilerOptions(), ts.ScriptSnapshot.fromString(sourceText), ""+fileVersionMap[filename]);
+        let sourceFile = documentRegistry.updateDocument(filename,
+                                                         GLOBAL_TS_PROJECT.getCompilerOptions(),
+                                                         ts.ScriptSnapshot.fromString(sourceText),
+                                                         "" + fileVersionMap[filename]);
         return sourceFile;
     });
 }
@@ -176,6 +186,7 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): Prom
                 let definition = definitions[symbolName];
                 let symbolLocation =  {
                     name: symbolName,
+                    type: DefinitionType[definition.type],
                     location: {
                         filename: definition.filename,
                         pos: definition.location
@@ -193,6 +204,7 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): Prom
                 let definition = definitions[symbolName];
                 let symbolLocation =  {
                     name: symbolName,
+                    type: DefinitionType[definition.type],
                     location: {
                         filename: moduleName,
                         pos: definition.location,
@@ -204,14 +216,12 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): Prom
             });
     });
 
-
     response.seq = 1;
     response.body = {
         symbolLocations: symbolLocations
-    }
+    };
 
-    writeOutput(response);
-    return Promise.resolve(null);
+    return writeOutput(response) as any as Promise<void>;
 }
 
 function processOrganizeImportsCommand(command: OrganizeImportsCommand): Promise<void> {
@@ -241,6 +251,12 @@ function indexDefinitionFile(documentRegistry: ts.DocumentRegistry, moduleName: 
             indexer.indexFile();
         });
     });
+}
+
+function indexExternalModule(moduleName: string): Promise<void> {
+    moduleIndexerMap[moduleName] = new ModuleIndexer(moduleName);
+
+    return Promise.resolve(null);
 }
 
 function reloadFile(documentRegistry: ts.DocumentRegistry, filename: string, tmpfilename?: string): Promise<void> {
@@ -312,7 +328,7 @@ tsProjectPromise.then(tsProject => {
             .pipe(tsserver.stdin);
 
         tsserver.stdout
-            .pipe(es.map((data: any, cb: CallbackFunction<any>) => { log("Response: ", data); cb(null, data) }))
+            .pipe(es.map((data: any, cb: CallbackFunction<any>) => { log("Response: ", data); cb(null, data); }))
             .pipe(process.stdout);
 
         let promises = files.map(file => {
@@ -330,9 +346,16 @@ tsProjectPromise.then(tsProject => {
     try {
         tsProject.getDependencyFilenames().then(deps => {
             Object.keys(deps).forEach(dep => {
-                let typings = deps[dep];
-                if (typings) {
-                    indexDefinitionFile(GLOBAL_DOCUMENT_REGISTRY, dep, typings);
+                indexExternalModule(dep);
+                try {
+                    fs.accessSync(dep);
+                    let typings = deps[dep];
+
+                    if (typings) {
+                        indexDefinitionFile(GLOBAL_DOCUMENT_REGISTRY, dep, typings);
+                    }
+                } catch (e) {
+                    log("Failed to index: ", dep);
                 }
             });
 

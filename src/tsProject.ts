@@ -30,11 +30,7 @@ export class TsProject {
         let modulePackage = path.join(moduleFolder, "package.json");
 
         return Promise.promisify(fs.readFile)(modulePackage).then(data => {
-            let typingsFile = JSON.parse(data.toString()).typings;
-            if (!typingsFile) {
-                return null;
-            }
-
+            let typingsFile = JSON.parse(data.toString()).typings || "index.d.ts";
             return path.join(moduleFolder, typingsFile);
         });
     }
