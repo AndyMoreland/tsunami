@@ -205,7 +205,7 @@
 (defun tsunami--import-external-module (module-name)
   (unless (tsunami--module-imported-p module-name)
     (tsunami--import-module-name module-name)
-    (insert-string (concat "* as " module-name))))
+    (insert (concat "* as " module-name))))
 
 (defun tsunami--import-symbol-location (candidate)
   (let* ((symbol-type (tsunami--type-of-symbol candidate))
@@ -281,6 +281,8 @@
     :help-message helm-ff-help-message
     :mode-line helm-read-file-name-mode-line-string
     :action action))
+
+(defvar tsunami--my-helm-result nil)
 
 (defun tsunami--helm-read-file-in-project (prompt)
   (helm :sources (tsunami--helm-projectile-build-dwim-source
