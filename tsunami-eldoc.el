@@ -64,24 +64,20 @@
   (tide-send-command "signatureHelp"
                      `(:file ,buffer-file-name :line ,(count-lines 1 (point)) :offset ,(tide-current-offset))
                      (lambda (response)
-                       (progn
-                         (when (tide-response-success-p response)
-                           (let ((the-message (tsunami-annotate-signatures (plist-get response :body))))
-                             (setq tsunami--last-eldoc the-message)
-                             ;; TODO Should be eldoc. Isn't. Can't figure it out.
-                             (message the-message)))))))
+                       (when (tide-response-success-p response)
+                         (let ((the-message (tsunami-annotate-signatures (plist-get response :body))))
+                           (setq tsunami--last-eldoc the-message)
+                           (eldoc-message the-message))))))
 
 ;; Andy wrote this
 (defun tsunami-command:quickinfo ()
   (tide-send-command "quickinfo"
                      `(:file ,buffer-file-name :line ,(count-lines 1 (point)) :offset ,(tide-current-offset))
                      (lambda (response)
-                       (progn
-                         (when (tide-response-success-p response)
-                           (let ((the-message (tide-plist-get response :body :displayString)))
-                             (setq tsunami--last-eldoc the-message)
-                             ;; TODO Should be eldoc. Isn't. Can't figure it out
-                             (message the-message)))))))
+                       (when (tide-response-success-p response)
+                         (let ((the-message (tide-plist-get response :body :displayString)))
+                           (setq tsunami--last-eldoc the-message)
+                           (eldoc-message the-message))))))
 
 (defun tsunami-method-call-p ()
   (or (looking-at "[(,]") (and (not (looking-at "\\sw")) (looking-back "[(,]\n?\\s-*"))))
