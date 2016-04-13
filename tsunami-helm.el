@@ -1,3 +1,6 @@
+(defvar tsunami--symbol-name-length 40)
+(defvar tsunami--module-name-length 60)
+
 (defun tsunami--helm-display-name-for-symbol (symbol)
   (let* ((name (tsunami--name-of-symbol symbol))
          (module-name (tsunami--get-module-name-for-import-for-symbol symbol))
@@ -18,12 +21,6 @@
          (pos (+ 1 (plist-get location :pos))))
     (find-file filename)
     (goto-char pos)))
-
-(defun tsunami--json-is-falsy (value)
-  (or
-   (not value)
-   (eq :json-false value)
-   (eq :json-null value)))
 
 (defun tsunami--complete-with-candidate (candidate)
   (let* ((symbol-name (tsunami--name-of-symbol candidate))

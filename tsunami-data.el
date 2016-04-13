@@ -19,9 +19,14 @@
          (symbol-locations (plist-get response :symbolLocations)))
     symbol-locations))
 
+(defun tsunami--json-is-falsy (value)
+  (or
+   (not value)
+   (eq :json-false value)
+   (eq :json-null value)))
+
 (defun tsunami--symbol-is-default-export-p (candidate)
   (not
    (tsunami--json-is-falsy (plist-get candidate :default))))
-
 
 (provide 'tsunami-data)
