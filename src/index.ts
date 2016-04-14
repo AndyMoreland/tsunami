@@ -85,6 +85,7 @@ interface FetchSymbolLocationsResponseBody {
 };
 
 var fileIndexerMap: { [filename: string]: Indexer } = {};
+/* Note: this is getting stomped on. */
 var moduleIndexerMap: { [modulename: string]: Indexer } = {};
 
 function parseCommand(data: {[index: string]: any}): Command {
@@ -345,6 +346,8 @@ tsProjectPromise.then(tsProject => {
 
     try {
         tsProject.getDependencyFilenames().then(deps => {
+            log("Dependency typings: ", JSON.stringify(deps, null, 2));
+
             Object.keys(deps).forEach(dep => {
                 indexExternalModule(dep);
                 try {
@@ -358,8 +361,9 @@ tsProjectPromise.then(tsProject => {
                     log("Failed to index: ", dep);
                 }
             });
-
-            log("Dependency typings: ", JSON.stringify(deps, null, 2));
+        }).catch(error => {
+            log("Failed to get dependency filenames.");
+            log(error.stack);
         });
     } catch (e) {
         log("Error during boot.");
