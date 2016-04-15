@@ -31,10 +31,12 @@
 
 (require 's)
 (require 'hydra)
+(require 'tide)
 (require 'tsunami-eldoc)
 (require 'tsunami-protocol)
 (require 'tsunami-data)
 (require 'tsunami-util)
+(require 'tsunami-navigation)
 (require 'tsunami-helm)
 
 (defun tsunami--invalidate-symbols-cache ()
@@ -180,6 +182,8 @@
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "M-<return>") 'tsunami-import-symbol-at-point)
             (define-key map (kbd "C-c C-i") 'helm-tsunami-symbols)
+            (define-key map (kbd "M-.") 'tsunami-jump-to-definition)
+            (define-key tide-mode-map (kbd "M-.") 'tsunami-jump-to-definition)
             map)
   :after-hook (tsunami--setup-variables))
 
