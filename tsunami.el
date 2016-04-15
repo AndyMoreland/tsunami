@@ -70,7 +70,18 @@
 (defun tsunami--module-imported-p (module-name)
   (let ((string-regexp (regexp-opt '("\"" "'"))))
     (when (tsunami--buffer-contains-regexp (concat "import .*? from " string-regexp module-name string-regexp))
-        t)))
+      t)))
+
+(defun tsunami--module-imported-wildcard-p (module-name)
+  "Returns nil or string alias for MODULE-NAME"
+  (let* ((quote-regexp (regexp-opt '("\"" "'")))
+         (regexp (concat "import \\* as \\(.*?\\) from " quote-regexp module-name quote-regexp ";")))
+    (print regexp)
+    (save-excursion
+      (save-match-data
+        (goto-char (point-min))
+        (when (search-forward-regexp regexp nil t)
+          (substring-no-properties (match-string 1)))))))
 
 (defun tsunami--import-module-name (module-name)
   (goto-char (point-min))
