@@ -349,9 +349,9 @@ tsProjectPromise.then(tsProject => {
             log("Dependency typings: ", JSON.stringify(deps, null, 2));
 
             Object.keys(deps).forEach(dep => {
-                indexExternalModule(dep);
+                /* indexExternalModule(dep); */
                 try {
-                    fs.accessSync(dep);
+                    fs.accessSync(deps[dep]);
                     let typings = deps[dep];
 
                     if (typings) {
