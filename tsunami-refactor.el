@@ -1,4 +1,5 @@
 (require 'popup)
+(require 'helm)
 
 (defun tsunami--helm-projectile-build-dwim-source (candidates action)
   "Dynamically build a Helm source definition for Projectile files based on context with CANDIDATES, executing ACTION."
@@ -44,13 +45,13 @@
       text)))
 
 (defun tsunami--get-containing-expression-ranges ()
-  (when-let ((file (buffer-file-name (current-buffer)))
-             (line (1- (line-number-at-pos (point))))
-             (offset (1- (current-column))))
-    (let ((response (tsunami--command:get-containing-expressions file line offset)))
-      (if (tide-response-success-p response)
-          (tsunami--get-response-body response)
-        (error (concat "Failure: " (plist-get response :message)))))))
+  (let ((file (buffer-file-name (current-buffer)))
+        (line (1- (line-number-at-pos (point))))
+        (offset (1- (current-column)))
+        ((response (tsunami--command:get-containing-expressions file line offset))))
+    (if (tide-response-success-p response)
+        (tsunami--get-response-body response)
+      (error (concat "Failure: " (plist-get response :message))))))
 
 (defun tsunami--choose-containing-expression ()
   (let* ((ranges (tsunami--get-containing-expression-ranges))

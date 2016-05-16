@@ -1,4 +1,5 @@
 (require 'tsunami-code-edit)
+(require 'tide)
 
 (defun tsunami-format ()
   (interactive)

@@ -1,3 +1,6 @@
+(require 'tide)
+(require 'eldoc)
+
 ;;; Eldoc: For some reason I can't figure out how to get eldoc to not flicker. Right now just using regular `message`.
 ;;; Ripped entirely from tide. Rewrote to be async instead of sync.
 (defun tsunami-annotate-display-part (display-part &optional highlight)

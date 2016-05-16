@@ -1,5 +1,10 @@
+(require 'helm)
+(require 'tsunami)
+(require 'tsunami-data)
+
 (defvar tsunami--symbol-name-length 40)
 (defvar tsunami--module-name-length 60)
+(defvar tsunami--matching-symbols nil)
 
 (defun tsunami--helm-display-name-for-symbol (symbol)
   (let* ((name (tsunami--name-of-symbol symbol))
@@ -31,10 +36,6 @@
 (defun tsunami--default-helm-actions ()
   '(("Jump To `RET'" . tsunami--jump-to-matching-symbol)
     ("Import" . tsunami--import-symbol-location)))
-
-(defun random-candidates ()
-  "Return a list of 4 random numbers from 0 to 10"
-  (loop for i below 4 collect (format "%d" (random 10))))
 
 (defun tsunami--candidate-match-function (candidate)
   (let ((symbol-name (first (s-split "\\s-" candidate t))))

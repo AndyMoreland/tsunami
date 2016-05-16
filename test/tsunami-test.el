@@ -50,3 +50,5 @@
                  "fixtures/example1.txt"
                  `(,tsunami--replace-code-edit ,tsunami--delete-code-edit ,tsunami--insert-code-edit)
                  "fixtures/combined-result.txt")
+
+(provide 'tsunami-test)
