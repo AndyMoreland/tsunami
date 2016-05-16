@@ -36,6 +36,7 @@
 (require 'tsunami-protocol)
 (require 'tsunami-data)
 (require 'tsunami-util)
+(require 'tsunami-refactor)
 (require 'tsunami-navigation)
 (require 'tsunami-helm)
 
@@ -186,6 +187,14 @@
   (message "Initialized tsunami mode.")
   (setq eldoc-documentation-function 'tsunami-eldoc-function))
 
+(defhydra tsunami-refactor-hydra (:color blue :hint nil)
+  "
+_l_ extract local
+_i_ organize imports
+  "
+  ("i" tsunami-refactor-organize-imports)
+  ("l" tsunami-refactor-extract-local))
+
 (define-minor-mode tsunami-mode
   "Toggle tsunami-mode" ;; doc
   :init-value nil ;; init
@@ -194,6 +203,7 @@
             (define-key map (kbd "M-<return>") 'tsunami-import-symbol-at-point)
             (define-key map (kbd "C-c C-i") 'helm-tsunami-symbols)
             (define-key map (kbd "M-.") 'tsunami-jump-to-definition)
+            (define-key map (kbd "C-c C-r") 'tsunami-refactor-hydra/body)
             (define-key tide-mode-map (kbd "M-.") 'tsunami-jump-to-definition)
             map)
   :after-hook (tsunami--setup-variables))

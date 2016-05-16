@@ -1,9 +1,10 @@
 /// <reference path="../typings/node/node.d.ts" />
+import { getExpressionsContainingPoint } from "./ExpressionTree";
 import * as Promise from "bluebird";
 import { ModuleIndexer } from "./ModuleIndexer";
 import { FileIndexer } from "./FileIndexer";
 import { DefinitionType, Indexer } from "./Indexer";
-import { logWithCallback, default as log } from "./log";
+import { logSync, logWithCallback, default as log } from "./log";
 import { ImportSorter } from "./importSorter";
 import { TsProject } from "./tsProject";
 import * as JSONStream from "JSONStream";
@@ -16,6 +17,7 @@ const readFilePromise = Promise.promisify(fs.readFile);
 
 export const SYMBOL_LOCATIONS = "SYMBOL_LOCATIONS";
 export const ORGANIZE_IMPORTS = "ORGANIZE_IMPORTS";
+export const GET_CONTAINING_EXPRESSIONS = "GET_CONTAINING_EXPRESSIONS";
 export const RELOAD = "reload";
 
 /* Yay singletons. */
@@ -24,8 +26,14 @@ let GLOBAL_TS_PROJECT: TsProject = null;
 
 /* HACK */
 process.on("uncaughtException", (err: any) => {
-    logWithCallback(err, (e: any, data: any) => process.exit());
+    logWithCallback((e: any, data: any) => process.exit(), err);
 });
+
+/* 0-indexed within file */
+interface RegionSpan {
+    start: number;
+    end: number;
+}
 
 interface Command {
     command: string;
@@ -49,6 +57,14 @@ interface ReloadCommand extends Command {
     arguments: {
         file: string;
         tmpfile: string;
+    };
+}
+
+interface GetContainingExpressionsCommand extends Command {
+    arguments: {
+        file: string;
+        line: number;
+        offset: number;
     };
 }
 
@@ -97,7 +113,9 @@ function parseCommand(data: {[index: string]: any}): Command {
 }
 
 function isTsunamiCommand(command: Command): boolean {
-    return isFetchSymbolLocationsCommand(command) || isOrganizeImportsCommand(command);
+    return isFetchSymbolLocationsCommand(command) ||
+        isOrganizeImportsCommand(command) ||
+        isGetContainingExpressionsCommand(command);
 }
 
 function isTsunamiWiretapCommand(command: Command): boolean {
@@ -114,6 +132,10 @@ function isReloadCommand(command: Command): command is ReloadCommand {
 
 function isOrganizeImportsCommand(command: Command): command is OrganizeImportsCommand {
     return command.command === ORGANIZE_IMPORTS;
+}
+
+function isGetContainingExpressionsCommand(command: Command): command is GetContainingExpressionsCommand {
+    return command.command === GET_CONTAINING_EXPRESSIONS;
 }
 
 function writeOutput<T>(response: Response<T>) {
@@ -203,7 +225,7 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): Prom
         Object.keys(definitions).forEach(
             symbolName => {
                 let definition = definitions[symbolName];
-                let symbolLocation =  {
+                let symbolLocation = {
                     name: symbolName,
                     type: DefinitionType[definition.type],
                     location: {
@@ -218,6 +240,7 @@ function processFetchSymbolLocations(command: FetchSymbolLocationsCommand): Prom
     });
 
     response.seq = 1;
+    response.success = true;
     response.body = {
         symbolLocations: symbolLocations
     };
@@ -234,6 +257,7 @@ function processOrganizeImportsCommand(command: OrganizeImportsCommand): Promise
         importSorter.sortFileImports((err?: Error) => {
             if (err) { log(err); }
             response.body = "" + err;
+            response.success = true;
             writeOutput(response);
         });
     }).catch(e => {
@@ -272,6 +296,22 @@ function processReloadCommand(command: ReloadCommand): Promise<void> {
     return reloadFile(GLOBAL_DOCUMENT_REGISTRY, command.arguments.file, command.arguments.tmpfile);
 }
 
+function processGetContainingExpressionsCommand(command: GetContainingExpressionsCommand): Promise<void> {
+    const { line, offset, file } = command.arguments;
+
+    return getSourceFileFor(GLOBAL_DOCUMENT_REGISTRY, file).then(sourceFile => {
+        const response: Response<RegionSpan[]> = getBlankResponseForCommand(command);
+        const position = sourceFile.getPositionOfLineAndCharacter(line, offset);
+        const expressions = getExpressionsContainingPoint(sourceFile, position);
+        response.success = true;
+        response.body = expressions.map(expr => ({ start: expr.getStart(), end: expr.getEnd()}));
+        writeOutput(response);
+    }).catch(e => {
+        log("Error occurred containing getting expressions: ", e, e.stack);
+        writeOutput(getErrorOutputForCommand(command, e));
+    });
+}
+
 function processTsunamiCommand(command: Command): Promise<void> {
     if (isFetchSymbolLocationsCommand(command)) {
         log("Fetching symbols for prefix: ", command.arguments.prefix);
@@ -282,6 +322,11 @@ function processTsunamiCommand(command: Command): Promise<void> {
     } else if (isReloadCommand(command)) {
         log("Reloading: ", command.arguments.file, command.arguments.tmpfile);
         return processReloadCommand(command);
+    } else if (isGetContainingExpressionsCommand(command)) {
+        log("Getting containing expressions for: ", command.arguments.file,
+            command.arguments.line,
+            command.arguments.offset);
+        return processGetContainingExpressionsCommand(command);
     }
 }
 
@@ -316,6 +361,7 @@ function processPotentialTsunamiCommand(data: UnknownObject, cb: CallbackFunctio
 
 let projectConfig = process.cwd();
 
+log("Attempting to start server.");
 let tsProjectPromise = TsProject.constructFromFilename(projectConfig);
 tsProjectPromise.then(tsProject => {
     GLOBAL_TS_PROJECT = tsProject;

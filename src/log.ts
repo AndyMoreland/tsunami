@@ -7,3 +7,7 @@ export default function log(...args: any[]): void {
 export function logWithCallback(cb: Function, ...args: any[]): void {
     fs.appendFile("/Users/amoreland/tsunami/log.txt", "\n\n" + args.join(", "), cb);
 }
+
+export function logSync(...args: any[]): void {
+    fs.appendFileSync("/Users/amoreland/tsunami/log.txt", "\n\n" + args.join(", "));
+}
