@@ -100,9 +100,8 @@ interface FetchSymbolLocationsResponseBody {
     symbolLocations: SymbolLocation[];
 };
 
-var fileIndexerMap: { [filename: string]: Indexer } = {};
-/* Note: this is getting stomped on. */
-var moduleIndexerMap: { [modulename: string]: Indexer } = {};
+const fileIndexerMap: { [filename: string]: Indexer } = {};
+const moduleIndexerMap: { [modulename: string]: Indexer } = {};
 
 function parseCommand(data: {[index: string]: any}): Command {
     if (data["command"] !== undefined && data["seq"] !== undefined) {
@@ -174,12 +173,12 @@ const fileVersionMap: { [filename: string]: number } = {};
 function getSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
     return readFilePromise(sourceFileName || filename).then(file => {
         let sourceText = file.toString();
-        fileVersionMap[filename] = 0;
+        fileVersionMap[filename] = 1;
         let sourceFile = documentRegistry.acquireDocument(filename,
                                                           GLOBAL_TS_PROJECT.getCompilerOptions(),
                                                           ts.ScriptSnapshot.fromString(sourceText), "" + fileVersionMap[filename]);
         return sourceFile;
-    });
+    }).then(foo => updateSourceFileFor(documentRegistry, filename, sourceFileName));
 }
 
 function updateSourceFileFor(documentRegistry: ts.DocumentRegistry, filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
@@ -271,9 +270,9 @@ function indexDefinitionFile(documentRegistry: ts.DocumentRegistry, moduleName: 
     return getSourceFileFor(documentRegistry, filename).then(() => {
         return updateSourceFileFor(documentRegistry, filename).then(sourceFile => {
             log("Indexing definition file:", sourceFile.fileName);
-            let indexer = new FileIndexer(sourceFile);
+            let indexer = new FileIndexer(sourceFile, (filename: string) => getSourceFileFor(documentRegistry, filename));
             moduleIndexerMap[moduleName] = indexer;
-            indexer.indexFile();
+            return indexer.indexFile();
         });
     });
 }
@@ -286,9 +285,9 @@ function indexExternalModule(moduleName: string): Promise<void> {
 
 function reloadFile(documentRegistry: ts.DocumentRegistry, filename: string, tmpfilename?: string): Promise<void> {
     return updateSourceFileFor(documentRegistry, filename, tmpfilename).then(sourceFile => {
-        let indexer = new FileIndexer(sourceFile);
+        let indexer = new FileIndexer(sourceFile, (filename: string) => getSourceFileFor(documentRegistry, filename));
         fileIndexerMap[filename] = indexer;
-        indexer.indexFile();
+        return indexer.indexFile();
     });
 }
 
@@ -391,6 +390,7 @@ tsProjectPromise.then(tsProject => {
     });
 
     try {
+        // ts.createLanguageService(ts.createCompilerHost(tsProject.getCompilerOptions(), true), GLOBAL_DOCUMENT_REGISTRY);
         tsProject.getDependencyFilenames().then(deps => {
             log("Dependency typings: ", JSON.stringify(deps, null, 2));
 

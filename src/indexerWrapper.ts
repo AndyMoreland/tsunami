@@ -5,18 +5,22 @@ import * as fs from "fs";
 import * as ts from "typescript";
 
 function getSourceFileFor(filename: string): ts.SourceFile {
-  return ts.createSourceFile(filename, fs.readFileSync(filename).toString(), ts.ScriptTarget.ES5, true);
+    return ts.createSourceFile(filename, fs.readFileSync(filename).toString(), ts.ScriptTarget.ES5, true);
 }
 
 process.argv.slice(2).forEach((filename) => {
-  let sourceFile = getSourceFileFor(filename);
-  let fileIndexer = new FileIndexer(sourceFile);
-  console.log("Indexing: ", filename);
-  try {
-      fileIndexer.indexFile();
-      let index = fileIndexer.getDefinitionIndex();
-      console.log(index);
-  } catch (e) {
-    console.error("Failed to index: ", filename);
-  }
+    let sourceFile = getSourceFileFor(filename);
+    let fileIndexer = new FileIndexer(sourceFile, (filename: string) => Promise.resolve(getSourceFileFor(filename)));
+    console.log("Indexing: ", filename);
+    try {
+        fileIndexer.indexFile().then(() => {
+            let index = fileIndexer.getDefinitionIndex();
+            console.log(index);
+        })
+            .catch(e => {
+                console.error(e);
+            });
+    } catch (e) {
+        console.error("Failed to index: ", filename);
+    }
 });
