@@ -1,18 +1,22 @@
 (require 'helm)
-(require 'tsunami)
 (require 'tsunami-data)
 
 (defvar tsunami--symbol-name-length 40)
 (defvar tsunami--module-name-length 60)
 (defvar tsunami--matching-symbols nil)
 
+(defvar tsunami--helm-target-buffer nil)
+(defvar tsunami--helm-rendered-symbols nil)
+(defvar tsunami--helm-displayed-candidates nil)
+
 (defun tsunami--helm-display-name-for-symbol (symbol)
   (let* ((name (tsunami--name-of-symbol symbol))
          (module-name (tsunami--get-module-name-for-import-for-symbol symbol)))
     (format
-     (concat (tsunami--padded-format tsunami--symbol-name-length)
-             " "
-             (tsunami--padded-format tsunami--module-name-length))
+     (concat
+      (tsunami--padded-format tsunami--symbol-name-length)
+      " "
+      (tsunami--padded-format tsunami--module-name-length))
      name module-name)))
 
 (defun tsunami--symbol-to-helm-tuple (symbol)
@@ -41,8 +45,13 @@
   (let ((symbol-name (first (s-split "\\s-" candidate t))))
     (helm-default-match-function symbol-name)))
 
+;;; Memoize tsunami--helm-displayed-candidates vs tsunami--matching-symbols
 (defun tsunami--get-helm-candidates ()
-  (mapcar 'tsunami--symbol-to-helm-tuple tsunami--matching-symbols))
+  (if (eq tsunami--helm-rendered-symbols tsunami--matching-symbols)
+      tsunami--helm-displayed-candidates
+    (with-current-buffer tsunami--helm-target-buffer
+      (setq tsunami--helm-rendered-symbols tsunami--matching-symbols
+            tsunami--helm-displayed-candidates (mapcar (lambda (candidate) (tsunami--symbol-to-helm-tuple candidate)) tsunami--matching-symbols)))))
 
 ;; (defun tsunami--symbols-helm-source (actions)
 ;;   "Define helm source for tsunami symbols."
@@ -59,16 +68,15 @@
 (defun tsunami--symbols-helm-source (actions)
   "Define helm source for tsunami symbols."
   (helm-build-sync-source "Tsunami Symbols Source"
-    :candidates (mapcar 'tsunami--symbol-to-helm-tuple tsunami--matching-symbols)
+    :candidates #'tsunami--get-helm-candidates
     :volatile t
     :fuzzy-match t
-    :filtered-candidate-transformer 'helm-adaptive-sort
     :action actions))
 
 (defun tsunami--helm (actions &optional input)
   "Search for symbols in project using helm."
   (interactive)
-  (progn
+  (let ((tsunami--helm-target-buffer (current-buffer)))
     (tsunami--invalidate-symbols-cache)
     (helm :sources (tsunami--symbols-helm-source actions)
           :buffer "*helm-tsunami-symbols*"
