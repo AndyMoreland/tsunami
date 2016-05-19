@@ -7,7 +7,7 @@
 
 (defun tsunami--command:get-containing-expressions (filename line offset)
   (tide-send-command-sync "GET_CONTAINING_EXPRESSIONS" `(:file ,filename
-                                                    :line ,line
-                                                    :offset ,offset)))
+                                                         :line ,line
+                                                         :offset ,offset)))
 
 (provide 'tsunami-protocol)
