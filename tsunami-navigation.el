@@ -14,14 +14,14 @@
 (defun tsunami--jump-to-definition-and-retry (response)
   (if (tide-response-success-p response)
       (tsunami--jump-to-definition-response response)
-    (tide-command:definition 'tsunami--jump-to-definition-and-retry)))
+    (tide-command:definition 'tsunami--jump-to-definition-response)))
 
 (defun tsunami-jump-to-definition (&optional arg)
   (interactive "P")
-  (tsunami--get-quickinfo-at-point
-   (lambda (response)
-     (if (string-equal "alias" (tide-plist-get response :body :kind))
-         (tide-command:type-definition 'tsunami--jump-to-definition-and-retry)
-       (tide-command:definition 'tsunami--jump-to-definition-and-retry)))))
+  (lexical-let ((arg arg))
+    (tsunami--get-quickinfo-at-point (lambda (response)
+                                       (if (or arg (string-equal "alias" (tide-plist-get response :body :kind)))
+                                           (tide-command:type-definition 'tsunami--jump-to-definition-and-retry)
+                                         (tide-command:definition 'tsunami--jump-to-definition-and-retry))))))
 
 (provide 'tsunami-navigation)
