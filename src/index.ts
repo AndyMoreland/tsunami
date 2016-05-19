@@ -374,7 +374,10 @@ tsProjectPromise.then(tsProject => {
             .pipe(tsserver.stdin);
 
         tsserver.stdout
-            .pipe(es.map((data: any, cb: CallbackFunction<any>) => { log("Response: ", data); cb(null, data); }))
+            .pipe(es.map((data: any, cb: CallbackFunction<any>) => {
+                log(data);
+                cb(null, data);
+            }))
             .pipe(process.stdout);
 
         let promises = files.map(file => {
