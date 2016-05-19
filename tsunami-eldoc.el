@@ -66,13 +66,10 @@
   (setq tsunami--last-eldoc the-message)
   (eldoc-message the-message))
 
-(defun tsunami-eldoc-display-in-tooltip (the-message)
-  (popup-tip the-message))
-
-(defun tsunami-tooltip-signature-help-callback (response)
+(defun tsunami-user-initiated-signature-help-callback (response)
   (when (tide-response-success-p response)
     (let ((the-message (tsunami-annotate-signatures (plist-get response :body))))
-      (tsunami-eldoc-display-in-tooltip the-message))))
+      (message the-message))))
 
 (defun tsunami-eldoc-signature-help-callback (response)
   (when (tide-response-success-p response)
@@ -104,7 +101,7 @@
 
 (defun tsunami-get-function-info ()
   (interactive)
-  (tsunami-command:signatureHelp #'tsunami-eldoc-signature-help-callback))
+  (tsunami-command:signatureHelp #'tsunami-user-initiated-signature-help-callback))
 
 (defun tsunami-method-call-p ()
   (or (looking-at "[(,]")
