@@ -191,9 +191,11 @@
   "
 _l_ extract local
 _i_ organize imports
+_r_ rename symbol
   "
   ("i" tsunami-refactor-organize-imports)
-  ("l" tsunami-refactor-extract-local))
+  ("l" tsunami-refactor-extract-local)
+  ("r" tide-rename-symbol))
 
 (define-minor-mode tsunami-mode
   "Toggle tsunami-mode" ;; doc
