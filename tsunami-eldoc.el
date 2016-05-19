@@ -72,26 +72,40 @@
                            (setq tsunami--last-eldoc the-message)
                            (eldoc-message the-message))))))
 
+(defun tsunami-eldoc-quickinfo-callback (response)
+  (when (tide-response-success-p response)
+    (let* ((response (tsunami--get-response-body response))
+           (display-string (plist-get response :displayString))
+           (documentation (plist-get response :documentation))
+           (the-message (if (< 0 (length documentation))
+                            (concat display-string "\n'" (propertize documentation 'face 'font-lock-comment-face) "'")
+                          display-string)))
+      (tsunami-eldoc-display-in-minibuffer the-message))))
+
 ;; Andy wrote this
-(defun tsunami-command:quickinfo ()
-  (tide-send-command "quickinfo"
-                     `(:file ,buffer-file-name :line ,(count-lines 1 (point)) :offset ,(tide-current-offset))
-                     (lambda (response)
-                       (when (tide-response-success-p response)
-                         (let ((the-message (tide-plist-get response :body :displayString)))
-                           (setq tsunami--last-eldoc the-message)
-                           (eldoc-message the-message))))))
+(defun tsunami-command:quickinfo (callback)
+  (tide-send-command "quickinfo" `(:file ,buffer-file-name
+                                   :line ,(count-lines 1 (point))
+                                   :offset ,(tide-current-offset))
+                     callback))
+
+(defun tsunami-get-function-info ()
+  (interactive)
+  (tsunami-command:signatureHelp #'tsunami-eldoc-signature-help-callback))
 
 (defun tsunami-method-call-p ()
-  (or (looking-at "[(,]") (and (not (looking-at "\\sw")) (looking-back "[(,]\n?\\s-*"))))
+  (or (looking-at "[(,]")
+      (and (not (looking-at "\\sw"))
+           (looking-back "[(,]\n?\\s-*"))))
 
 (defun tsunami-eldoc-function ()
-  (progn (when (not (member last-command '(next-error previous-error)))
-           (if (tsunami-method-call-p)
-               (tsunami-command:signatureHelp)
-             (when (looking-at "\\s_\\|\\sw")
-               (tsunami-command:quickinfo))))
-         nil))
+  (prog2
+    (when (not (member last-command '(next-error previous-error flycheck-next-error flycheck-previous-error tsunami-get-function-info)))
+      (if (tsunami-method-call-p)
+          (tsunami-command:signatureHelp #'tsunami-eldoc-signature-help-callback)
+        (when (looking-at "\\s_\\|\\sw\\|\n")
+          (tsunami-command:quickinfo #'tsunami-eldoc-quickinfo-callback))))
+    tsunami--last-eldoc))
 
 
 (provide 'tsunami-eldoc)
