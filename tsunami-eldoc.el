@@ -62,15 +62,28 @@
 
 (defvar tsunami--last-eldoc nil)
 
+(defun tsunami-eldoc-display-in-minibuffer (the-message)
+  (setq tsunami--last-eldoc the-message)
+  (eldoc-message the-message))
+
+(defun tsunami-eldoc-display-in-tooltip (the-message)
+  (popup-tip the-message))
+
+(defun tsunami-tooltip-signature-help-callback (response)
+  (when (tide-response-success-p response)
+    (let ((the-message (tsunami-annotate-signatures (plist-get response :body))))
+      (tsunami-eldoc-display-in-tooltip the-message))))
+
+(defun tsunami-eldoc-signature-help-callback (response)
+  (when (tide-response-success-p response)
+    (let ((the-message (tsunami-annotate-signatures (plist-get response :body))))
+      (tsunami-eldoc-display-in-minibuffer the-message))))
+
 ;; Andy wrote this
-(defun tsunami-command:signatureHelp ()
+(defun tsunami-command:signatureHelp (callback)
   (tide-send-command "signatureHelp"
                      `(:file ,buffer-file-name :line ,(count-lines 1 (point)) :offset ,(tide-current-offset))
-                     (lambda (response)
-                       (when (tide-response-success-p response)
-                         (let ((the-message (tsunami-annotate-signatures (plist-get response :body))))
-                           (setq tsunami--last-eldoc the-message)
-                           (eldoc-message the-message))))))
+                     callback))
 
 (defun tsunami-eldoc-quickinfo-callback (response)
   (when (tide-response-success-p response)

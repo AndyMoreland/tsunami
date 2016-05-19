@@ -206,6 +206,7 @@ _r_ rename symbol
             (define-key map (kbd "C-c C-i") 'helm-tsunami-symbols)
             (define-key map (kbd "M-.") 'tsunami-jump-to-definition)
             (define-key map (kbd "C-c C-r") 'tsunami-refactor-hydra/body)
+            (define-key map (kbd "M-q") 'tsunami-get-function-info)
             (define-key tide-mode-map (kbd "M-.") 'tsunami-jump-to-definition)
             map)
   :after-hook (tsunami--setup-variables))
