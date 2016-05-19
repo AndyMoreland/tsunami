@@ -44,26 +44,28 @@
       (set-text-properties 0 (length text) nil text)
       text)))
 
+(defun tsunami--get-folded-plain-text-for-range (range)
+  (let* ((raw-text (tsunami--get-plain-text-for-range range))
+         (lines (s-split "\n" raw-text)))
+    (if (< 1 (length lines))
+        (concat (first lines) " ... " (car (last lines)))
+      (first lines))))
+
 (defun tsunami--get-containing-expression-ranges ()
-  (let ((file (buffer-file-name (current-buffer)))
-        (line (1- (line-number-at-pos (point))))
-        (offset (1- (current-column)))
-        ((response (tsunami--command:get-containing-expressions file line offset))))
+  (let* ((file (buffer-file-name (current-buffer)))
+         (line (1- (line-number-at-pos (point))))
+         (offset (1- (current-column)))
+         (response (tsunami--command:get-containing-expressions file line offset)))
     (if (tide-response-success-p response)
         (tsunami--get-response-body response)
       (error (concat "Failure: " (plist-get response :message))))))
 
 (defun tsunami--choose-containing-expression ()
   (let* ((ranges (tsunami--get-containing-expression-ranges))
-         (with-expressions (-annotate 'tsunami--get-plain-text-for-range ranges))
-         (single-line-expressions (-filter (lambda (tuple)
-                                             (destructuring-bind (text . range)
-                                                 tuple
-                                               (not (s-contains-p "\n" text))))
-                                           with-expressions))
+         (with-expressions (-annotate 'tsunami--get-folded-plain-text-for-range ranges))
          (popup-items (reverse (--map (destructuring-bind (text . range) it
                                         (popup-make-item text :value range))
-                                      single-line-expressions))))
+                                      with-expressions))))
     (popup-menu* popup-items)))
 
 ;; Should interactively edit both occurrences -- use multiple cursors?
