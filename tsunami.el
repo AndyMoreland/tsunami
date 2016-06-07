@@ -184,8 +184,7 @@
   (tsunami--helm (tsunami--default-helm-actions)))
 
 (defun tsunami--setup-variables ()
-  (message "Initialized tsunami mode.")
-  (setq eldoc-documentation-function 'tsunami-eldoc-function))
+  (setq-local eldoc-documentation-function 'tsunami-eldoc-function))
 
 (defhydra tsunami-refactor-hydra (:color blue :hint nil)
   "
