@@ -31,7 +31,6 @@ export class MutableTsunamiContext implements TsunamiContext {
         }).then(foo => this.updateSourceFileFor(filename, sourceFileName));
     }
 
-
     public reloadFile(filename: string, tmpfilename: string): Promise<void> {
         return this.updateSourceFileFor(filename, tmpfilename).then(sourceFile => {
             let indexer = new FileIndexer(sourceFile, (filename: string) => this.getSourceFileFor(filename));
