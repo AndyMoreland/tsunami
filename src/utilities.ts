@@ -2,6 +2,47 @@ import * as ts from "typescript";
 
 /* Taken from typescript compiler because they are not exported. */
 
+export function nodeContainsPoint(node: ts.Node, point: number): boolean {
+    return node.getStart() <= point && node.getEnd() >= point;
+}
+
+/* Ripped from palantir's tslint */
+export function isScopeBoundary(node: ts.Node): boolean {
+    return node.kind === ts.SyntaxKind.FunctionDeclaration
+            || node.kind === ts.SyntaxKind.FunctionExpression
+            || node.kind === ts.SyntaxKind.PropertyAssignment
+            || node.kind === ts.SyntaxKind.ShorthandPropertyAssignment
+            || node.kind === ts.SyntaxKind.MethodDeclaration
+            || node.kind === ts.SyntaxKind.Constructor
+            || node.kind === ts.SyntaxKind.ModuleDeclaration
+            || node.kind === ts.SyntaxKind.ArrowFunction
+            || node.kind === ts.SyntaxKind.ParenthesizedExpression
+            || node.kind === ts.SyntaxKind.ClassDeclaration
+            || node.kind === ts.SyntaxKind.ClassExpression
+            || node.kind === ts.SyntaxKind.InterfaceDeclaration
+            || node.kind === ts.SyntaxKind.GetAccessor
+            || node.kind === ts.SyntaxKind.SetAccessor;
+}
+
+export function isBlockScopeBoundary(node: ts.Node): boolean {
+    return isScopeBoundary(node)
+        || node.kind === ts.SyntaxKind.DoStatement
+        || node.kind === ts.SyntaxKind.WhileStatement
+        || node.kind === ts.SyntaxKind.ForStatement
+        || node.kind === ts.SyntaxKind.ForInStatement
+        || node.kind === ts.SyntaxKind.ForOfStatement
+        || node.kind === ts.SyntaxKind.WithStatement
+        || node.kind === ts.SyntaxKind.SwitchStatement
+        || (node.parent != null
+            && (node.parent.kind === ts.SyntaxKind.TryStatement
+                || node.parent.kind === ts.SyntaxKind.IfStatement)
+           )
+        || (node.kind === ts.SyntaxKind.Block && node.parent != null
+            && (node.parent.kind === ts.SyntaxKind.Block
+                || node.parent.kind === ts.SyntaxKind.SourceFile)
+           );
+}
+
 export function isClassLike(node: ts.Node): node is ts.ClassLikeDeclaration {
     return node && (node.kind === ts.SyntaxKind.ClassDeclaration || node.kind === ts.SyntaxKind.ClassExpression);
 }
