@@ -1,4 +1,4 @@
-import { DefinitionIndex, DefinitionType, Definition } from "./indexer";
+import { DefinitionIndex, DefinitionType, Definition } from "./Indexer";
 import log from "./log";
 import * as ts from "typescript";
 import * as path from "path";
