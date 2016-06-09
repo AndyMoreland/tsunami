@@ -1,5 +1,6 @@
 built/
-node_modules
+lib/
+node_modules/
 log.txt
 *.elc
 .cask
