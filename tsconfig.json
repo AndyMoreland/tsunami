@@ -7,8 +7,9 @@
         "sourceMap": false
     },
     "exclude": [
-      "node_modules",
-      "node_modules.bak",
-      ".cask"
+        "node_modules",
+        "node_modules.bak",
+        ".cask",
+        "lib"
     ]
 }

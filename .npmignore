@@ -1,0 +1,13 @@
+/node_modules/
+/src/
+/test/
+/typings/
+.gitignore
+.npmignore
+Cask
+*.log
+package.json
+tsconfig.json
+tsd.json
+tslint.json
+*.el
