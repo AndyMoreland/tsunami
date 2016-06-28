@@ -1,8 +1,7 @@
-import { isBlockScopeBoundary, nodeContainsPoint, isExpression } from "./utilities";
+import { isBlockScopeBoundary, nodeContainsPoint } from "./utilities";
 import * as ts from "typescript/lib/typescript";
-import { logSync } from "./log";
 
-export function getExpressionsContainingPoint(sourceFile: ts.SourceFile, point: number) {
+export function getScopesContainingPoint(sourceFile: ts.SourceFile, point: number) {
     const results: ts.Node[] = [];
 
     const visitNode = (node: ts.Node) => {

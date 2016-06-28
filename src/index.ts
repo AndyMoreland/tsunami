@@ -1,9 +1,10 @@
 /// <reference path="../typings/node/node.d.ts" />
 import { Tsunami } from "./Tsunami";
-import { ReloadCommandDefinition } from "./commands/ReloadCommand";
-import { OrganizeImportsCommandDefinition } from "./commands/OrganizeImportsCommand";
 import { FetchSymbolLocationsDefinition } from "./commands/FetchSymbolLocations";
 import { GetContainingExpressionsDefinition } from "./commands/GetContainingExpressions";
+import { GetContainingScopesDefinition } from "./commands/GetContainingScopes";
+import { OrganizeImportsCommandDefinition } from "./commands/OrganizeImportsCommand";
+import { ReloadCommandDefinition } from "./commands/ReloadCommand";
 import { logWithCallback, default as log } from "./log";
 import { TsProject } from "./tsProject";
 
@@ -15,7 +16,8 @@ process.on("uncaughtException", (err: any) => {
 const terminalCommandDefinitions = [
     new FetchSymbolLocationsDefinition(),
     new OrganizeImportsCommandDefinition(),
-    new GetContainingExpressionsDefinition()
+    new GetContainingExpressionsDefinition(),
+    new GetContainingScopesDefinition()
 ];
 
 const nonterminalCommandDefinitions = [

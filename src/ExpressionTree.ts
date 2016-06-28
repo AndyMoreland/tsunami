@@ -1,14 +1,9 @@
 
-import { isExpression } from "./utilities";
+import { nodeContainsPoint, isExpression } from "./utilities";
 import * as ts from "typescript/lib/typescript";
 import { logSync } from "./log";
 
-function nodeContainsPoint(node: ts.Node, point: number) {
-    return node.getStart() <= point && node.getEnd() >= point;
-}
-
 export function getExpressionsContainingPoint(sourceFile: ts.SourceFile, point: number) {
-    logSync("I've been invoked!");
     const results: ts.Node[] = [];
 
     const visitNode = (node: ts.Node) => {
