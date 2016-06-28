@@ -20,8 +20,7 @@
   (interactive "P")
   (lexical-let ((arg arg))
     (tsunami--get-quickinfo-at-point (lambda (response)
-                                       (if (or arg
-                                               (string-equal "alias" (tide-plist-get response :body :kind)))
+                                       (if arg
                                            (tide-command:type-definition 'tsunami--jump-to-definition-and-retry)
                                          (tide-command:definition 'tsunami--jump-to-definition-and-retry))))))
 

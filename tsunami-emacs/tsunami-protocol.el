@@ -10,4 +10,9 @@
                                                          :line ,line
                                                          :offset ,offset)))
 
+(defun tsunami--command:get-containing-scopes (filename line offset)
+  (tide-send-command-sync "GET_CONTAINING_SCOPES" `(:file ,filename
+                                                    :line ,line
+                                                    :offset ,offset)))
+
 (provide 'tsunami-protocol)

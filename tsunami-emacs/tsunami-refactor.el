@@ -60,12 +60,30 @@
         (tsunami--get-response-body response)
       (error (concat "Failure: " (plist-get response :message))))))
 
+(defun tsunami--get-containing-scope-ranges ()
+  (let* ((file (buffer-file-name (current-buffer)))
+         (line (1- (line-number-at-pos (point))))
+         (offset (1- (current-column)))
+         (response (tsunami--command:get-containing-scopes file line offset)))
+    (if (tide-response-success-p response)
+        (tsunami--get-response-body response)
+      (error (concat "Failure: " (plist-get response :message))))))
+
+
 (defun tsunami--choose-containing-expression ()
   (let* ((ranges (tsunami--get-containing-expression-ranges))
          (with-expressions (-annotate 'tsunami--get-folded-plain-text-for-range ranges))
          (popup-items (reverse (--map (destructuring-bind (text . range) it
                                         (popup-make-item text :value range))
                                       with-expressions))))
+    (popup-menu* popup-items)))
+
+(defun tsunami--choose-containing-scope ()
+  (let* ((ranges (tsunami--get-containing-scope-ranges))
+         (with-scopes (-annotate 'tsunami--get-folded-plain-text-for-range ranges))
+         (popup-items (reverse (--map (destructuring-bind (text . range) it
+                                        (popup-make-item text :value range))
+                                      with-scopes))))
     (popup-menu* popup-items)))
 
 ;; Should interactively edit both occurrences -- use multiple cursors?

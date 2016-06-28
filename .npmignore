@@ -11,3 +11,4 @@ tsconfig.json
 tsd.json
 tslint.json
 *.el
+tsunami-emacs/

@@ -37,6 +37,7 @@
 (require 'tsunami-data)
 (require 'tsunami-util)
 (require 'tsunami-refactor)
+(require 'tsunami-refactor-util)
 (require 'tsunami-navigation)
 (require 'tsunami-helm)
 
@@ -107,14 +108,19 @@
 (defun tsunami--add-symbol-to-import (module-name symbol-name is-default-p)
   (save-excursion
     (tsunami--goto-import-block-for-module module-name)
-    (let ((empty-import-block-p (looking-at-p "}")))
+    (let* ((empty-import-block-p (looking-at-p "}"))
+           ;; Space-brace := { module }
+           (space-brace-import-style-p (or
+                                        (looking-at-p " ")
+                                        empty-import-block-p)))
       (insert
        (if is-default-p
            (concat " default as " symbol-name)
-         (concat " " symbol-name)))
+         (concat (if space-brace-import-style-p " " "") symbol-name)))
       (if (not empty-import-block-p)
-          (insert ",")
-        (insert " ")))))
+          (insert (if space-brace-import-style-p "," ", "))
+        (when space-brace-import-style-p
+          (insert  " "))))))
 
 (defun tsunami--add-default-import-symbol (module-name symbol-name)
   (save-excursion
@@ -171,8 +177,9 @@
                  (tsunami--import-symbol module-name symbol-name is-default-p))))))
 
 (defun tsunami--import-and-complete-symbol (candidate)
-  (tsunami--import-symbol-location candidate)
-  (tsunami--complete-with-candidate candidate))
+  (with-atomic-undo
+    (tsunami--import-symbol-location candidate)
+    (tsunami--complete-with-candidate candidate)))
 
 (defun tsunami-import-symbol-at-point ()
   (interactive)
