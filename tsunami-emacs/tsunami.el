@@ -206,7 +206,7 @@ _r_ rename symbol
 (define-minor-mode tsunami-mode
   "Toggle tsunami-mode" ;; doc
   :init-value nil ;; init
-  :lighter "tsunami" ;; lighter
+  :lighter " tsu" ;; lighter
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "M-<return>") 'tsunami-import-symbol-at-point)
             (define-key map (kbd "C-c C-i") 'helm-tsunami-symbols)
