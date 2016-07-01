@@ -15,4 +15,12 @@
                                                     :line ,line
                                                     :offset ,offset)))
 
+(defun tsuami--command:change-request (filename line offset end-line end-offset new-text)
+  (tide-send-command "change" `(:file ,filename
+                                :line ,line
+                                :offset ,offset
+                                :endLine ,end-line
+                                :endOffset ,end-offset
+                                :insertString ,new-text)))
+
 (provide 'tsunami-protocol)
