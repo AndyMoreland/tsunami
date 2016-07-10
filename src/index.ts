@@ -1,4 +1,6 @@
 /// <reference path="../typings/node/node.d.ts" />
+import { SaveToCommandDefinition } from "./commands/SaveToCommand";
+import { ChangeCommandDefinition } from "./commands/ChangeCommand";
 import { Tsunami } from "./Tsunami";
 import { FetchSymbolLocationsDefinition } from "./commands/FetchSymbolLocations";
 import { GetContainingExpressionsDefinition } from "./commands/GetContainingExpressions";
@@ -21,10 +23,13 @@ const terminalCommandDefinitions = [
 ];
 
 const nonterminalCommandDefinitions = [
-    new ReloadCommandDefinition()
+    new ReloadCommandDefinition(),
+    new ChangeCommandDefinition(),
+    new SaveToCommandDefinition()
 ];
 
 let projectConfig = process.cwd();
+
 
 log("Attempting to start server.");
 TsProject.constructFromFilename(projectConfig)

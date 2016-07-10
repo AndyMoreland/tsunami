@@ -1,3 +1,5 @@
+(require 'tide)
+
 (defun tsunami--command:fetch-all-symbols (prefix cb)
   "Fetch all symbols."
   (tide-send-command "SYMBOL_LOCATIONS" `(:prefix ,prefix) cb))
@@ -15,12 +17,16 @@
                                                     :line ,line
                                                     :offset ,offset)))
 
-(defun tsuami--command:change-request (filename line offset end-line end-offset new-text)
+(defun tsunami--command:change-request (filename line offset end-line end-offset new-text)
   (tide-send-command "change" `(:file ,filename
                                 :line ,line
                                 :offset ,offset
                                 :endLine ,end-line
                                 :endOffset ,end-offset
                                 :insertString ,new-text)))
+
+(defun tsunami--command:save-to-request (filename tmpfile)
+  (tide-send-command "saveto" `(:file ,filename
+                                :tmpfile ,tmpfile)))
 
 (provide 'tsunami-protocol)
