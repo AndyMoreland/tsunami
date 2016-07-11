@@ -88,17 +88,18 @@
 
 ;; Should interactively edit both occurrences -- use multiple cursors?
 (defun tsunami--execute-extract-local (start end scope-start scope-end)
-  (let ((new-name "newVariable")
-        (expression-contents (buffer-substring start end))
-        (start-marker (save-excursion
-                        (goto-char start)
-                        (point-marker))))
+  (let* ((new-name "newVariable")
+         (expression-contents (buffer-substring start end))
+         (expression-pattern (to-whitespace-insensitive-pattern expression-contents))
+         (start-marker (save-excursion
+                         (goto-char start)
+                         (point-marker))))
 
     (with-atomic-undo
       ;; Replace all expression instances
       (save-excursion
         (goto-char scope-start)
-        (while (search-forward expression-contents scope-end t)
+        (while (re-search-forward expression-pattern scope-end t)
           (replace-match new-name)))
       ;; Insert new name
       (save-excursion

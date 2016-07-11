@@ -44,4 +44,7 @@ if undo is executed after the body completes, the point will return to its origi
      (atomic-change-group
        ,@body)))
 
+(defun to-whitespace-insensitive-pattern (str)
+  (replace-regexp-in-string "\\s-" (concat (regexp-quote "\\s-") "+") str))
+
 (provide 'tsunami-refactor-util)
