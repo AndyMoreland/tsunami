@@ -87,32 +87,40 @@
     (popup-menu* popup-items)))
 
 ;; Should interactively edit both occurrences -- use multiple cursors?
-(defun tsunami--execute-extract-local (start end)
-  (let ((new-name "newVariable"))
-    (save-excursion
-      (goto-char start)
-      (kill-region start end)
-      (insert new-name)
-      ;; (iedit-add-region-as-occurrence start (+ start (length new-name)))
-      (open-line-above)
-      (yank)
-      (indent-according-to-mode)
-      (back-to-indentation)
-      (insert (concat "const " new-name " = " ))
-      (back-to-indentation)
-      (forward-word)
-      (forward-char)
-      ;; (iedit-add-region-as-occurrence (point) (+ (point) (length new-name)))
-      (end-of-line)
-      (insert ";"))
+(defun tsunami--execute-extract-local (start end scope-start scope-end)
+  (let ((new-name "newVariable")
+        (expression-contents (buffer-substring start end))
+        (start-marker (save-excursion
+                        (goto-char start)
+                        (point-marker))))
+
+    (with-atomic-undo
+      ;; Replace all expression instances
+      (save-excursion
+        (goto-char scope-start)
+        (while (search-forward expression-contents scope-end t)
+          (replace-match new-name)))
+      ;; Insert new name
+      (save-excursion
+        (goto-char start-marker)
+        (kill-forward-chars (length new-name))
+        (insert new-name)
+        (goto-char scope-start)
+        (open-line-below)
+        (progn ; Generate the expression definition.
+          (insert (concat "const " new-name " = " expression-contents ";"))
+          (indent-according-to-mode))))
     (forward-char (length new-name))
     (iedit-mode)))
 
 (defun tsunami-refactor-extract-local ()
   (interactive)
-  (let ((expression-range (tsunami--choose-containing-expression)))
+  (let ((expression-range (tsunami--choose-containing-expression))
+        (scope-range (tsunami--choose-containing-scope)))
     (tsunami--execute-extract-local (1+ (plist-get expression-range :start))
-                                    (1+ (plist-get expression-range :end)))))
+                                    (1+ (plist-get expression-range :end))
+                                    (1+ (plist-get scope-range :start))
+                                    (1+ (plist-get scope-range :end)))))
 
 (defun tsunami-refactor-organize-imports ()
   "Organize the current file's imports."
