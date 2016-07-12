@@ -1,5 +1,6 @@
 (require 'popup)
 (require 'helm)
+(require 's)
 
 (defun tsunami--helm-projectile-build-dwim-source (candidates action)
   "Dynamically build a Helm source definition for Projectile files based on context with CANDIDATES, executing ACTION."
