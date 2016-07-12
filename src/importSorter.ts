@@ -11,6 +11,16 @@ enum ImportState {
     NEVER_FOUND_IMPORT, READING_IMPORTS, LEFT_IMPORT_BLOCK
 }
 
+/**
+ * Sorts imports lexographically according to (`distance` from the current module, alphabetical ordering).
+ * `Distance` is the number of "../" required to reach the LCA of the current module and the imported module.
+ * Example sorted import block:
+ * import { foo } from "lodash"; //  10000
+ * import { bar } from "@AndyMoreland/tsunami"; // 50000
+ * import { baz } from "../../../../many/folders/away"; // 4
+ * import { banana } from "../../../../z/many/folders/away"; // 4, alphabetically after the previous
+ * import { somethingClose } from "./Neighbor"; // 0, in the same folder.
+ */
 export class ImportSorter {
     private sourceFile: ts.SourceFile;
     private firstImportPosition: number = -1;
@@ -50,28 +60,41 @@ export class ImportSorter {
         return moduleSpecifier.getText().replace(/'/g, "\"");
     }
 
-    private static computeProximity(specifier: string) {
-        if (specifier.slice(0, 3) === "\"./") {
+    /* Distance is in [0, inf]. Smaller distance => closer in the file tree. */
+    private static computeDistance(specifier: string) {
+        if (specifier.slice(1, 3) === "./") {
             return 0;
         }
 
-        if (specifier.slice(0, 4) !== "\"../") {
-            return 10000;
+        const firstChar = specifier.charAt(1);
+
+        /* For imports from dependencies, we want 3rd party dependencies listed before
+           internal dependencies. */
+
+        if (firstChar !== ".") {
+            if (firstChar === "@") {
+                return 5000;
+            }
+
+            if (specifier.slice(1, 4) !== "../") {
+                return 10000;
+            }
         }
 
         return (specifier.match(/..\//g) || []).length;
     }
 
     private createNewImportBlock() {
+        /* Sort from farthest-away-to-closest-away, top-to-bottom */
         let sortedDecs = this.importDeclarations.sort((a, b) => {
             let aSpecifier = ImportSorter.emitModuleSpecifier(a.moduleSpecifier);
             let bSpecifier = ImportSorter.emitModuleSpecifier(b.moduleSpecifier);
 
-            let aProximity = ImportSorter.computeProximity(aSpecifier);
-            let bProximity = ImportSorter.computeProximity(bSpecifier);
+            let aDistance = ImportSorter.computeDistance(aSpecifier);
+            let bDistance = ImportSorter.computeDistance(bSpecifier);
 
-            if (aProximity !== bProximity) {
-                return aProximity > bProximity ? -1 : 1;
+            if (aDistance !== bDistance) {
+                return aDistance > bDistance ? -1 : 1;
             }
 
             if (aSpecifier === bSpecifier) {
