@@ -53,7 +53,7 @@ export class ImportSorter {
         /* let namedBindings = <ts.NamedImports>importStatement.importClause.namedBindings; */
         output = output.replace(/'/g, "\"");
         output = output.replace(/"$/, "\";");
-        return output.replace(/\n/g, "");
+        return output.replace(/\n$|^\n/g, "");
     }
 
     private static emitModuleSpecifier(moduleSpecifier: ts.Expression): string {
