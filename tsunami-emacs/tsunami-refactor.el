@@ -49,7 +49,7 @@
   (let* ((raw-text (tsunami--get-plain-text-for-range range))
          (lines (s-split "\n" raw-text)))
     (if (< 1 (length lines))
-        (concat (first lines) " ... " (car (last lines)))
+        (concat (first lines) " ... " (s-trim-left (car (last lines))))
       (first lines))))
 
 (defun tsunami--get-containing-expression-ranges ()
