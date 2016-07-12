@@ -27,3 +27,13 @@ export function getErrorOutputForCommand(command: Command, error: Error): Respon
 
     return response;
 }
+
+export function getOutputForCommand<T>(command: Command, body: T): Response<T> {
+    let response: Response<T> = getBlankResponseForCommand(command);
+
+    response.success = true;
+    response.body = body;
+    response.seq = 1;
+
+    return response;
+}

@@ -13,7 +13,7 @@ export interface ChangeCommand extends Command {
     };
 }
 
-export class ChangeCommandDefinition implements CommandDefinition<ChangeCommand> {
+export class ChangeCommandDefinition implements CommandDefinition<ChangeCommand, void> {
     public predicate(command: Command): command is ChangeCommand {
         return command.command === "change";
     }

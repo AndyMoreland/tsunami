@@ -1,5 +1,5 @@
 import { RegionSpan } from "../protocol/types";
-import { getErrorOutputForCommand, Response, getBlankResponseForCommand } from "../Response";
+import { getErrorOutputForCommand } from "../Response";
 import { getScopesContainingPoint } from "../ScopeTree";
 import { TsunamiContext } from "../Context";
 import log from "../log";
@@ -13,24 +13,22 @@ export interface GetContainingScopesCommand extends Command {
     };
 }
 
-export class GetContainingScopesDefinition implements CommandDefinition<GetContainingScopesCommand> {
+export class GetContainingScopesDefinition implements CommandDefinition<GetContainingScopesCommand, RegionSpan[]> {
     public predicate(command: Command): command is GetContainingScopesCommand {
         return command.command === "GET_CONTAINING_SCOPES";
     }
 
-    public processor(context: TsunamiContext, command: GetContainingScopesCommand): Promise<void> {
+    public processor(context: TsunamiContext, command: GetContainingScopesCommand): Promise<RegionSpan[]> {
         const { line, offset, file } = command.arguments;
 
         return context.getSourceFileFor(file).then(sourceFile => {
-            const response: Response<RegionSpan[]> = getBlankResponseForCommand(command);
             const position = sourceFile.getPositionOfLineAndCharacter(line, offset);
             const scopes = getScopesContainingPoint(sourceFile, position);
-            response.success = true;
-            response.body = scopes.map(scope => ({ start: scope.getStart(), end: scope.getEnd()}));
-            context.writeOutput(response);
+            return scopes.map(scope => ({ start: scope.getStart(), end: scope.getEnd()}));;
         }).catch(e => {
             log("Error occurred containing getting scopes: ", e, e.stack);
             context.writeOutput(getErrorOutputForCommand(command, e));
+            throw e;
         });
     }
 };

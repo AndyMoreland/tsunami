@@ -7,8 +7,7 @@ export interface ReloadCommand extends Command {
     };
 }
 
-
-export class ReloadCommandDefinition implements CommandDefinition<ReloadCommand> {
+export class ReloadCommandDefinition implements CommandDefinition<ReloadCommand, void> {
     public predicate(command: Command): command is ReloadCommand {
         return command.command === "reload";
     }

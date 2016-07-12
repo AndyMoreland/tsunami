@@ -1,6 +1,15 @@
 import * as fs from "fs";
 import * as ts from "typescript";
 
+const fsWriteFilePromise = (file: string, data: string) => new Promise<void>((resolve, reject) => {
+    fs.writeFile(file, data, (err?: Error) => {
+        if (err) {
+            return reject(err);
+        }
+        return resolve();
+    });
+});
+
 export class NonContiguousImportBlockException extends Error {
     constructor(error?: string) {
         super(error);
@@ -112,19 +121,25 @@ export class ImportSorter {
         ts.forEachChild(this.sourceFile, this.visitNode);
     }
 
-    public sortFileImports(cb: (err?: Error) => void): void {
-        if (this.importReadingState === ImportState.NEVER_FOUND_IMPORT) {
-            this.readImportStatements();
-        }
+    public sortFileImports(): Promise<void> {
+        try {
+            if (this.importReadingState === ImportState.NEVER_FOUND_IMPORT) {
+                this.readImportStatements();
+            }
 
-        if (this.importDeclarations.length > 0) {
-            let text = this.sourceFile.getFullText();
-            let header = text.substring(0, this.firstImportPosition - 1);
-            let importBlock = this.createNewImportBlock();
-            let footer = text.substring(this.lastImportPosition);
+            if (this.importDeclarations.length > 0) {
+                let text = this.sourceFile.getFullText();
+                let header = text.substring(0, this.firstImportPosition - 1);
+                let importBlock = this.createNewImportBlock();
+                let footer = text.substring(this.lastImportPosition);
 
-            let newText = header + importBlock + footer;
-            fs.writeFile(this.sourceFile.fileName, newText, cb);
+                let newText = header + importBlock + footer;
+                return fsWriteFilePromise(this.sourceFile.fileName, newText).thenReturn(null);
+            }
+
+            return Promise.resolve(null);
+        } catch (e) {
+            return Promise.reject(e);
         }
     }
 }

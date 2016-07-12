@@ -30,8 +30,8 @@ export class Tsunami {
 
     constructor(
         private tsProject: TsProject,
-        terminalCommandDefinitions: CommandDefinition<any>[],
-        nonterminalCommandDefinitions: CommandDefinition<any>[]
+        terminalCommandDefinitions: CommandDefinition<any, any>[],
+        nonterminalCommandDefinitions: CommandDefinition<any, any>[]
     ) {
         this.terminalInvoker = new CommandInvoker(terminalCommandDefinitions);
         this.nonterminalInvoker = new CommandInvoker(nonterminalCommandDefinitions);

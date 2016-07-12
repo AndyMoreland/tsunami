@@ -9,7 +9,7 @@ export interface SaveToCommand extends Command {
     };
 }
 
-export class SaveToCommandDefinition implements CommandDefinition<SaveToCommand> {
+export class SaveToCommandDefinition implements CommandDefinition<SaveToCommand, void> {
     public predicate(command: Command): command is SaveToCommand {
         return command.command === "saveto";
     }

@@ -1,5 +1,4 @@
 import { RegionSpan } from "../protocol/types";
-import { getErrorOutputForCommand, Response, getBlankResponseForCommand } from "../Response";
 import { getExpressionsContainingPoint } from "../ExpressionTree";
 import { TsunamiContext } from "../Context";
 import log from "../log";
@@ -13,24 +12,21 @@ export interface GetContainingExpressionsCommand extends Command {
     };
 }
 
-export class GetContainingExpressionsDefinition implements CommandDefinition<GetContainingExpressionsCommand> {
+export class GetContainingExpressionsDefinition implements CommandDefinition<GetContainingExpressionsCommand, RegionSpan[]> {
     public predicate(command: Command): command is GetContainingExpressionsCommand {
         return command.command === "GET_CONTAINING_EXPRESSIONS";
     }
 
-    public processor(context: TsunamiContext, command: GetContainingExpressionsCommand): Promise<void> {
+    public processor(context: TsunamiContext, command: GetContainingExpressionsCommand): Promise<RegionSpan[]> {
         const { line, offset, file } = command.arguments;
 
         return context.getSourceFileFor(file).then(sourceFile => {
-            const response: Response<RegionSpan[]> = getBlankResponseForCommand(command);
             const position = sourceFile.getPositionOfLineAndCharacter(line, offset);
             const expressions = getExpressionsContainingPoint(sourceFile, position);
-            response.success = true;
-            response.body = expressions.map(expr => ({ start: expr.getStart(), end: expr.getEnd()}));
-            context.writeOutput(response);
+            return expressions.map(expr => ({ start: expr.getStart(), end: expr.getEnd()}));
         }).catch(e => {
             log("Error occurred containing getting expressions: ", e, e.stack);
-            context.writeOutput(getErrorOutputForCommand(command, e));
+            throw e;
         });
     }
 };
