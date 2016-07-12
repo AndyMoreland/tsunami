@@ -9,7 +9,6 @@ export interface Response<T> {
     body?: T;
 }
 
-
 export function getBlankResponseForCommand(command: Command): Response<any> {
     return {
         command: command.command,

@@ -30,7 +30,6 @@ const nonterminalCommandDefinitions = [
 
 let projectConfig = process.cwd();
 
-
 log("Attempting to start server.");
 TsProject.constructFromFilename(projectConfig)
     .then(project => {
