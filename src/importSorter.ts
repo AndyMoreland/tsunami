@@ -1,3 +1,4 @@
+import * as Promise from "bluebird";
 import * as fs from "fs";
 import * as ts from "typescript";
 
@@ -36,7 +37,6 @@ export class ImportSorter {
     private lastImportPosition: number = -1;
     private importReadingState: ImportState = ImportState.NEVER_FOUND_IMPORT;
     private importDeclarations: ts.ImportDeclaration[] = [];
-
     constructor(sourceFile: ts.SourceFile) {
         this.sourceFile = sourceFile;
     }

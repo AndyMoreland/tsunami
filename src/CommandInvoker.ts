@@ -1,7 +1,7 @@
-import log from "./log";
-import { getOutputForCommand, getErrorOutputForCommand } from "./Response";
-import { TsunamiContext } from "./Context";
 import { Command, CommandDefinition } from "./Command";
+import { TsunamiContext } from "./Context";
+import { getOutputForCommand, getErrorOutputForCommand } from "./Response";
+import log from "./log";
 
 export class CommandInvoker {
     constructor(

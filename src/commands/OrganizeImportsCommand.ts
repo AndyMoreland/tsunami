@@ -2,6 +2,7 @@ import { CommandDefinition, Command } from "../Command";
 import { TsunamiContext } from "../Context";
 import { getBlankResponseForCommand, Response } from "../Response";
 import { ImportSorter } from "../importSorter";
+import * as Promise from "bluebird";
 
 export interface OrganizeImportsCommand extends Command {
     arguments: {
