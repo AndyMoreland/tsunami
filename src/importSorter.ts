@@ -23,22 +23,22 @@ export class ImportSorter {
     }
 
     private visitNode = (node: ts.Node) => {
-        if (node.kind == ts.SyntaxKind.ImportDeclaration) {
-            if (this.importReadingState == ImportState.LEFT_IMPORT_BLOCK) {
+        if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+            if (this.importReadingState === ImportState.LEFT_IMPORT_BLOCK) {
                 throw new NonContiguousImportBlockException();
             } else {
-                this.importReadingState = ImportState.READING_IMPORTS
+                this.importReadingState = ImportState.READING_IMPORTS;
             }
 
-            this.firstImportPosition = this.firstImportPosition == -1 ? node.getStart() : this.firstImportPosition;
+            this.firstImportPosition = this.firstImportPosition === -1 ? node.getStart() : this.firstImportPosition;
             this.importDeclarations.push(node as ts.ImportDeclaration);
             this.lastImportPosition = node.getEnd();
-        } else if (this.importReadingState == ImportState.READING_IMPORTS) {
+        } else if (this.importReadingState === ImportState.READING_IMPORTS) {
             this.importReadingState = ImportState.LEFT_IMPORT_BLOCK;
         }
     }
 
-    static emitImport(importStatement: ts.ImportDeclaration): string {
+    private static emitImport(importStatement: ts.ImportDeclaration): string {
         let output = importStatement.getText();
         /* let namedBindings = <ts.NamedImports>importStatement.importClause.namedBindings; */
         output = output.replace(/'/g, "\"");
@@ -46,16 +46,16 @@ export class ImportSorter {
         return output.replace(/\n/g, "");
     }
 
-    static emitModuleSpecifier(moduleSpecifier: ts.Expression): string {
+    private static emitModuleSpecifier(moduleSpecifier: ts.Expression): string {
         return moduleSpecifier.getText().replace(/'/g, "\"");
     }
 
-    static computeProximity(specifier: string) {
-        if (specifier.slice(0, 3) == '"./') {
+    private static computeProximity(specifier: string) {
+        if (specifier.slice(0, 3) === "\"./") {
             return 0;
         }
 
-        if (specifier.slice(0, 4) != '"../') {
+        if (specifier.slice(0, 4) !== "\"../") {
             return 10000;
         }
 
@@ -70,27 +70,27 @@ export class ImportSorter {
             let aProximity = ImportSorter.computeProximity(aSpecifier);
             let bProximity = ImportSorter.computeProximity(bSpecifier);
 
-            if (aProximity != bProximity) {
+            if (aProximity !== bProximity) {
                 return aProximity > bProximity ? -1 : 1;
             }
 
-            if (aSpecifier == bSpecifier) {
+            if (aSpecifier === bSpecifier) {
                 return 0;
             }
 
             return aSpecifier >= bSpecifier ? 1 : -1;
         });
 
-        let prefix = this.firstImportPosition != 0 ? "\n" : "";
+        let prefix = this.firstImportPosition !== 0 ? "\n" : "";
         return prefix + sortedDecs.map(ImportSorter.emitImport).join("\n");
     }
 
-    readImportStatements(): void {
+    public readImportStatements(): void {
         ts.forEachChild(this.sourceFile, this.visitNode);
     }
 
-    sortFileImports(cb: (err?: Error) => void): void {
-        if (this.importReadingState == ImportState.NEVER_FOUND_IMPORT) {
+    public sortFileImports(cb: (err?: Error) => void): void {
+        if (this.importReadingState === ImportState.NEVER_FOUND_IMPORT) {
             this.readImportStatements();
         }
 
