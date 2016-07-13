@@ -40,6 +40,7 @@
 (require 'tsunami-refactor-util)
 (require 'tsunami-navigation)
 (require 'tsunami-helm)
+(require 'tsunami-synchronization)
 
 (defun tsunami--invalidate-symbols-cache ()
   "Invalidate the symbols cache."

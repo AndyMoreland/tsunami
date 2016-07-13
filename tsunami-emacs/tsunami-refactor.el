@@ -1,6 +1,7 @@
 (require 'popup)
 (require 'helm)
 (require 's)
+(require 'tsunami-code-edit)
 
 (defun tsunami--helm-projectile-build-dwim-source (candidates action)
   "Dynamically build a Helm source definition for Projectile files based on context with CANDIDATES, executing ACTION."
@@ -70,14 +71,14 @@
         (tsunami--get-response-body response)
       (error (concat "Failure: " (plist-get response :message))))))
 
-
 (defun tsunami--choose-containing-expression ()
   (let* ((ranges (tsunami--get-containing-expression-ranges))
          (with-expressions (-annotate 'tsunami--get-folded-plain-text-for-range ranges))
          (popup-items (reverse (--map (destructuring-bind (text . range) it
                                         (popup-make-item text :value range))
                                       with-expressions))))
-    (popup-menu* popup-items)))
+    (when (< 0 (length ranges))
+        (popup-menu* popup-items))))
 
 (defun tsunami--choose-containing-scope ()
   (let* ((ranges (tsunami--get-containing-scope-ranges))
@@ -85,7 +86,8 @@
          (popup-items (reverse (--map (destructuring-bind (text . range) it
                                         (popup-make-item text :value range))
                                       with-scopes))))
-    (popup-menu* popup-items)))
+    (when (< 0 (length ranges))
+      (popup-menu* popup-items))))
 
 ;; Should interactively edit both occurrences -- use multiple cursors?
 (defun tsunami--execute-extract-local (start end scope-start scope-end)
@@ -119,10 +121,12 @@
   (interactive)
   (let ((expression-range (tsunami--choose-containing-expression))
         (scope-range (tsunami--choose-containing-scope)))
-    (tsunami--execute-extract-local (1+ (plist-get expression-range :start))
-                                    (1+ (plist-get expression-range :end))
-                                    (1+ (plist-get scope-range :start))
-                                    (1+ (plist-get scope-range :end)))))
+    (if (and expression-range scope-range)
+        (tsunami--execute-extract-local (1+ (plist-get expression-range :start))
+                                        (1+ (plist-get expression-range :end))
+                                        (1+ (plist-get scope-range :start))
+                                        (1+ (plist-get scope-range :end)))
+      (error "Point not in valid scope or expression"))))
 
 (defun tsunami-refactor-organize-imports ()
   "Organize the current file's imports."
