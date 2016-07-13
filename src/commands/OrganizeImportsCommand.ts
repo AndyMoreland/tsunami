@@ -2,7 +2,6 @@ import * as Promise from "bluebird";
 import { CodeEdit } from "../protocol/types";
 import { CommandDefinition, Command } from "../Command";
 import { TsunamiContext } from "../Context";
-import { getBlankResponseForCommand, Response } from "../Response";
 import { ImportSorter } from "../importSorter";
 
 export interface OrganizeImportsCommand extends Command {
@@ -17,10 +16,6 @@ export class OrganizeImportsCommandDefinition implements CommandDefinition<Organ
     }
 
     public processor(context: TsunamiContext, command: OrganizeImportsCommand): Promise<CodeEdit> {
-        let response: Response<string> = getBlankResponseForCommand(command);
-        response.seq = 1;
-        response.success = true;
-
         return context.getSourceFileFor(command.arguments.filename).then(sourceFile => {
             let importSorter = new ImportSorter(sourceFile);
             return importSorter.getSortFileImports();
