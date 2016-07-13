@@ -1,3 +1,4 @@
+import { Location } from "./protocol/types";
 import * as ts from "typescript";
 
 /* Taken from typescript compiler because they are not exported. */
@@ -153,4 +154,15 @@ export function isExpression(node: ts.Node): boolean {
                 }
         }
         return false;
-    }
+}
+
+/* Assumes that SourceFile retains the full text. Given a 0-indexed position (as received from `getStart()`),
+   returns the correct `Location` in the file for use with the CodeEdit protocol. */
+export function convertPositionToLocation(sourceFile: ts.SourceFile, position: number): Location {
+    const lineAndCharacter = sourceFile.getLineAndCharacterOfPosition(position);
+
+    return {
+        line: lineAndCharacter.line + 1,
+        offset: lineAndCharacter.character + 1
+    };
+}

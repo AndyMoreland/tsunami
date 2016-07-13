@@ -1,15 +1,7 @@
+import { convertPositionToLocation } from "./utilities";
+import { CodeEdit } from "./protocol/types";
 import * as Promise from "bluebird";
-import * as fs from "fs";
 import * as ts from "typescript";
-
-const fsWriteFilePromise = (file: string, data: string) => new Promise<void>((resolve, reject) => {
-    fs.writeFile(file, data, (err?: Error) => {
-        if (err) {
-            return reject(err);
-        }
-        return resolve();
-    });
-});
 
 export class NonContiguousImportBlockException extends Error {
     constructor(error?: string) {
@@ -121,20 +113,21 @@ export class ImportSorter {
         ts.forEachChild(this.sourceFile, this.visitNode);
     }
 
-    public sortFileImports(): Promise<void> {
+    public getSortFileImports(): Promise<CodeEdit> {
         try {
             if (this.importReadingState === ImportState.NEVER_FOUND_IMPORT) {
                 this.readImportStatements();
             }
 
             if (this.importDeclarations.length > 0) {
-                let text = this.sourceFile.getFullText();
-                let header = text.substring(0, this.firstImportPosition - 1);
-                let importBlock = this.createNewImportBlock();
-                let footer = text.substring(this.lastImportPosition);
+                const importBlock = this.createNewImportBlock();
+                const editFromNewText: CodeEdit = {
+                    start: convertPositionToLocation(this.sourceFile, this.firstImportPosition),
+                    end: convertPositionToLocation(this.sourceFile, this.lastImportPosition),
+                    newText: importBlock
+                };
 
-                let newText = header + importBlock + footer;
-                return fsWriteFilePromise(this.sourceFile.fileName, newText).thenReturn(null);
+                return Promise.resolve(editFromNewText);
             }
 
             return Promise.resolve(null);

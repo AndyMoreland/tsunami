@@ -1,24 +1,14 @@
+import * as Promise from "bluebird";
+import { CodeEdit } from "../protocol/types";
 import { CommandDefinition, Command } from "../Command";
 import { TsunamiContext } from "../Context";
 import { getBlankResponseForCommand, Response } from "../Response";
 import { ImportSorter } from "../importSorter";
-import * as Promise from "bluebird";
 
 export interface OrganizeImportsCommand extends Command {
     arguments: {
         filename: string;
     };
-}
-
-export interface Location {
-    line: number;
-    offset: number;
-}
-
-export interface CodeEdit {
-    start: Location;
-    end: Location;
-    newText: string;
 }
 
 export class OrganizeImportsCommandDefinition implements CommandDefinition<OrganizeImportsCommand, CodeEdit> {
@@ -33,9 +23,7 @@ export class OrganizeImportsCommandDefinition implements CommandDefinition<Organ
 
         return context.updateSourceFileFor(command.arguments.filename).then(sourceFile => {
             let importSorter = new ImportSorter(sourceFile);
-            return importSorter.sortFileImports().then(() => {
-                context.writeOutput(response);
-            });
-        }).thenReturn(null);
+            return importSorter.getSortFileImports();
+        });
     }
 }
