@@ -12,3 +12,4 @@ tsd.json
 tslint.json
 *.el
 tsunami-emacs/
+log.txt
