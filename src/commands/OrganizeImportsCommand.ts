@@ -21,7 +21,7 @@ export class OrganizeImportsCommandDefinition implements CommandDefinition<Organ
         response.seq = 1;
         response.success = true;
 
-        return context.updateSourceFileFor(command.arguments.filename).then(sourceFile => {
+        return context.getSourceFileFor(command.arguments.filename).then(sourceFile => {
             let importSorter = new ImportSorter(sourceFile);
             return importSorter.getSortFileImports();
         });
