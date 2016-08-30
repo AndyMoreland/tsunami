@@ -1,18 +1,20 @@
-import { FileIndexer } from "./FileIndexer";
-import { MutableTsunamiContext } from "./MutableTsunamiContext";
-import { getErrorOutputForCommand } from "./Response";
-import { writeOutputToStdOut } from "./ioUtils";
-import { CommandInvoker } from "./CommandInvoker";
-import { Command, CommandDefinition } from "./Command";
-import { TsunamiContext } from "./Context";
-import log from "./log";
-import { UnknownObject, CallbackFunction } from "./types";
 import * as JSONStream from "JSONStream";
 import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
 import * as ts from "typescript";
+import { BenchmarkingCommandInvoker } from "./BenchmarkingCommandInvoker";
+import { Command, CommandDefinition } from "./Command";
+import { CommandInvoker } from "./CommandInvoker";
+import { TsunamiContext } from "./Context";
+import { FileIndexer } from "./FileIndexer";
+import { MutableTsunamiContext } from "./MutableTsunamiContext";
+import { getErrorOutputForCommand } from "./Response";
+import { SimpleCommandInvoker } from "./SimpleCommandInvoker";
+import { writeOutputToStdOut } from "./ioUtils";
+import log from "./log";
 import { TsProject } from "./tsProject";
+import { UnknownObject, CallbackFunction } from "./types";
 
 function parseCommand(data: {[index: string]: any}): Command {
     if (data["command"] !== undefined && data["seq"] !== undefined) {
@@ -33,8 +35,8 @@ export class Tsunami {
         terminalCommandDefinitions: CommandDefinition<any, any>[],
         nonterminalCommandDefinitions: CommandDefinition<any, any>[]
     ) {
-        this.terminalInvoker = new CommandInvoker(terminalCommandDefinitions);
-        this.nonterminalInvoker = new CommandInvoker(nonterminalCommandDefinitions);
+        this.terminalInvoker = new BenchmarkingCommandInvoker(new SimpleCommandInvoker(terminalCommandDefinitions));
+        this.nonterminalInvoker = new BenchmarkingCommandInvoker(new SimpleCommandInvoker(nonterminalCommandDefinitions));
         this.documentRegistry = ts.createDocumentRegistry(true);
         this.context = new MutableTsunamiContext(
             this.tsProject,
