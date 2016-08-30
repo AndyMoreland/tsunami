@@ -1,11 +1,11 @@
+import * as Promise from "bluebird";
+import * as fs from "fs";
+import * as ts from "typescript";
+import { TsunamiContext } from "./Context";
+import { FileIndexer } from "./FileIndexer";
 import { Response } from "./Response";
 import { TsProject } from "./tsProject";
-import { FileIndexer } from "./FileIndexer";
 import { Map } from "./types";
-import { TsunamiContext } from "./Context";
-import * as ts from "typescript";
-import * as fs from "fs";
-import * as Promise from "bluebird";
 
 const readFilePromise = Promise.promisify(fs.readFile);
 
@@ -53,5 +53,9 @@ export class MutableTsunamiContext implements TsunamiContext {
                                                              "" + this.fileVersionMap[filename]);
             return sourceFile;
         });
+    }
+
+    public getProject(): TsProject {
+        return this.project;
     }
 }
