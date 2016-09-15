@@ -20,6 +20,6 @@ export class ChangeCommandDefinition implements CommandDefinition<ChangeCommand,
 
     public processor(context: TsunamiContext, command: ChangeCommand): Promise<void> {
         log("Got change request: ", JSON.stringify(command, null, 2));
-        return Promise.resolve(null);
+        return Promise.resolve(null!);
     }
 }

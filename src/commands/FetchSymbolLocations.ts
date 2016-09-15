@@ -3,7 +3,6 @@ import { SymbolLocation } from "../protocol/types";
 import { CommandDefinition, Command } from "../Command";
 import { TsunamiContext } from "../Context";
 import { DefinitionType } from "../Indexer";
-import { Response, getBlankResponseForCommand } from "../Response";
 
 export interface FetchSymbolLocationsCommand extends Command {
     arguments: {
@@ -29,7 +28,7 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
                 Object.keys(definitions).forEach(
                     symbolName => {
                         let definition = definitions[symbolName];
-                        let symbolLocation =  {
+                        let symbolLocation = {
                             name: symbolName,
                             type: DefinitionType[definition.type],
                             location: {

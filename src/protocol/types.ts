@@ -8,7 +8,7 @@ export interface SymbolLocation {
     name: string;
     location: {
         filename: string;
-        pos: number;
+        pos?: number;
     };
     type: string;
     default?: boolean;

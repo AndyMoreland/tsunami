@@ -10,12 +10,12 @@ export interface OrganizeImportsCommand extends Command {
     };
 }
 
-export class OrganizeImportsCommandDefinition implements CommandDefinition<OrganizeImportsCommand, CodeEdit> {
+export class OrganizeImportsCommandDefinition implements CommandDefinition<OrganizeImportsCommand, CodeEdit | null> {
     public predicate(command: Command): command is OrganizeImportsCommand {
         return command.command === "ORGANIZE_IMPORTS";
     }
 
-    public processor(context: TsunamiContext, command: OrganizeImportsCommand): Promise<CodeEdit> {
+    public processor(context: TsunamiContext, command: OrganizeImportsCommand): Promise<CodeEdit | null> {
         return context.getSourceFileFor(command.arguments.filename).then(sourceFile => {
             let importSorter = new ImportSorter(sourceFile);
             return importSorter.getSortFileImports();

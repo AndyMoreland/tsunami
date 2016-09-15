@@ -1,4 +1,5 @@
 import { Command } from "./Command";
+
 export interface Response<T> {
     seq: number;
     type: string;
@@ -13,8 +14,8 @@ export function getBlankResponseForCommand(command: Command): Response<any> {
     return {
         command: command.command,
         request_seq: command.seq,
-        success: undefined,
-        seq: undefined,
+        success: undefined!,
+        seq: undefined!,
         type: "response"
     };
 }

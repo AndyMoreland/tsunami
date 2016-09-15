@@ -97,6 +97,8 @@ export class Tsunami {
             log("Error during boot.");
             log(e.stack);
         }
+
+        return Promise.reject(new Error("Error during boot."));
     }
 
     public buildInitialProjectIndex(): Promise<void> {

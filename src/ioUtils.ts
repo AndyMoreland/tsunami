@@ -10,7 +10,7 @@ export function writeOutput<T>(stream: NodeJS.WritableStream, response: Response
     stream.write("Content-Length: " + outputLength + "\n\n");
     stream.write(output + "\n");
 
-    return Promise.resolve<void>(null);
+    return Promise.resolve<void>(null!);
 }
 
 export function writeOutputToStdOut<T>(response: Response<T>) {

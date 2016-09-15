@@ -2,7 +2,7 @@ import * as ts from "typescript";
 import * as path from "path";
 import { TsProject } from "./tsProject";
 
-class ImportIndexerVisitor {
+export class ImportIndexerAccumulator {
     private moduleSpecifiers: string[] = [];
 
     constructor(private indexer: ImportIndexer) {}
@@ -46,14 +46,14 @@ export class ImportIndexer {
     }
 
     public getImportedModules(): string[] {
-        let visitor = new ImportIndexerVisitor(this);
+        let visitor = new ImportIndexerAccumulator(this);
         ts.forEachChild(this.sourceFile, visitor.visitNode);
 
         return visitor.getModuleSpecifiers();
     }
 
     public importsModule(absoluteModuleName: string): boolean {
-        let visitor = new ImportIndexerVisitor(this);
+        let visitor = new ImportIndexerAccumulator(this);
         ts.forEachChild(this.sourceFile, visitor.visitNode);
         let moduleSpecifiers = visitor.getModuleSpecifiers();
         let needle = ImportIndexer.filenameToModuleName(absoluteModuleName);

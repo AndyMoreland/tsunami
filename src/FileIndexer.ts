@@ -32,7 +32,7 @@ export class FileIndexer {
 
     private indexClassDeclaration(node: ts.ClassDeclaration): void {
         try {
-            this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.CLASS));
+            this.addDefinitiontoIndex(this.getDefinitionForNode(node, (node.name != null && node.name.getText()), DefinitionType.CLASS));
         } catch (e) {
             log ("Node of death encountered.");
             log (e.stack);
@@ -52,7 +52,7 @@ export class FileIndexer {
 
     private indexFunctionDeclaration(node: ts.FunctionDeclaration): void {
         // log("indexing Function: ", node.name.getText());
-        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.FUNCTION));
+        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name != null && node.name.getText(), DefinitionType.FUNCTION));
     }
 
     private indexInterfaceDeclaration(node: ts.InterfaceDeclaration): void {
@@ -108,19 +108,21 @@ export class FileIndexer {
             if (child.kind === ts.SyntaxKind.AsteriskToken) {
                 const dirname = path.dirname(this.sourceFile.fileName);
                 /* HACK: assumes .d.ts because we're only operating in libraries, really. */
-                const recursivePath = path.join(dirname, node.moduleSpecifier.getText().replace(/"|'/g, "")) + ".d.ts";
-                log("Recursively indexing: ", recursivePath);
-                const subindexPromise = this.getSourceFileForAbsolutePath(recursivePath).then(sourceFile => {
-                    const indexer = new FileIndexer(sourceFile, this.getSourceFileForAbsolutePath);
-                    return indexer.indexFile().then(nothing => {
-                        const recursiveIndex = indexer.getDefinitionIndex();
-                        this.addIndex(recursiveIndex);
-                    });
+                if (node.moduleSpecifier != null) {
+                    const recursivePath = path.join(dirname, node.moduleSpecifier.getText().replace(/"|'/g, "")) + ".d.ts";
+                    log("Recursively indexing: ", recursivePath);
+                    const subindexPromise = this.getSourceFileForAbsolutePath(recursivePath).then(sourceFile => {
+                        const indexer = new FileIndexer(sourceFile, this.getSourceFileForAbsolutePath);
+                        return indexer.indexFile().then(nothing => {
+                            const recursiveIndex = indexer.getDefinitionIndex();
+                            this.addIndex(recursiveIndex);
+                        });
 
-                }).catch(e => {
-                    log("Failed to index recursive module: ", recursivePath);
-                });
-                promises.push(subindexPromise);
+                    }).catch(e => {
+                        log("Failed to index recursive module: ", recursivePath);
+                    });
+                    promises.push(subindexPromise);
+                }
             }
         });
 
@@ -132,11 +134,13 @@ export class FileIndexer {
     }
 
     private isDefaultNode(node: ts.Node): boolean {
-        return node.modifiers && node.modifiers.filter(modifierNode => modifierNode.kind === ts.SyntaxKind.DefaultKeyword).length > 0;
+        return (node.modifiers != null)
+            && node.modifiers.filter(modifierNode => modifierNode.kind === ts.SyntaxKind.DefaultKeyword).length > 0;
     }
 
     private isExportedNode(node: ts.Node): boolean {
-        return node.modifiers && node.modifiers.filter(modifierNode => modifierNode.kind === ts.SyntaxKind.ExportKeyword).length > 0;
+        return (node.modifiers != null)
+            && node.modifiers.filter(modifierNode => modifierNode.kind === ts.SyntaxKind.ExportKeyword).length > 0;
     }
 
     public indexNode = (node: ts.Node): Promise<void> => {
@@ -146,7 +150,7 @@ export class FileIndexer {
             return this.indexExportDeclaration(node as ts.ExportDeclaration);
         }
 
-        return Promise.resolve<void>(null);
+        return Promise.resolve<void>(null!);
     };
 
     public indexFile(): Promise<void> {

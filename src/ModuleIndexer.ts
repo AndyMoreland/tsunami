@@ -8,7 +8,6 @@ export class ModuleIndexer implements Indexer {
             [this.moduleName]: {
                 default: false,
                 filename: this.moduleName,
-                location: null,
                 text: this.moduleName,
                 type: DefinitionType.EXTERNAL_MODULE
             }

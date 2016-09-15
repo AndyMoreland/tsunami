@@ -113,7 +113,7 @@ export class ImportSorter {
         ts.forEachChild(this.sourceFile, this.visitNode);
     }
 
-    public getSortFileImports(): Promise<CodeEdit> {
+    public getSortFileImports(): Promise<CodeEdit | null> {
         try {
             if (this.importReadingState === ImportState.NEVER_FOUND_IMPORT) {
                 this.readImportStatements();

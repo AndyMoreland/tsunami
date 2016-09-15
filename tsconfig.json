@@ -1,15 +1,19 @@
 {
-    "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
-        "noImplicitAny": true,
-        "outDir": "lib",
-        "sourceMap": false
-    },
-    "exclude": [
-        "node_modules",
-        "node_modules.bak",
-        ".cask",
-        "lib"
-    ]
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "outDir": "lib",
+    "sourceMap": false,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    "lib": ["dom", "es6"]
+  },
+  "exclude": [
+    "node_modules",
+    "node_modules.bak",
+    ".cask",
+    "lib",
+    "patched_typescript"
+  ]
 }

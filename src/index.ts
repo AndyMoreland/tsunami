@@ -1,4 +1,5 @@
 /// <reference path="../typings/node/node.d.ts" />
+import { GetPropertiesOfSymbolDefinition } from "./commands/GetPropertiesOfSymbol";
 import { SaveToCommandDefinition } from "./commands/SaveToCommand";
 import { ChangeCommandDefinition } from "./commands/ChangeCommand";
 import { Tsunami } from "./Tsunami";
@@ -19,7 +20,8 @@ const terminalCommandDefinitions = [
     new FetchSymbolLocationsDefinition(),
     new OrganizeImportsCommandDefinition(),
     new GetContainingExpressionsDefinition(),
-    new GetContainingScopesDefinition()
+    new GetContainingScopesDefinition(),
+    new GetPropertiesOfSymbolDefinition()
 ];
 
 const nonterminalCommandDefinitions = [

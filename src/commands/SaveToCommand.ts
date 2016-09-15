@@ -16,6 +16,6 @@ export class SaveToCommandDefinition implements CommandDefinition<SaveToCommand,
 
     public processor(context: TsunamiContext, command: SaveToCommand): Promise<void> {
         log("Got SaveTo request: ", JSON.stringify(command, null, 2));
-        return Promise.resolve(null);
+        return Promise.resolve(null!);
     }
 }

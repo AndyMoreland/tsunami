@@ -8,7 +8,7 @@ export interface DefinitionIndex {
 
 export interface Definition {
     text: string;
-    location: number;
+    location?: number;
     filename: string;
     type: DefinitionType;
     default: boolean;

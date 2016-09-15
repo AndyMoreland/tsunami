@@ -36,7 +36,7 @@ export class MutableTsunamiContext implements TsunamiContext {
             let indexer = new FileIndexer(sourceFile, (filename: string) => this.getSourceFileFor(filename));
             this.fileIndexerMap[filename] = indexer;
             return indexer.indexFile();
-        }).thenReturn(null);
+        }).thenReturn(null!);
     }
 
     public updateSourceFileFor(filename: string, tmpfilename?: string): Promise<ts.SourceFile> {

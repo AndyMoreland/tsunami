@@ -1,8 +1,8 @@
-import log from "./log";
-import { TsunamiContext } from "./Context";
 import * as Promise from "bluebird";
 import { Command } from "./Command";
 import { CommandInvoker } from "./CommandInvoker";
+import { TsunamiContext } from "./Context";
+import log from "./log";
 
 export class BenchmarkingCommandInvoker implements CommandInvoker {
     constructor(private delegate: CommandInvoker) {}
