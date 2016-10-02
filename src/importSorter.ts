@@ -1,4 +1,4 @@
-import { convertPositionToLocation } from "./utilities";
+import { convertPositionToLocation } from "./utilities/languageUtilities";
 import { CodeEdit } from "./protocol/types";
 import * as Promise from "bluebird";
 import * as ts from "typescript";

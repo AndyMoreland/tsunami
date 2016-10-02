@@ -1,5 +1,5 @@
-import { Response } from "./Response";
-import log from "./log";
+import { Response } from "../Response";
+import log from "../log";
 
 export function writeOutput<T>(stream: NodeJS.WritableStream, response: Response<T>) {
     let output = JSON.stringify(response);

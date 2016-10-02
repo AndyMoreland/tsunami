@@ -7,7 +7,7 @@ export interface DefinitionIndex {
 }
 
 export interface Definition {
-    text: string;
+    text: string | undefined;
     location?: number;
     filename: string;
     type: DefinitionType;

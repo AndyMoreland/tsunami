@@ -1,4 +1,4 @@
-import { isBlockScopeBoundary, nodeContainsPoint } from "./utilities";
+import { isBlockScopeBoundary, nodeContainsPoint } from "./utilities/languageUtilities";
 import * as ts from "typescript/lib/typescript";
 
 export function getScopesContainingPoint(sourceFile: ts.SourceFile, point: number) {

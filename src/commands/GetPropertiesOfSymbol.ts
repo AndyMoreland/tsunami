@@ -1,7 +1,6 @@
 import { getScopesContainingPoint } from "../ScopeTree";
-import { getNodesContainingPoint } from "../utilities";
+import { getNodesContainingPoint } from "../utilities/languageUtilities";
 import * as ts from "typescript";
-import { RegionSpan } from "../protocol/types";
 import { TsunamiContext } from "../Context";
 import log from "../log";
 import { Command, CommandDefinition } from "../Command";
@@ -31,7 +30,10 @@ export class GetPropertiesOfSymbolDefinition implements CommandDefinition<GetPro
             const node = expressions[expressions.length - 1];
             log("Nodes text: ", JSON.stringify(node.getText(), null, 2));
             const symbol = typeChecker.getSymbolAtLocation(node);
-            const inScope = typeChecker.getSymbolsInScope(scopes[scopes.length - 1], ts.SymbolFlags.Type | ts.SymbolFlags.Value | ts.SymbolFlags.Namespace | ts.SymbolFlags.Alias);
+            const inScope = typeChecker.getSymbolsInScope(
+                scopes[scopes.length - 1],
+                ts.SymbolFlags.Type | ts.SymbolFlags.Value | ts.SymbolFlags.Namespace | ts.SymbolFlags.Alias
+            );
             log("Symbol name: ", (symbol && symbol.getName()) || "No symbol");
             if (inScope) {
                 inScope.forEach(symbol => log("in scope: ", symbol.getName()));

@@ -1,6 +1,6 @@
-/// <reference path="../typings/node/node.d.ts" />
+/// <reference path="../../typings/node/node.d.ts" />
 
-import { FileIndexer } from "./FileIndexer";
+import { FileIndexer } from "../FileIndexer";
 import * as fs from "fs";
 import * as ts from "typescript";
 

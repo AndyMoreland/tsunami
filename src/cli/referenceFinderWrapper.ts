@@ -1,5 +1,5 @@
-import { ImportIndexer, ReferenceFinder } from "./referenceFinder";
-import { TsProject } from "./tsProject";
+import { ReferenceFinder } from "../referenceFinder";
+import { TsProject } from "../tsProject";
 import * as ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";

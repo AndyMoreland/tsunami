@@ -11,7 +11,7 @@ import { FileIndexer } from "./FileIndexer";
 import { MutableTsunamiContext } from "./MutableTsunamiContext";
 import { getErrorOutputForCommand } from "./Response";
 import { SimpleCommandInvoker } from "./SimpleCommandInvoker";
-import { writeOutputToStdOut } from "./ioUtils";
+import { writeOutputToStdOut } from "./utilities/ioUtils";
 import log from "./log";
 import { TsProject } from "./tsProject";
 import { UnknownObject, CallbackFunction } from "./types";

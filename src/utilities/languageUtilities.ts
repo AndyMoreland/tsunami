@@ -1,4 +1,4 @@
-import { Location } from "./protocol/types";
+import { Location } from "../protocol/types";
 import * as ts from "typescript";
 
 /* Taken from typescript compiler because they are not exported. */

@@ -13,11 +13,14 @@ export class FileIndexer {
     ) {}
 
     private addDefinitiontoIndex(definition: Definition): void {
-        this.index[definition.text] = definition;
+        if (definition.text != null) {
+            this.index[definition.text] = definition;
+        }
     }
 
     private addIndex(index: DefinitionIndex): void {
-        Object.keys(index).forEach(key => this.index[index[key].text] = index[key]);
+        Object.keys(index).filter(key => index[key].text != null)
+            .forEach(key => this.index[index[key].text!] = index[key]);
     }
 
     private getDefinitionForNode(node: ts.Node, name: string, type: DefinitionType, isDefault: boolean = false): Definition {
@@ -32,7 +35,7 @@ export class FileIndexer {
 
     private indexClassDeclaration(node: ts.ClassDeclaration): void {
         try {
-            this.addDefinitiontoIndex(this.getDefinitionForNode(node, (node.name != null && node.name.getText()), DefinitionType.CLASS));
+            this.addDefinitiontoIndex(this.getDefinitionForNode(node, (node.name != null && node.name.getText()) || "", DefinitionType.CLASS));
         } catch (e) {
             log ("Node of death encountered.");
             log (e.stack);
@@ -52,7 +55,7 @@ export class FileIndexer {
 
     private indexFunctionDeclaration(node: ts.FunctionDeclaration): void {
         // log("indexing Function: ", node.name.getText());
-        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name != null && node.name.getText(), DefinitionType.FUNCTION));
+        this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name != null ? node.name.getText() : "", DefinitionType.FUNCTION));
     }
 
     private indexInterfaceDeclaration(node: ts.InterfaceDeclaration): void {

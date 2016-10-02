@@ -1,4 +1,4 @@
-import { nodeContainsPoint, isExpression } from "./utilities";
+import { isExpression, nodeContainsPoint } from "./utilities/languageUtilities";
 import * as ts from "typescript/lib/typescript";
 
 export function getExpressionsContainingPoint(sourceFile: ts.SourceFile, point: number) {
