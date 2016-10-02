@@ -1,6 +1,6 @@
-import { ImportStatementType, ModuleSpecifier } from "../src/imports/ImportStatement";
-import { ImportBlockBuilder } from "../src/imports/ImportBlock";
 import { expect } from "chai";
+import { ImportBlockBuilder } from "../src/imports/ImportBlockBuilder";
+import { ModuleSpecifier } from "../src/imports/ImportStatement";
 
 declare function describe(foo: string, cb: Function): void;
 declare function it(foo: string, cb: Function): void;
@@ -21,7 +21,7 @@ describe("ImportBlockBuilder", () => {
         });
     });
 
-    it("should be able to initialize itself from a block", () => {
+    describe("initializing from an existing block", () => {
         const importBlock = ImportBlockBuilder.empty()
             .addImportBinding(typescriptModule, {symbolName: "SyntaxKind"}).build();
 
@@ -31,9 +31,8 @@ describe("ImportBlockBuilder", () => {
         const originalTypescriptRecords = importBlock.importRecords["typescript"].importClause.namedBindings;
         const newTypescriptRecords = importBlock2.importRecords["typescript"].importClause.namedBindings;
 
-        expect(originalTypescriptRecords).to.not.contain({symbolName: "LanguageService"});
-        expect(newTypescriptRecords).to.contain({symbolName: "SyntaxKind"});
-        expect(newTypescriptRecords).to.contain({symbolName: "LanguageService"});
+        it("should not modify the original", () => expect(originalTypescriptRecords).to.not.contain({symbolName: "LanguageService"}));
+        it("should contain the original", () => expect(newTypescriptRecords).to.contain({symbolName: "SyntaxKind"}));
+        it("should contain the new import", () => expect(newTypescriptRecords).to.contain({symbolName: "LanguageService"}));
     });
-
 });
