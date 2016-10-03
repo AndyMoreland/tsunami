@@ -1,0 +1,5 @@
+import { foo } from "../../farthest/a/foo";
+import { foo } from "../../farthest/b/foo";
+import { foo } from "../../farthest/c/foo";
+import { foo } from "../closer/foo";
+import { foo } from "./closest";
