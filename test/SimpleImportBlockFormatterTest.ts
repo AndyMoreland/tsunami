@@ -32,4 +32,7 @@ describe("SimpleImportBlockFormatter", () => {
 
     it("should replace single-quotes in module specifiers with double",
        () => expectMatches(new SimpleImportBlockFormatter(), "moduleSpecifierQuotes"));
+
+    it("should sort named bindings alphabetically",
+       () => expectMatches(new SimpleImportBlockFormatter(), "alphabetical-bindings"));
 });

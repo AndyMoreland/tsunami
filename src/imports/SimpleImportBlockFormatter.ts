@@ -1,6 +1,6 @@
 import * as path from "path";
 import { ImportBlock } from "./ImportBlock";
-import { ImportBlockFormatter } from "./ImportBlockFormatter";
+import { ImportBlockFormatterOptions, ImportBlockFormatter } from "./ImportBlockFormatter";
 import { ImportRecord, ImportStatementType } from "./ImportStatement";
 
 /* Distance is in [0, inf]. Smaller distance => closer in the file tree. */
@@ -49,6 +49,21 @@ function getLocalModuleSpecifier(localPath: string, importRecord: ImportRecord):
 }
 
 export class SimpleImportBlockFormatter implements ImportBlockFormatter {
+    constructor(private options?: ImportBlockFormatterOptions) {}
+
+    private getIndentSize() {
+        return (this.options && this.options.indentSize) || 4;
+    }
+
+    private getIndentSpaces() {
+        let result = "";
+        for (let i = 0; i < this.getIndentSize(); i++) {
+            result += " ";
+        }
+
+        return result;
+    }
+
     private emitImportRecord(localPath: string, importRecord: ImportRecord): string[] {
         const ret: string[] = [];
         const hasBindings = importRecord.importClause.defaultName != null || importRecord.importClause.namedBindings.length > 0;
@@ -70,7 +85,13 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                     return [binding.symbolName, binding.alias].filter(x => x != null).join(" as ");
                 });
 
-                const symbols = sortedBindings.length > 0 ? `{ ${sortedStringBindings.join(", ")} }` : null;
+                const totalLen = sortedStringBindings.reduce((totalLen, str) => totalLen + str.length, 0);
+                const multilineFormat = totalLen > 80;
+                const newlineOrSpace = multilineFormat ? "\n" : " ";
+                const bindingsJoinStr = multilineFormat ? ",\n" + this.getIndentSpaces() : ", ";
+                const leadingIndent = multilineFormat ? this.getIndentSpaces() : "";
+                // tslint:disable-next-line
+                const symbols = sortedBindings.length > 0 ? `{${newlineOrSpace}${leadingIndent}${sortedStringBindings.join(bindingsJoinStr)}${newlineOrSpace}}` : null;
                 const bindings = [defaultName, symbols].filter(x => x != null).join(", ");
                 ret.push(`import ${bindings} from "${spec}"`);
             }

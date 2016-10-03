@@ -1,6 +1,1 @@
-import {
-    a,
-    b,
-    c,
-    d
-} from "a-module";
+import { aextremelyLongSymbolNamesShouldAllGoOnMultipleLines, btoAvoidAnUnreadableMess, clikeThisExample, dRightHere } from "a-module";
