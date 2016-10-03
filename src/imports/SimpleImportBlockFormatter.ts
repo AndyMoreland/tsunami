@@ -1,7 +1,7 @@
 import * as path from "path";
 import { ImportBlock } from "./ImportBlock";
 import { ImportBlockFormatter } from "./ImportBlockFormatter";
-import { ImportRecord, ImportStatementType, getTypeOfModuleSpecifier, ModuleSpecifier } from "./ImportStatement";
+import { ImportRecord, ImportStatementType } from "./ImportStatement";
 
 /* Distance is in [0, inf]. Smaller distance => closer in the file tree. */
 function computeDistance(specifier: string): number {
@@ -27,13 +27,24 @@ function computeDistance(specifier: string): number {
     return (specifier.match(/..\//g) || []).length;
 }
 
-function toLocalModuleSpecifier(localPath: string, moduleSpecifier: string): string {
-    const type = getTypeOfModuleSpecifier(moduleSpecifier);
+/** Returns relative path, ensuring it begins with ./ or ../ */
+function getPrefixedRelativePath(from: string, to: string): string {
+    const result = path.relative(from, to);
+    if (!result.startsWith(".")) {
+        return "./" + result;
+    } else {
+        return result;
+    }
+}
+
+/** Given a working directory, returns a module specifier for importRecord. */
+function getLocalModuleSpecifier(localPath: string, importRecord: ImportRecord): string {
+    const type = importRecord.type;
 
     if (type === ImportStatementType.PROJECT_RELATIVE) {
-        return path.relative(localPath, moduleSpecifier);
+        return getPrefixedRelativePath(localPath, importRecord.moduleSpecifier);
     } else {
-        return moduleSpecifier;
+        return importRecord.moduleSpecifier;
     }
 }
 
@@ -41,7 +52,7 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
     private emitImportRecord(localPath: string, importRecord: ImportRecord): string[] {
         const ret: string[] = [];
         const hasBindings = importRecord.importClause.defaultName != null || importRecord.importClause.namedBindings.length > 0;
-        const spec = toLocalModuleSpecifier(localPath, importRecord.moduleSpecifier);
+        const spec = getLocalModuleSpecifier(localPath, importRecord);
 
         if (importRecord.namespaceImport == null && !hasBindings)  {
             ret.push(`import "${spec}"`);
@@ -72,8 +83,8 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
         const moduleSpecifiers = Object.keys(importBlock.importRecords);
 
         const sortedModuleSpecifiers = moduleSpecifiers.sort((a, b) => {
-            const localA = toLocalModuleSpecifier(localPath, a);
-            const localB = toLocalModuleSpecifier(localPath, b);
+            const localA = getLocalModuleSpecifier(localPath, importBlock.importRecords[a]);
+            const localB = getLocalModuleSpecifier(localPath, importBlock.importRecords[b]);
 
             const distanceA = computeDistance(localA);
             const distanceB = computeDistance(localB);
@@ -86,7 +97,7 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                 return 0;
             }
 
-            return a >= b ? 1 : -1;
+            return a >= b ? -1 : 1;
         });
 
         return sortedModuleSpecifiers.map(spec => {
@@ -94,6 +105,6 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
         }).reduce((acc, el) => {
             acc.push(...el);
             return acc;
-        }, [] as string[]).join(";\n");
+        }, [] as string[]).join(";\n") + ";\n"; /* Make sure we get the trailing ;\n */
     }
 }

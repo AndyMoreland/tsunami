@@ -41,7 +41,7 @@ export function getTypeOfModuleSpecifier(moduleSpecifier: string): ImportStateme
 }
 
 function getImportRecordTypeFromImportDeclaration(declaration: ts.ImportDeclaration): ImportStatementType {
-    return getTypeOfModuleSpecifier(declaration.getText());
+    return getTypeOfModuleSpecifier(declaration.moduleSpecifier.getText().slice(1, -1));
 }
 
 function parseImportClause(importClause: ts.ImportClause): ImportClause | NamespaceImport {
@@ -93,12 +93,12 @@ function parseImportClause(importClause: ts.ImportClause): ImportClause | Namesp
     return parsedImportClause;
 }
 
-function canonicalizeModuleSpecifier(moduleSpecifier: string): AbsoluteFilename | ModuleName {
+function canonicalizeModuleSpecifier(localDirectory: string, moduleSpecifier: string): AbsoluteFilename | ModuleName {
     const firstChar = moduleSpecifier.charAt(0);
     if (firstChar !== "." && firstChar !== "/") {
         return moduleSpecifier as ModuleName;
     } else {
-        return path.resolve(moduleSpecifier) as AbsoluteFilename;
+        return path.resolve(localDirectory, moduleSpecifier) as AbsoluteFilename;
     }
 }
 
@@ -109,7 +109,10 @@ function isNamespaceImport(parsed: NamespaceImport | ImportClause): parsed is Na
 export function createImportRecordFromImportDeclaration(declaration: ts.ImportDeclaration): ImportRecord {
     const record: ImportRecord = {
         type: getImportRecordTypeFromImportDeclaration(declaration),
-        moduleSpecifier: canonicalizeModuleSpecifier(declaration.moduleSpecifier.getText().slice(1, -1)),
+        moduleSpecifier: canonicalizeModuleSpecifier(
+            path.dirname(declaration.getSourceFile().fileName),
+            declaration.moduleSpecifier.getText().slice(1, -1)
+        ),
         importClause: {
             namedBindings: []
         }

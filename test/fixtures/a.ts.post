@@ -1,0 +1,20 @@
+import { a, b, c, d, e, f, g } from "a-module";
+import defaultSymbol from "b-module";
+import { foo } from "bar";
+import defaultSymbol from "default-exporting-module";
+import * as DuplicatedModule from "duplicated-module";
+import theDefaultExport { oneThing, aSecondthing, default as anAlias } from "duplicated-module";
+import {
+    a,
+    b,
+    c,
+    d
+} from "multi-line-module";
+import * as bar from "npm-module";
+import "side-effectful-module";
+import { foo } from "@foo-scope/foo-package";
+import { foo } from "./closest";
+import { foo } from "./closer/foo";
+import { foo } from "../a/foo";
+import { foo } from "../b/foo";
+import { foo } from "../c/foo";

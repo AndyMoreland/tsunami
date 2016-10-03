@@ -14,10 +14,8 @@ import {
     d
 } from "another-module";
 import defaultSymbol from "default-exporting-module";
-import defaultSymbol, { anotherSymbol as anAlias } from "a-module";
 import defaultSymbol, { default as anInvalidAdditionalAlias } from "b-module";
 import "side-effectful-module";
-
 import { oneThing } from "duplicated-module";
 import { aSecondThing } from "duplicated-module";
 import { default as anAlias} from "duplicated-module";
