@@ -28,6 +28,7 @@ export interface ImportRecord {
     moduleSpecifier: ModuleSpecifier;
     importClause: ImportClause;
     namespaceImport?: NamespaceImport;
+    sideEffectful: boolean;
 }
 
 export function getTypeOfModuleSpecifier(moduleSpecifier: string): ImportStatementType {
@@ -115,7 +116,8 @@ export function createImportRecordFromImportDeclaration(declaration: ts.ImportDe
         ),
         importClause: {
             namedBindings: []
-        }
+        },
+        sideEffectful: false
     };
 
     if (declaration.importClause != null) {
@@ -125,6 +127,8 @@ export function createImportRecordFromImportDeclaration(declaration: ts.ImportDe
         } else {
             record.importClause = parsed;
         }
+    } else {
+        record.sideEffectful = true;
     }
 
     return record;
@@ -192,7 +196,8 @@ export function mergeImportRecords(a: ImportRecord, b?: ImportRecord): { record:
             defaultName,
             namedBindings
         },
-        namespaceImport
+        namespaceImport,
+        sideEffectful: a.sideEffectful || b.sideEffectful
     };
 
     return {

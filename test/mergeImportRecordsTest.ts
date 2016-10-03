@@ -11,7 +11,8 @@ const SYMBOL_1_IMPORT: ImportRecord = {
     moduleSpecifier: MODULE_1,
     importClause: {
         namedBindings: [{symbolName: "symbol-1"}]
-    }
+    },
+    sideEffectful: false
 };
 
 const SYMBOL_2_IMPORT: ImportRecord = {
@@ -19,7 +20,8 @@ const SYMBOL_2_IMPORT: ImportRecord = {
     moduleSpecifier: MODULE_1,
     importClause: {
         namedBindings: [{symbolName: "symbol-2"}]
-    }
+    },
+    sideEffectful: false
 };
 
 const DEFAULT_ALIASED_IMPORT: ImportRecord = {
@@ -28,7 +30,8 @@ const DEFAULT_ALIASED_IMPORT: ImportRecord = {
     importClause: {
         namedBindings: [],
         defaultName: "default-alias"
-    }
+    },
+    sideEffectful: false
 };
 
 const NAMESPACE_BINDING_IMPORT: ImportRecord = {
@@ -39,7 +42,8 @@ const NAMESPACE_BINDING_IMPORT: ImportRecord = {
     },
     namespaceImport: {
         alias: "namespace-alias"
-    }
+    },
+    sideEffectful: false
 };
 
 describe("mergeImportRecords", () => {

@@ -19,8 +19,16 @@ export interface Location {
     offset: number;
 }
 
-export interface CodeEdit {
+export interface Extent {
     start: Location;
     end: Location;
+}
+
+export interface CodeEdit extends Extent {
     newText: string;
+}
+
+export interface CodeEditForFile {
+    filename: string; /* absolute */
+    edit: CodeEdit;
 }

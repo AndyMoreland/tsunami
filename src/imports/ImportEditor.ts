@@ -1,0 +1,60 @@
+import * as path from "path";
+import * as ts from "typescript";
+import { CodeEdit, Extent } from "../protocol/types";
+import { convertPositionToLocation } from "../utilities/languageUtilities";
+import { ImportBlock } from "./ImportBlock";
+import { ImportBlockFormatter } from "./ImportBlockFormatter";
+
+export class ImportEditor {
+    constructor(
+        private formatter: ImportBlockFormatter
+    ) {}
+
+    private getImportExtents(sourceFile: ts.SourceFile): Extent[] {
+        const results: Extent[] = [];
+        let inExtent = false;
+        let startOfExtent = -1;
+
+        ts.forEachChild(sourceFile, (node) => {
+            if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+                if (!inExtent) {
+                    inExtent = true;
+                    startOfExtent = node.getStart();
+                }
+            } else {
+                if (inExtent) {
+                    inExtent = false;
+                    results.push({
+                        start: convertPositionToLocation(sourceFile, startOfExtent),
+                        end: convertPositionToLocation(sourceFile, node.getEnd()),
+                    });
+                }
+            }
+        });
+
+        return results;
+    }
+
+    public applyImportBlockToFile(sourceFile: ts.SourceFile, importBlock: ImportBlock): CodeEdit[] {
+        const importExtents = this.getImportExtents(sourceFile);
+
+        if (importExtents.length === 0) {
+            importExtents.push({
+                start: convertPositionToLocation(sourceFile, 0),
+                end: convertPositionToLocation(sourceFile, 0)
+            });
+        }
+
+        const firstEdit: CodeEdit = {
+            start: importExtents[0].start,
+            end: importExtents[0].end,
+            newText: this.formatter.formatImportBlock(path.dirname(sourceFile.fileName), importBlock)
+        };
+
+        const deletions: CodeEdit[] = importExtents.slice(1).map(extent => {
+            return Object.assign({}, extent, {newText: ""}) as CodeEdit;
+        });
+
+        return [firstEdit, ...deletions];
+    }
+}

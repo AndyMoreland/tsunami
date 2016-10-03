@@ -62,4 +62,13 @@ describe("ImportBlockBuilder", () => {
         it("should contain the original", () => expect(newTypescriptRecords).to.contain(UA_SYNTAX_KIND));
         it("should contain the new import", () => expect(newTypescriptRecords).to.contain(UA_LANGUAGE_SERVICE));
     });
+
+    describe("removing the only import", () => {
+        const importBlock = ImportBlockBuilder.empty()
+            .addImportBinding(TYPESCRIPT, UA_SYNTAX_KIND)
+            .withoutImport(TYPESCRIPT, "SyntaxKind")
+            .build();
+
+        it("should remove the import record", () => expect(importBlock.importRecords).to.not.contain.keys(TYPESCRIPT));
+    });
 });

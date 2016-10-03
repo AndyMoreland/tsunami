@@ -65,7 +65,15 @@ export class ImportBlockBuilder {
         if (name === "default") {
             importRecord.importClause.defaultName = undefined;
         } else {
-            importRecord.importClause.namedBindings.filter(x => x.symbolName === name);
+            const filteredBindings = importRecord.importClause.namedBindings.filter(x => x.symbolName !== name);
+            importRecord.importClause.namedBindings = filteredBindings;
+        }
+
+        if (importRecord.importClause.namedBindings.length === 0
+            && importRecord.importClause.defaultName == null
+            && importRecord.namespaceImport == null
+            && !importRecord.sideEffectful) {
+            delete this.importRecords[moduleSpecifier];
         }
 
         return this;
@@ -89,7 +97,8 @@ export class ImportBlockBuilder {
         const newSpecifier = {
             type: getTypeOfModuleSpecifier(specifier),
             moduleSpecifier: specifier,
-            importClause: { namedBindings: []}
+            importClause: { namedBindings: []},
+            sideEffectful: false
         };
 
         this.importRecords[specifier] = newSpecifier;
