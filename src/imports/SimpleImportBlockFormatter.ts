@@ -1,7 +1,7 @@
 import * as path from "path";
 import log from "../log";
 import { ImportBlock } from "./ImportBlock";
-import { ImportBlockFormatterOptions, ImportBlockFormatter } from "./ImportBlockFormatter";
+import { ImportBlockFormatter, ImportBlockFormatterOptions } from "./ImportBlockFormatter";
 import { ImportRecord, ImportStatementType } from "./ImportStatement";
 
 /* Distance is in [0, inf]. Smaller distance => closer in the file tree. */
@@ -127,6 +127,6 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
         }).reduce((acc, el) => {
             acc.push(...el);
             return acc;
-        }, [] as string[]).join(";\n") + ";\n"; /* Make sure we get the trailing ;\n */
+        }, [] as string[]).join(";\n") + ";"; /* Make sure we get the trailing ;\n */
     }
 }

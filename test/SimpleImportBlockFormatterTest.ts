@@ -17,7 +17,8 @@ function expectMatches(formatter: ImportBlockFormatter, fileName: string): void 
     const sourceFile = getSourceFileFor(path.join(__dirname, "fixtures", `${fileName}.ts.pre`));
     const result = formatter.formatImportBlock(path.join(__dirname, "fixtures"), ImportBlock.fromFile(sourceFile));
 
-    expect(result).to.eql(fs.readFileSync(path.join(__dirname, "fixtures", `${fileName}.ts.post`)).toString());
+    /* Account for trailing \n in fixture file */
+    expect(result + "\n").to.eql(fs.readFileSync(path.join(__dirname, "fixtures", `${fileName}.ts.post`)).toString());
 }
 
 describe("SimpleImportBlockFormatter", () => {
@@ -37,5 +38,5 @@ describe("SimpleImportBlockFormatter", () => {
        () => expectMatches(new SimpleImportBlockFormatter(), "alphabetical-bindings"));
 
     it("should collapse multiple import statements from the same module",
-       () => expectMatches(new SimpleImportBlockFormatter(), "multiple-imports"))
+       () => expectMatches(new SimpleImportBlockFormatter(), "multiple-imports"));
 });
