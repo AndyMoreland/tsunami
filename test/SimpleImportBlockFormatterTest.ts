@@ -22,11 +22,14 @@ function expectMatches(formatter: ImportBlockFormatter, fileName: string): void 
 
 describe("SimpleImportBlockFormatter", () => {
     it("should order global before scope before project imports",
-        () => expectMatches(new SimpleImportBlockFormatter(), "global-scope-project"));
+       () => expectMatches(new SimpleImportBlockFormatter(), "global-scope-project"));
+
+    it("should order farthest-to-closest in project imports",
+       () => expectMatches(new SimpleImportBlockFormatter(), "farthest-to-closest"));
 
     it("should preserve multi-line imports properly",
-        () => expectMatches(new SimpleImportBlockFormatter(), "multiLine"));
+       () => expectMatches(new SimpleImportBlockFormatter(), "multiLine"));
 
     it("should replace single-quotes in module specifiers with double",
-        () => expectMatches(new SimpleImportBlockFormatter(), "moduleSpecifierQuotes"));
+       () => expectMatches(new SimpleImportBlockFormatter(), "moduleSpecifierQuotes"));
 });

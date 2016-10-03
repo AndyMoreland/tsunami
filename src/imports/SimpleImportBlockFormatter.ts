@@ -5,11 +5,11 @@ import { ImportRecord, ImportStatementType } from "./ImportStatement";
 
 /* Distance is in [0, inf]. Smaller distance => closer in the file tree. */
 function computeDistance(specifier: string): number {
-    if (specifier.slice(1, 3) === "./") {
+    if (specifier.slice(0, 2) === "./") {
         return 0;
     }
 
-    const firstChar = specifier.charAt(1);
+    const firstChar = specifier.charAt(0);
 
     /* For imports from dependencies, we want 3rd party dependencies listed before
        internal dependencies. */
@@ -19,7 +19,7 @@ function computeDistance(specifier: string): number {
             return 5000;
         }
 
-        if (specifier.slice(1, 4) !== "../") {
+        if (specifier.slice(0, 3) !== "../") {
             return 10000;
         }
     }
@@ -97,7 +97,7 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                 return 0;
             }
 
-            return a >= b ? -1 : 1;
+            return a >= b ? 1 : -1;
         });
 
         return sortedModuleSpecifiers.map(spec => {
