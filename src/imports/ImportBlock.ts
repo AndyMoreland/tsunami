@@ -1,6 +1,7 @@
+import { mergeImportRecords } from "./ImportStatement";
 import * as ts from "typescript";
 import {
-    createImportStatementFromImportDeclaration,
+    createImportRecordFromImportDeclaration,
     ImportRecord
 } from "./ImportStatement";
 
@@ -15,8 +16,11 @@ export class ImportBlock {
 
         ts.forEachChild(sourceFile, (node) => {
             if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-                const record = createImportStatementFromImportDeclaration(node as ts.ImportDeclaration);
-                importRecords[record.moduleSpecifier] = record;
+                const record = createImportRecordFromImportDeclaration(node as ts.ImportDeclaration);
+                importRecords[record.moduleSpecifier] = mergeImportRecords(
+                    record,
+                    importRecords[record.moduleSpecifier]
+                ).record;
             }
         });
 

@@ -57,18 +57,27 @@ function parseImportClause(importClause: ts.ImportClause): ImportClause | Namesp
         if (importClause.namedBindings.kind === ts.SyntaxKind.NamedImports) {
             const namedImports = importClause.namedBindings as ts.NamedImports;
             namedImports.elements.forEach(specifier => {
-                const name = specifier.name.getText();
-                const propertyName = specifier.propertyName ? specifier.propertyName.getText() : undefined;
+                let symbolName = specifier.name.getText();
+                let alias: string | undefined = undefined;
 
-                if (name === "default" ) {
+                if (specifier.propertyName != null) {
+                    alias = specifier.name.getText();
+                    symbolName = specifier.propertyName.getText();
+                }
+
+                if (symbolName === "default" ) {
+                    /*
                     if (importClause.name != null) {
                         throw new Error("Invalid import specifier: found two default name bindings.");
                     }
-                    parsedImportClause.defaultName = name;
+                    if (alias == null) {
+                        throw new Error("Found default import in named bindings without alias.");
+                    } */
+                    parsedImportClause.defaultName = symbolName;
                 }  else {
                     parsedImportClause.namedBindings.push({
-                        symbolName: name,
-                        alias: propertyName
+                        symbolName,
+                        alias
                     });
                 }
             });
@@ -97,10 +106,10 @@ function isNamespaceImport(parsed: NamespaceImport | ImportClause): parsed is Na
     return (parsed as NamespaceImport).alias != null;
 }
 
-export function createImportStatementFromImportDeclaration(declaration: ts.ImportDeclaration): ImportRecord {
+export function createImportRecordFromImportDeclaration(declaration: ts.ImportDeclaration): ImportRecord {
     const record: ImportRecord = {
         type: getImportRecordTypeFromImportDeclaration(declaration),
-        moduleSpecifier: canonicalizeModuleSpecifier(declaration.moduleSpecifier.getText()),
+        moduleSpecifier: canonicalizeModuleSpecifier(declaration.moduleSpecifier.getText().slice(1, -1)),
         importClause: {
             namedBindings: []
         }
@@ -116,4 +125,75 @@ export function createImportStatementFromImportDeclaration(declaration: ts.Impor
     }
 
     return record;
+}
+
+export interface Warning {
+    message: string;
+}
+
+function mergeNamedBindings(a: NamedBinding[], b: NamedBinding[]): { namedBindings: NamedBinding[], warnings: Warning[] } {
+    const warnings: Warning[] = [];
+    const symbolsAlreadyNamed: { [symbol: string]: string | true } = { };
+    const namedBindings = a.slice();
+
+    namedBindings.forEach(binding => symbolsAlreadyNamed[binding.symbolName] = binding.alias || true);
+
+    b.forEach(binding => {
+        if (symbolsAlreadyNamed[binding.symbolName] != null) {
+            warnings.push({
+                message: `Import for ${binding.symbolName} aliased in multiple ways.`
+            });
+        } else {
+            namedBindings.push(binding);
+        }
+    });
+
+    return {
+        namedBindings, warnings
+    };
+}
+
+export function mergeImportRecords(a: ImportRecord, b?: ImportRecord): { record: ImportRecord, warnings: Warning[] } {
+    if (b == null) {
+        return { record: a, warnings: [] };
+    }
+
+    if (a.moduleSpecifier !== b.moduleSpecifier || a.type !== b.type) {
+        throw new Error("Can't merge ImportRecords with non-identical module specifiers");
+    }
+
+    const warnings: Warning[] = [];
+    const defaultName = a.importClause.defaultName || b.importClause.defaultName;
+    const namespaceImport = a.namespaceImport || b.namespaceImport;
+    const namedBindingsResult = mergeNamedBindings(a.importClause.namedBindings, b.importClause.namedBindings);
+    const namedBindings = namedBindingsResult.namedBindings;
+    warnings.push(...namedBindingsResult.warnings);
+
+    if (a.importClause.defaultName && b.importClause.defaultName && a.importClause.defaultName !== b.importClause.defaultName) {
+        warnings.push({
+            // tslint:disable-next-line
+            message: `Import for ${a.moduleSpecifier} specifies two default aliases: ${a.importClause.defaultName}, ${b.importClause.defaultName}`
+        });
+    }
+
+    if (a.namespaceImport && b.namespaceImport && a.namespaceImport.alias !== b.namespaceImport.alias) {
+        warnings.push({
+            message: `Namespace imported in two conflicting ways for ${a.moduleSpecifier}`
+        });
+    }
+
+    const newRecord: ImportRecord = {
+        type: a.type, /* equal to b's type */
+        moduleSpecifier: a.moduleSpecifier, /* equal to b's specifier */
+        importClause: {
+            defaultName,
+            namedBindings
+        },
+        namespaceImport
+    };
+
+    return {
+        record: newRecord,
+        warnings
+    };
 }

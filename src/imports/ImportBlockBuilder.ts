@@ -1,26 +1,40 @@
-import { NamedBinding, getTypeOfModuleSpecifier, ModuleSpecifier } from "./ImportStatement";
+import { ImportRecord, NamedBinding, getTypeOfModuleSpecifier, ModuleSpecifier } from "./ImportStatement";
 import { ImportBlock, ImportRecords } from "./ImportBlock";
 import * as deepcopy from "deepcopy";
 
 export class ImportBlockBuilder {
     private built = false;
+
+    public static from(block: ImportBlock) {
+        const importRecords = deepcopy(block.importRecords);
+
+        return new ImportBlockBuilder(importRecords);
+    }
+
+    public static empty() {
+        return new ImportBlockBuilder();
+    }
+
     constructor(private importRecords: ImportRecords = {}) {}
 
     public addSideEffectfulImport(moduleSpecifier: ModuleSpecifier): this {
+        this.ensureImportRecord(moduleSpecifier);
         return this;
     }
 
     public addDefaultImport(moduleSpecifier: ModuleSpecifier, alias: string): this {
+        this.ensureImportRecord(moduleSpecifier).importClause.defaultName = alias;
+        return this;
+    }
+
+    public addNamespaceSpecifier(moduleSpecifier: ModuleSpecifier, alias: string): this {
+        this.ensureImportRecord(moduleSpecifier).namespaceImport = { alias };
         return this;
     }
 
     /** Overwrites import alias if it already exists. */
     public addImportBinding(moduleSpecifier: ModuleSpecifier, namedBinding: NamedBinding): this {
-        const importRecord = this.importRecords[moduleSpecifier] || {
-            type: getTypeOfModuleSpecifier(moduleSpecifier),
-            moduleSpecifier: moduleSpecifier,
-            importClause: { namedBindings: []}
-        };
+        const importRecord = this.ensureImportRecord(moduleSpecifier);
 
         const clause = importRecord.importClause;
         if (namedBinding.symbolName === "default") {
@@ -37,8 +51,6 @@ export class ImportBlockBuilder {
                 clause.namedBindings.push(namedBinding);
             }
         }
-
-        this.importRecords[moduleSpecifier] = importRecord;
 
         return this;
     }
@@ -59,16 +71,6 @@ export class ImportBlockBuilder {
         return this;
     }
 
-    public static from(block: ImportBlock) {
-        const importRecords = deepcopy(block.importRecords);
-
-        return new ImportBlockBuilder(importRecords);
-    }
-
-    public static empty() {
-        return new ImportBlockBuilder();
-    }
-
     public build(): ImportBlock {
         if (this.built) {
             throw new Error("Can't build ImportBlock twice.'");
@@ -77,5 +79,21 @@ export class ImportBlockBuilder {
         this.built = true;
 
         return new ImportBlock(this.importRecords);
+    }
+
+    private ensureImportRecord(specifier: ModuleSpecifier): ImportRecord {
+        if (this.importRecords[specifier] != null) {
+            return this.importRecords[specifier];
+        }
+
+        const newSpecifier = {
+            type: getTypeOfModuleSpecifier(specifier),
+            moduleSpecifier: specifier,
+            importClause: { namedBindings: []}
+        };
+
+        this.importRecords[specifier] = newSpecifier;
+
+        return newSpecifier;
     }
 }

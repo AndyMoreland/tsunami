@@ -59,7 +59,7 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                     return [binding.symbolName, binding.alias].filter(x => x != null).join(" as ");
                 });
 
-                const symbols = `{${sortedStringBindings.join(", ")}}`;
+                const symbols = sortedBindings.length > 0 ? `{ ${sortedStringBindings.join(", ")} }` : null;
                 const bindings = [defaultName, symbols].filter(x => x != null).join(", ");
                 ret.push(`import ${bindings} from "${spec}"`);
             }
