@@ -35,4 +35,7 @@ describe("SimpleImportBlockFormatter", () => {
 
     it("should sort named bindings alphabetically",
        () => expectMatches(new SimpleImportBlockFormatter(), "alphabetical-bindings"));
+
+    it("should collapse multiple import statements from the same module",
+       () => expectMatches(new SimpleImportBlockFormatter(), "multiple-imports"))
 });

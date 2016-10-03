@@ -1,4 +1,5 @@
 import * as path from "path";
+import log from "../log";
 import { ImportBlock } from "./ImportBlock";
 import { ImportBlockFormatterOptions, ImportBlockFormatter } from "./ImportBlockFormatter";
 import { ImportRecord, ImportStatementType } from "./ImportStatement";

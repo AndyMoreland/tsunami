@@ -1,7 +1,11 @@
-import { convertPositionToLocation } from "./utilities/languageUtilities";
-import { CodeEdit } from "./protocol/types";
 import * as Promise from "bluebird";
+import * as path from "path";
 import * as ts from "typescript";
+import { ImportBlock } from "./imports/ImportBlock";
+import { SimpleImportBlockFormatter } from "./imports/SimpleImportBlockFormatter";
+import log from "./log";
+import { CodeEdit } from "./protocol/types";
+import { convertPositionToLocation } from "./utilities/languageUtilities";
 
 export class NonContiguousImportBlockException extends Error {
     constructor(error?: string) {
@@ -49,66 +53,6 @@ export class ImportSorter {
         }
     }
 
-    private static emitImport(importStatement: ts.ImportDeclaration): string {
-        let output = importStatement.getText();
-        /* let namedBindings = <ts.NamedImports>importStatement.importClause.namedBindings; */
-        output = output.replace(/'/g, "\"");
-        output = output.replace(/"$/, "\";");
-        return output.replace(/\n$|^\n/g, "");
-    }
-
-    private static emitModuleSpecifier(moduleSpecifier: ts.Expression): string {
-        return moduleSpecifier.getText().replace(/'/g, "\"");
-    }
-
-    /* Distance is in [0, inf]. Smaller distance => closer in the file tree. */
-    private static computeDistance(specifier: string) {
-        if (specifier.slice(1, 3) === "./") {
-            return 0;
-        }
-
-        const firstChar = specifier.charAt(1);
-
-        /* For imports from dependencies, we want 3rd party dependencies listed before
-           internal dependencies. */
-
-        if (firstChar !== ".") {
-            if (firstChar === "@") {
-                return 5000;
-            }
-
-            if (specifier.slice(1, 4) !== "../") {
-                return 10000;
-            }
-        }
-
-        return (specifier.match(/..\//g) || []).length;
-    }
-
-    private createNewImportBlock() {
-        /* Sort from farthest-away-to-closest-away, top-to-bottom */
-        let sortedDecs = this.importDeclarations.sort((a, b) => {
-            let aSpecifier = ImportSorter.emitModuleSpecifier(a.moduleSpecifier);
-            let bSpecifier = ImportSorter.emitModuleSpecifier(b.moduleSpecifier);
-
-            let aDistance = ImportSorter.computeDistance(aSpecifier);
-            let bDistance = ImportSorter.computeDistance(bSpecifier);
-
-            if (aDistance !== bDistance) {
-                return aDistance > bDistance ? -1 : 1;
-            }
-
-            if (aSpecifier === bSpecifier) {
-                return 0;
-            }
-
-            return aSpecifier >= bSpecifier ? 1 : -1;
-        });
-
-        let prefix = this.firstImportPosition !== 0 ? "\n" : "";
-        return prefix + sortedDecs.map(ImportSorter.emitImport).join("\n");
-    }
-
     public readImportStatements(): void {
         ts.forEachChild(this.sourceFile, this.visitNode);
     }
@@ -120,11 +64,12 @@ export class ImportSorter {
             }
 
             if (this.importDeclarations.length > 0) {
-                const importBlock = this.createNewImportBlock();
+                const formatter = new SimpleImportBlockFormatter();
+                const importBlock = ImportBlock.fromFile(this.sourceFile);
                 const editFromNewText: CodeEdit = {
                     start: convertPositionToLocation(this.sourceFile, this.firstImportPosition),
                     end: convertPositionToLocation(this.sourceFile, this.lastImportPosition),
-                    newText: importBlock
+                    newText: formatter.formatImportBlock(path.dirname(this.sourceFile.fileName), importBlock)
                 };
 
                 return Promise.resolve(editFromNewText);
