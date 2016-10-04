@@ -6,6 +6,11 @@
                                    :offset ,(tide-current-offset))
                      cb))
 
+(defun tsunami--sync-get-quickinfo-at-point ()
+  (tide-send-command-sync "quickinfo" `(:file ,buffer-file-name
+                                   :line ,(count-lines 1 (point))
+                                   :offset ,(tide-current-offset))))
+
 (defun tsunami--jump-to-definition-response (response)
   (tide-on-response-success response
     (let ((filespan (car (plist-get response :body))))

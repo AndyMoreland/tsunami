@@ -73,11 +73,20 @@
     :fuzzy-match t
     :action actions))
 
-(defun tsunami--helm (actions &optional input)
+;; (defun tsunami--symbols-helm-source (actions)
+;;   "Define helm source for tsunami symbols."
+;;   (helm-build-sync-source "Tsunami Symbols Source"
+;;     :candidates (tsunami--get-helm-candidates)
+;;     :match (lambda (pattern) (message pattern))
+;;     :matchplugin nil
+;;     :migemo 'nomultimatch
+;;     :fuzzy-match nil
+;;     :action actions))
+
+(defun tsunami--helm (actions &optional re-index input)
   "Search for symbols in project using helm."
-  (interactive)
   (let ((tsunami--helm-target-buffer (current-buffer)))
-    (tsunami--invalidate-symbols-cache)
+    (when re-index (tsunami--invalidate-symbols-cache))
     (helm :sources (tsunami--symbols-helm-source actions)
           :buffer "*helm-tsunami-symbols*"
           :input input)))

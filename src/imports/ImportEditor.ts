@@ -14,6 +14,7 @@ export class ImportEditor {
         const results: Extent[] = [];
         let inExtent = false;
         let startOfExtent = -1;
+        let endOfExtent = -1;
 
         ts.forEachChild(sourceFile, (node) => {
             if (node.kind === ts.SyntaxKind.ImportDeclaration) {
@@ -21,12 +22,14 @@ export class ImportEditor {
                     inExtent = true;
                     startOfExtent = node.getStart();
                 }
+
+                endOfExtent = node.getEnd();
             } else {
                 if (inExtent) {
                     inExtent = false;
                     results.push({
                         start: convertPositionToLocation(sourceFile, startOfExtent),
-                        end: convertPositionToLocation(sourceFile, node.getEnd()),
+                        end: convertPositionToLocation(sourceFile, endOfExtent),
                     });
                 }
             }

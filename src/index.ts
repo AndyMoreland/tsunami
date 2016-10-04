@@ -1,4 +1,5 @@
 /// <reference path="../typings/node/node.d.ts" />
+import { MoveSymbolCommandDefinition } from "./commands/MoveSymbolCommand";
 import { GetPropertiesOfSymbolDefinition } from "./commands/GetPropertiesOfSymbol";
 import { SaveToCommandDefinition } from "./commands/SaveToCommand";
 import { ChangeCommandDefinition } from "./commands/ChangeCommand";
@@ -21,7 +22,8 @@ const terminalCommandDefinitions = [
     new OrganizeImportsCommandDefinition(),
     new GetContainingExpressionsDefinition(),
     new GetContainingScopesDefinition(),
-    new GetPropertiesOfSymbolDefinition()
+    new GetPropertiesOfSymbolDefinition(),
+    new MoveSymbolCommandDefinition()
 ];
 
 const nonterminalCommandDefinitions = [

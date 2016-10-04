@@ -1,0 +1,1 @@
+import { default as log, a } from "logger";

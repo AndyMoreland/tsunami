@@ -2,6 +2,7 @@
 (require 'helm)
 (require 's)
 (require 'tsunami-code-edit)
+(require 'deferred)
 
 (defun tsunami--helm-projectile-build-dwim-source (candidates action)
   "Dynamically build a Helm source definition for Projectile files based on context with CANDIDATES, executing ACTION."
@@ -137,7 +138,37 @@
                                          (if (tide-response-success-p response)
                                              (let ((code-edit (plist-get response :body)))
                                                (tsunami--apply-code-edit code-edit)
-                                               (message "Organized imported."))
+                                               (message "Organized imports."))
                                            (message "Failed to organize imports."))))))
+
+(defun tsunami-copy-interface-body ()
+  (interactive)
+  (let ((response (tsunami--command:sync-definition)))
+    (print response)
+    (save-excursion
+      (with-current-buffer (current-buffer)
+        (tsunami--jump-to-definition-response response)
+        (search-forward "{")
+        (backward-char)
+        (mark-sexp)
+        (copy-region-as-kill (point) (mark))))))
+
+(defun tsunami-move-symbol ()
+  (interactive)
+  (let ((from-filename (tsunami--helm-read-file-in-project "From: "))
+        (to-filename (tsunami--helm-read-file-in-project "To: "))
+        (symbol-name (read-from-minibuffer "SymbolName: ")))
+    (let ((response (tsunami--command:move-symbol from-filename to-filename symbol-name)))
+      (if (tide-response-success-p response)
+          (let ((code-edit-groups (plist-get response :body)))
+            (save-excursion
+              (-each code-edit-groups
+                (lambda (code-edit-group)
+                  (let ((file (plist-get code-edit-group :file))
+                        (code-edits (plist-get code-edit-group :edits)))
+                    (with-current-buffer (find-file-noselect file)
+                      (tsunami--apply-code-edits code-edits)
+                      (basic-save-buffer)))))))
+        (error "Failed to move symbol")))))
 
 (provide 'tsunami-refactor)

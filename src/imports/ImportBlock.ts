@@ -1,3 +1,4 @@
+import log from "../log";
 import { ModuleSpecifier, mergeImportRecords } from "./ImportStatement";
 import * as ts from "typescript";
 import {
@@ -25,7 +26,13 @@ export class ImportBlock {
 
     /** Returns true if this ImportBlock may contain the specified symbol */
     public mayContainImport(moduleSpecifier: ModuleSpecifier, symbolName: string) {
-        return this.importRecords[moduleSpecifier].importClause.namedBindings.find(x => x.symbolName === symbolName) ||
+        const specifier = this.importRecords[moduleSpecifier];
+
+        if (!specifier) {
+            return false;
+        }
+
+        return specifier.importClause.namedBindings.find(x => x.symbolName === symbolName) ||
             this.importRecords[moduleSpecifier].namespaceImport != null;
     }
 

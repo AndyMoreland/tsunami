@@ -182,14 +182,14 @@
     (tsunami--import-symbol-location candidate)
     (tsunami--complete-with-candidate candidate)))
 
-(defun tsunami-import-symbol-at-point ()
-  (interactive)
+(defun tsunami-import-symbol-at-point (&optional arg)
+  (interactive "P")
   (let ((symbol (thing-at-point 'symbol t)))
-    (tsunami--helm '(("Import `RET'" . tsunami--import-and-complete-symbol)) symbol)))
+    (tsunami--helm '(("Import `RET'" . tsunami--import-and-complete-symbol)) arg symbol)))
 
-(defun helm-tsunami-symbols ()
-  (interactive)
-  (tsunami--helm (tsunami--default-helm-actions)))
+(defun helm-tsunami-symbols (&optional arg)
+  (interactive "P")
+  (tsunami--helm (tsunami--default-helm-actions) arg))
 
 (defun tsunami--setup-variables ()
   (setq-local eldoc-documentation-function 'tsunami-eldoc-function))

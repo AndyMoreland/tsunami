@@ -28,7 +28,7 @@ export interface CodeEdit extends Extent {
     newText: string;
 }
 
-export interface CodeEditForFile {
-    filename: string; /* absolute */
-    edit: CodeEdit;
+export interface CodeEditGroup {
+    file: string; /* absolute */
+    edits: CodeEdit[];
 }

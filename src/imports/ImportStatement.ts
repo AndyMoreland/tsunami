@@ -74,7 +74,7 @@ function parseImportClause(importClause: ts.ImportClause): ImportClause | Namesp
                     if (alias == null) {
                         throw new Error("Found default import in named bindings without alias.");
                     } */
-                    parsedImportClause.defaultName = symbolName;
+                    parsedImportClause.defaultName = alias;
                 }  else {
                     parsedImportClause.namedBindings.push({
                         symbolName,
@@ -99,7 +99,7 @@ function canonicalizeModuleSpecifier(localDirectory: string, moduleSpecifier: st
     if (firstChar !== "." && firstChar !== "/") {
         return moduleSpecifier as ModuleName;
     } else {
-        return path.resolve(localDirectory, moduleSpecifier) as AbsoluteFilename;
+        return path.resolve(localDirectory, moduleSpecifier).replace(/\.tsx?/g, "") as AbsoluteFilename;
     }
 }
 
