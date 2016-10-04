@@ -25,14 +25,14 @@ export class ImportBlock {
     }
 
     /** Returns true if this ImportBlock may contain the specified symbol */
-    public mayContainImport(moduleSpecifier: ModuleSpecifier, symbolName: string) {
+    public mayContainImport(moduleSpecifier: ModuleSpecifier, symbolName: string): boolean {
         const specifier = this.importRecords[moduleSpecifier];
 
         if (!specifier) {
             return false;
         }
 
-        return specifier.importClause.namedBindings.find(x => x.symbolName === symbolName) ||
+        return specifier.importClause.namedBindings.find(x => x.symbolName === symbolName) != null ||
             this.importRecords[moduleSpecifier].namespaceImport != null;
     }
 
