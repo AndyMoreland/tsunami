@@ -18,7 +18,7 @@ function expectMatches(formatter: ImportBlockFormatter, fileName: string): void 
     const result = formatter.formatImportBlock(path.join(__dirname, "fixtures"), ImportBlock.fromFile(sourceFile));
 
     /* Account for trailing \n in fixture file */
-    expect(result + "\n").to.eql(fs.readFileSync(path.join(__dirname, "fixtures", `${fileName}.ts.post`)).toString());
+    expect(result.trim()).to.eql(fs.readFileSync(path.join(__dirname, "fixtures", `${fileName}.ts.post`)).toString().trim());
 }
 
 describe("SimpleImportBlockFormatter", () => {
@@ -42,4 +42,10 @@ describe("SimpleImportBlockFormatter", () => {
 
     it("should properly rewrite aliased default imports",
        () => expectMatches(new SimpleImportBlockFormatter(), "default-imports"));
+
+    it("should do nothing to files without imports",
+       () => expectMatches(new SimpleImportBlockFormatter(), "no-imports"));
+
+    it("should not screw with leading comments",
+       () => expectMatches(new SimpleImportBlockFormatter(), "no-imports"));
 });

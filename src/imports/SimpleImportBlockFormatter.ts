@@ -127,6 +127,6 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
         }).reduce((acc, el) => {
             acc.push(...el);
             return acc;
-        }, [] as string[]).join(";\n") + ";"; /* Make sure we get the trailing ;\n */
+        }, [] as string[]).join(";\n") + (sortedModuleSpecifiers.length > 0 ? ";" : ""); /* Make sure we get the trailing ;\n */
     }
 }

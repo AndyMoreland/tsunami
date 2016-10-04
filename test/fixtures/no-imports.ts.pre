@@ -1,0 +1,3 @@
+function foo() {
+    console.log("I'm an importless file");
+}

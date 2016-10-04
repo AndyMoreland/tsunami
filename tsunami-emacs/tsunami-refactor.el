@@ -155,20 +155,20 @@
 
 (defun tsunami-move-symbol ()
   (interactive)
-  (let ((from-filename (tsunami--helm-read-file-in-project "From: "))
+  (let* ((from-filename (tsunami--helm-read-file-in-project "From: "))
         (to-filename (tsunami--helm-read-file-in-project "To: "))
-        (symbol-name (read-from-minibuffer "SymbolName: ")))
-    (let ((response (tsunami--command:move-symbol from-filename to-filename symbol-name)))
-      (if (tide-response-success-p response)
-          (let ((code-edit-groups (plist-get response :body)))
-            (save-excursion
-              (-each code-edit-groups
-                (lambda (code-edit-group)
-                  (let ((file (plist-get code-edit-group :file))
-                        (code-edits (plist-get code-edit-group :edits)))
-                    (with-current-buffer (find-file-noselect file)
-                      (tsunami--apply-code-edits code-edits)
-                      (basic-save-buffer)))))))
-        (error "Failed to move symbol")))))
+        (symbol-name (read-from-minibuffer "SymbolName: "))
+        (response (tsunami--command:move-symbol from-filename to-filename symbol-name)))
+    (if (tide-response-success-p response)
+        (let ((code-edit-groups (plist-get response :body)))
+          (save-excursion
+            (-each code-edit-groups
+              (lambda (code-edit-group)
+                (let ((file (plist-get code-edit-group :file))
+                      (code-edits (plist-get code-edit-group :edits)))
+                  (with-current-buffer (find-file-noselect file)
+                    (tsunami--apply-code-edits code-edits)
+                    (basic-save-buffer)))))))
+      (error "Failed to move symbol"))))
 
 (provide 'tsunami-refactor)

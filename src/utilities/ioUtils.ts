@@ -39,17 +39,15 @@ function getLineStartIndex(file: string): number[] {
 /* Assumes codeEdits are sorted end-to-start of file. */
 export function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Promise<void> {
     return readFilePromise(path).then(buffer => {
-        const file = buffer.toString();
-        const lineIndex = getLineStartIndex(file);
-
-        let result = file;
+        let result = buffer.toString();
+        const lineIndex = getLineStartIndex(result);
 
         sortedCodeEdits.slice().reverse().forEach(edit => {
             const startPos = lineIndex[edit.start.line - 1] + edit.start.offset - 1;
             const endPos = lineIndex[edit.end.line - 1] + edit.end.offset - 1;
 
-            const firstSegment = file.slice(0, startPos);
-            const secondSegment = file.slice(endPos);
+            const firstSegment = result.slice(0, startPos);
+            const secondSegment = result.slice(endPos);
 
             result = firstSegment + (edit.newText || "") + secondSegment;
         });
