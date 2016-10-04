@@ -68,14 +68,14 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
     private emitImportRecord(localPath: string, importRecord: ImportRecord): string[] {
         const ret: string[] = [];
         const hasBindings = importRecord.importClause.defaultName != null || importRecord.importClause.namedBindings.length > 0;
-        const spec = getLocalModuleSpecifier(localPath, importRecord);
+        const localSpecifier = getLocalModuleSpecifier(localPath, importRecord);
 
         if (importRecord.namespaceImport == null && !hasBindings)  {
-            ret.push(`import "${spec}"`);
+            ret.push(`import "${localSpecifier}"`);
         } else {
             if (importRecord.namespaceImport != null) {
                 const alias = importRecord.namespaceImport.alias;
-                ret.push(`import * as ${alias} from "${spec}"`);
+                ret.push(`import * as ${alias} from "${localSpecifier}"`);
             }
 
             if (hasBindings) {
@@ -86,15 +86,19 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                     return [binding.symbolName, binding.alias].filter(x => x != null).join(" as ");
                 });
 
-                const totalLen = sortedStringBindings.reduce((totalLen, str) => totalLen + str.length, 0);
-                const multilineFormat = totalLen > 80;
+                const totalLen = sortedStringBindings.reduce((totalLen, str) => totalLen + str.length, 0)
+                    + (defaultName != null ? defaultName.length : 0)
+                    + localSpecifier.length
+                    + 10;
+                console.log(totalLen);
+                const multilineFormat = totalLen > 140;
                 const newlineOrSpace = multilineFormat ? "\n" : " ";
                 const bindingsJoinStr = multilineFormat ? ",\n" + this.getIndentSpaces() : ", ";
                 const leadingIndent = multilineFormat ? this.getIndentSpaces() : "";
                 // tslint:disable-next-line
                 const symbols = sortedBindings.length > 0 ? `{${newlineOrSpace}${leadingIndent}${sortedStringBindings.join(bindingsJoinStr)}${newlineOrSpace}}` : null;
                 const bindings = [defaultName, symbols].filter(x => x != null).join(", ");
-                ret.push(`import ${bindings} from "${spec}"`);
+                ret.push(`import ${bindings} from "${localSpecifier}"`);
             }
         }
 
@@ -122,8 +126,8 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
             return a >= b ? 1 : -1;
         });
 
-        return sortedModuleSpecifiers.map(spec => {
-            return this.emitImportRecord(localPath, importBlock.importRecords[spec]);
+        return sortedModuleSpecifiers.map(localSpecifier => {
+            return this.emitImportRecord(localPath, importBlock.importRecords[localSpecifier]);
         }).reduce((acc, el) => {
             acc.push(...el);
             return acc;
