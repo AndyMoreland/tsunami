@@ -9,6 +9,9 @@
     "build": "tsc",
     "prepublish": "tsc --declaration"
   },
+  "bin": {
+    "tsunami-imports": "./lib/src/cli/importSorterWrapper.js"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {

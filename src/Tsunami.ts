@@ -3,6 +3,7 @@ import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
 import * as ts from "typescript";
+import * as path from "path";
 import { BenchmarkingCommandInvoker } from "./BenchmarkingCommandInvoker";
 import { Command, CommandDefinition } from "./Command";
 import { CommandInvoker } from "./CommandInvoker";
@@ -54,7 +55,7 @@ export class Tsunami {
     }
 
     public buildRiggedTsServerProcess() {
-        let tsserver: p.ChildProcess = p.spawn("node", ["/Users/amoreland/tsunami/node_modules/typescript/lib/tsserver.js"]);
+        let tsserver: p.ChildProcess = p.spawn("tsserver");
 
         process.stdin.resume();
         process.stdin
