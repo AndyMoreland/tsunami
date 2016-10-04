@@ -1,5 +1,5 @@
 {
-  "name": "@AndyMoreland/tsunami",
+  "name": "@derander/tsunami",
   "version": "0.1.0",
   "description": "Refactoring layer for tide-mode",
   "main": "lib/index.js",
