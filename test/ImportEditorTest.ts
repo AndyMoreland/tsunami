@@ -22,7 +22,7 @@ function getSourceFileFor(filename: string): ts.SourceFile {
 function expectMatches(editor: ImportEditor, fileName: string): void {
     const sourceFile = getSourceFileFor(path.join(__dirname, "fixtures", `${fileName}.ts.pre`));
     const edits = editor.applyImportBlockToFile(sourceFile, ImportBlock.fromFile(sourceFile));
-    const result = applyCodeEditsInMemory(sourceFile.getText(), edits);
+    const result = applyCodeEditsInMemory(sourceFile.getFullText(), edits);
 
     /* Account for trailing \n in fixture file */
     expect(result.trim()).to.eql(fs.readFileSync(path.join(__dirname, "fixtures", `${fileName}.ts.post`)).toString().trim());
@@ -34,7 +34,12 @@ describe("ImportEditor", () => {
     it("should order global before scope before project imports",
        () => expectMatches(editor, "global-scope-project"));
 
-
     it("should not add extra whitespace when imports are split into two chunks by a non-import statement",
        () => expectMatches(editor, "split-imports"))
+
+    it("should not munch comments that follow the import block",
+       () => expectMatches(editor, "imports-followed-by-comments"))
+
+    it("should not screw with leading comments",
+       () => expectMatches(editor, "leading-comment"));
 });

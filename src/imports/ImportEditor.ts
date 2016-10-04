@@ -23,18 +23,25 @@ export class ImportEditor {
                     inExtent = true;
                     startOfExtent = node.getStart();
                 }
-
+                endOfExtent = node.getEnd();
             } else {
                 if (inExtent) {
-                    endOfExtent = node.getStart();
                     inExtent = false;
+                    // console.log("[" + sourceFile.getFullText()[endOfExtent] + "]");
                     results.push({
                         start: convertPositionToLocation(sourceFile, startOfExtent),
-                        end: convertPositionToLocation(sourceFile, endOfExtent),
+                        end: convertPositionToLocation(sourceFile, endOfExtent + 1)
                     });
                 }
             }
         });
+
+        // if (inExtent) {
+        //     results.push({
+        //         start: convertPositionToLocation(sourceFile, startOfExtent),
+        //         end: convertPositionToLocation(sourceFile, endOfExtent),
+        //     });
+        // }
 
         return results;
     }
@@ -49,7 +56,7 @@ export class ImportEditor {
         const firstEdit: CodeEdit = {
             start: importExtents[0].start,
             end: importExtents[0].end,
-            newText: this.formatter.formatImportBlock(path.dirname(sourceFile.fileName), importBlock) + "\n\n"
+            newText: this.formatter.formatImportBlock(path.dirname(sourceFile.fileName), importBlock) + "\n"
         };
 
         const deletions: CodeEdit[] = importExtents.slice(1).map(extent => {

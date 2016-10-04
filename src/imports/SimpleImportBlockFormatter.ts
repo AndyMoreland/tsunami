@@ -92,7 +92,6 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                     + (defaultName != null ? defaultName.length : 0)
                     + localSpecifier.length
                     + extraStuffInImportStateLength;
-                console.log(totalLen);
                 const multilineFormat = totalLen > 140;
                 const newlineOrSpace = multilineFormat ? "\n" : " ";
                 const bindingsJoinStr = multilineFormat ? ",\n" + this.getIndentSpaces() : ", ";

@@ -1,0 +1,2 @@
+/** Hello there. This is a comment. */
+import { x } from "y";

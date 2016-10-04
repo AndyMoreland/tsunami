@@ -1,0 +1,4 @@
+import { x } from "y";
+
+// this is a comment
+const x = 6;

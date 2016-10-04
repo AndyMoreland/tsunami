@@ -45,7 +45,4 @@ describe("SimpleImportBlockFormatter", () => {
 
     it("should do nothing to files without imports",
        () => expectMatches(new SimpleImportBlockFormatter(), "no-imports"));
-
-    it("should not screw with leading comments",
-       () => expectMatches(new SimpleImportBlockFormatter(), "no-imports"));
 });

@@ -1,5 +1,7 @@
 import { x } from "bar";
 import { y } from "car";
-const x = 5;
+import { z } from "dar";
+const a = 5;
+const b = 5;
 
 const banana = 6;
