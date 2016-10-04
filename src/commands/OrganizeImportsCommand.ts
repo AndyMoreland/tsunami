@@ -4,7 +4,6 @@ import { ImportEditor } from "../imports/ImportEditor";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { CodeEdit } from "../protocol/types";
 import { Command, CommandDefinition } from "../Command";
-const x = 5;
 import { TsunamiContext } from "../Context";
 
 export interface OrganizeImportsCommand extends Command {
