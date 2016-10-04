@@ -86,10 +86,12 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                     return [binding.symbolName, binding.alias].filter(x => x != null).join(" as ");
                 });
 
-                const totalLen = sortedStringBindings.reduce((totalLen, str) => totalLen + str.length, 0)
+                const extraStuffInImportStateLength = 22;
+
+                const totalLen = sortedStringBindings.reduce((totalLen, str) => totalLen + str.length + 2, 0)
                     + (defaultName != null ? defaultName.length : 0)
                     + localSpecifier.length
-                    + 10;
+                    + extraStuffInImportStateLength;
                 console.log(totalLen);
                 const multilineFormat = totalLen > 140;
                 const newlineOrSpace = multilineFormat ? "\n" : " ";
@@ -131,6 +133,6 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
         }).reduce((acc, el) => {
             acc.push(...el);
             return acc;
-        }, [] as string[]).join(";\n") + (sortedModuleSpecifiers.length > 0 ? ";" : ""); /* Make sure we get the trailing ;\n */
+        }, [] as string[]).join(";\n") + (sortedModuleSpecifiers.length > 0 ? ";" : ""); /* Make sure we get the trailing ; */
     }
 }

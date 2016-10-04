@@ -1,8 +1,11 @@
 import * as Promise from "bluebird";
+import { ImportBlock } from "../imports/ImportBlock";
+import { ImportEditor } from "../imports/ImportEditor";
+import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { CodeEdit } from "../protocol/types";
-import { CommandDefinition, Command } from "../Command";
+import { Command, CommandDefinition } from "../Command";
+const x = 5;
 import { TsunamiContext } from "../Context";
-import { ImportSorter } from "../importSorter";
 
 export interface OrganizeImportsCommand extends Command {
     arguments: {
@@ -10,15 +13,16 @@ export interface OrganizeImportsCommand extends Command {
     };
 }
 
-export class OrganizeImportsCommandDefinition implements CommandDefinition<OrganizeImportsCommand, CodeEdit | null> {
+export class OrganizeImportsCommandDefinition implements CommandDefinition<OrganizeImportsCommand, CodeEdit[] | null> {
     public predicate(command: Command): command is OrganizeImportsCommand {
         return command.command === "ORGANIZE_IMPORTS";
     }
 
-    public processor(context: TsunamiContext, command: OrganizeImportsCommand): Promise<CodeEdit | null> {
+    public processor(context: TsunamiContext, command: OrganizeImportsCommand): Promise<CodeEdit[] | null> {
         return context.getSourceFileFor(command.arguments.filename).then(sourceFile => {
-            let importSorter = new ImportSorter(sourceFile);
-            return importSorter.getSortFileImports();
+            const editor = new ImportEditor(new SimpleImportBlockFormatter());
+            const importBlock = ImportBlock.fromFile(sourceFile);
+            return editor.applyImportBlockToFile(sourceFile, importBlock);
         });
     }
 }

@@ -3,6 +3,7 @@ import * as ts from "typescript";
 import { CodeEdit, Extent } from "../protocol/types";
 import { convertPositionToLocation } from "../utilities/languageUtilities";
 import { ImportBlock } from "./ImportBlock";
+import x = require("typescript");
 import { ImportBlockFormatter } from "./ImportBlockFormatter";
 
 export class ImportEditor {
@@ -16,16 +17,16 @@ export class ImportEditor {
         let startOfExtent = -1;
         let endOfExtent = -1;
 
-        ts.forEachChild(sourceFile, (node) => {
+        ts.forEachChild(sourceFile, node => {
             if (node.kind === ts.SyntaxKind.ImportDeclaration) {
                 if (!inExtent) {
                     inExtent = true;
                     startOfExtent = node.getStart();
                 }
 
-                endOfExtent = node.getEnd();
             } else {
                 if (inExtent) {
+                    endOfExtent = node.getStart();
                     inExtent = false;
                     results.push({
                         start: convertPositionToLocation(sourceFile, startOfExtent),
@@ -48,7 +49,7 @@ export class ImportEditor {
         const firstEdit: CodeEdit = {
             start: importExtents[0].start,
             end: importExtents[0].end,
-            newText: this.formatter.formatImportBlock(path.dirname(sourceFile.fileName), importBlock)
+            newText: this.formatter.formatImportBlock(path.dirname(sourceFile.fileName), importBlock) + "\n\n"
         };
 
         const deletions: CodeEdit[] = importExtents.slice(1).map(extent => {

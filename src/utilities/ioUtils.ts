@@ -1,8 +1,8 @@
+import * as Promise from "bluebird";
+import * as fs from "fs";
 import { CodeEdit } from "../protocol/types";
 import { Response } from "../Response";
 import log from "../log";
-import * as Promise from "bluebird";
-import * as fs from "fs";
 
 const readFilePromise = Promise.promisify(fs.readFile);
 const writeFilePromise = Promise.promisify<void, string, string>(fs.writeFile);
@@ -36,22 +36,26 @@ function getLineStartIndex(file: string): number[] {
     return indices;
 }
 
+export function applyCodeEditsInMemory(fileContents: string, sortedCodeEdits: CodeEdit[]): string {
+    let result = fileContents;
+    const lineIndex = getLineStartIndex(result);
+
+    sortedCodeEdits.slice().reverse().forEach(edit => {
+        const startPos = lineIndex[edit.start.line - 1] + edit.start.offset - 1;
+        const endPos = lineIndex[edit.end.line - 1] + edit.end.offset - 1;
+
+        const firstSegment = result.slice(0, startPos);
+        const secondSegment = result.slice(endPos);
+
+        result = firstSegment + (edit.newText || "") + secondSegment;
+    });
+
+    return result;
+}
+
 /* Assumes codeEdits are sorted end-to-start of file. */
 export function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Promise<void> {
     return readFilePromise(path).then(buffer => {
-        let result = buffer.toString();
-        const lineIndex = getLineStartIndex(result);
-
-        sortedCodeEdits.slice().reverse().forEach(edit => {
-            const startPos = lineIndex[edit.start.line - 1] + edit.start.offset - 1;
-            const endPos = lineIndex[edit.end.line - 1] + edit.end.offset - 1;
-
-            const firstSegment = result.slice(0, startPos);
-            const secondSegment = result.slice(endPos);
-
-            result = firstSegment + (edit.newText || "") + secondSegment;
-        });
-
-        return writeFilePromise(path, result);
+        return writeFilePromise(path, applyCodeEditsInMemory(buffer.toString(), sortedCodeEdits));
     });
 }

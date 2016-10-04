@@ -1,0 +1,5 @@
+import { x } from "bar";
+import { y } from "car";
+const x = 5;
+
+const banana = 6;

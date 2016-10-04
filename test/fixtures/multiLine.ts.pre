@@ -1,1 +1,1 @@
-import { aextremelyLongSymbolNamesShouldAllGoOnMultipleLines, btoAvoidAnUnreadableMess, clikeThisExample, dRightHere } from "a-module";
+import { aextremelyLongSymbolNamesShouldAllGoOnMultipleLines, btoAvoidAnUnreadableMess, clikeThisExample, dRightHere, eInThisFile } from "a-module";
