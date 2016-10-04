@@ -1,9 +1,9 @@
 import { RegionSpan } from "../protocol/types";
+import { Command, CommandDefinition } from "../Command";
+import { TsunamiContext } from "../Context";
 import { getErrorOutputForCommand } from "../Response";
 import { getScopesContainingPoint } from "../ScopeTree";
-import { TsunamiContext } from "../Context";
 import log from "../log";
-import { Command, CommandDefinition } from "../Command";
 
 export interface GetContainingScopesCommand extends Command {
     arguments: {

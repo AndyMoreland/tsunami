@@ -1,8 +1,8 @@
 import { RegionSpan } from "../protocol/types";
-import { getExpressionsContainingPoint } from "../ExpressionTree";
-import { TsunamiContext } from "../Context";
-import log from "../log";
 import { Command, CommandDefinition } from "../Command";
+import { TsunamiContext } from "../Context";
+import { getExpressionsContainingPoint } from "../ExpressionTree";
+import log from "../log";
 
 export interface GetContainingExpressionsCommand extends Command {
     arguments: {

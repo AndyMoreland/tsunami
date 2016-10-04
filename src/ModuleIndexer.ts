@@ -1,4 +1,4 @@
-import { DefinitionType, Indexer, DefinitionIndex } from "./Indexer";
+import { DefinitionIndex, DefinitionType, Indexer } from "./Indexer";
 
 export class ModuleIndexer implements Indexer {
     constructor(private moduleName: string) {}

@@ -1,15 +1,15 @@
 /// <reference path="../typings/node/node.d.ts" />
-import { MoveSymbolCommandDefinition } from "./commands/MoveSymbolCommand";
-import { GetPropertiesOfSymbolDefinition } from "./commands/GetPropertiesOfSymbol";
-import { SaveToCommandDefinition } from "./commands/SaveToCommand";
-import { ChangeCommandDefinition } from "./commands/ChangeCommand";
 import { Tsunami } from "./Tsunami";
+import { ChangeCommandDefinition } from "./commands/ChangeCommand";
 import { FetchSymbolLocationsDefinition } from "./commands/FetchSymbolLocations";
 import { GetContainingExpressionsDefinition } from "./commands/GetContainingExpressions";
 import { GetContainingScopesDefinition } from "./commands/GetContainingScopes";
+import { GetPropertiesOfSymbolDefinition } from "./commands/GetPropertiesOfSymbol";
+import { MoveSymbolCommandDefinition } from "./commands/MoveSymbolCommand";
 import { OrganizeImportsCommandDefinition } from "./commands/OrganizeImportsCommand";
 import { ReloadCommandDefinition } from "./commands/ReloadCommand";
-import { logWithCallback, default as log } from "./log";
+import { SaveToCommandDefinition } from "./commands/SaveToCommand";
+import log, { logWithCallback } from "./log";
 import { TsProject } from "./tsProject";
 
 /* HACK */

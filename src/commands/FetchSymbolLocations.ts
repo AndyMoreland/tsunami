@@ -1,6 +1,6 @@
 import * as Promise from "bluebird";
 import { SymbolLocation } from "../protocol/types";
-import { CommandDefinition, Command } from "../Command";
+import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
 import { DefinitionType } from "../Indexer";
 

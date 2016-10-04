@@ -1,5 +1,5 @@
-import { Location } from "../protocol/types";
 import * as ts from "typescript";
+import { Location } from "../protocol/types";
 
 /* Taken from typescript compiler because they are not exported. */
 

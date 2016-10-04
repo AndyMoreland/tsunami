@@ -2,8 +2,8 @@ import * as JSONStream from "JSONStream";
 import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
-import * as ts from "typescript";
 import * as path from "path";
+import * as ts from "typescript";
 import { BenchmarkingCommandInvoker } from "./BenchmarkingCommandInvoker";
 import { Command, CommandDefinition } from "./Command";
 import { CommandInvoker } from "./CommandInvoker";
@@ -12,10 +12,10 @@ import { FileIndexer } from "./FileIndexer";
 import { MutableTsunamiContext } from "./MutableTsunamiContext";
 import { getErrorOutputForCommand } from "./Response";
 import { SimpleCommandInvoker } from "./SimpleCommandInvoker";
-import { writeOutputToStdOut } from "./utilities/ioUtils";
 import log from "./log";
 import { TsProject } from "./tsProject";
-import { UnknownObject, CallbackFunction } from "./types";
+import { CallbackFunction, UnknownObject } from "./types";
+import { writeOutputToStdOut } from "./utilities/ioUtils";
 
 function parseCommand(data: {[index: string]: any}): Command {
     if (data["command"] !== undefined && data["seq"] !== undefined) {

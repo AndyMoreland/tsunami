@@ -1,12 +1,12 @@
-import { ImportEditor } from "../imports/ImportEditor";
-import { AbsoluteFilename, ModuleSpecifier } from "../imports/ImportStatement";
-import { ImportBlock } from "../imports/ImportBlock";
-import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
-import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import * as Promise from "bluebird";
 import * as ts from "typescript";
+import { ImportBlock } from "../imports/ImportBlock";
+import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
+import { ImportEditor } from "../imports/ImportEditor";
+import { AbsoluteFilename, ModuleSpecifier } from "../imports/ImportStatement";
+import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { CodeEditGroup } from "../protocol/types";
-import { CommandDefinition, Command } from "../Command";
+import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
 
 export interface MoveSymbolCommand extends Command {

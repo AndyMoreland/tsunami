@@ -1,9 +1,9 @@
 #! /usr/bin/env node
 /// <reference path="../../typings/node/node.d.ts" />
 
+import * as Promise from "bluebird";
 import * as fs from "fs";
 import * as ts from "typescript";
-import * as Promise from "bluebird";
 import { ImportBlock } from "../imports/ImportBlock";
 import { ImportEditor } from "../imports/ImportEditor";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";

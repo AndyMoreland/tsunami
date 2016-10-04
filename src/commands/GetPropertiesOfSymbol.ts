@@ -1,9 +1,9 @@
-import { getScopesContainingPoint } from "../ScopeTree";
-import { getNodesContainingPoint } from "../utilities/languageUtilities";
 import * as ts from "typescript";
-import { TsunamiContext } from "../Context";
-import log from "../log";
+import { getNodesContainingPoint } from "../utilities/languageUtilities";
 import { Command, CommandDefinition } from "../Command";
+import { TsunamiContext } from "../Context";
+import { getScopesContainingPoint } from "../ScopeTree";
+import log from "../log";
 
 export interface GetPropertiesOfSymbolCommand extends Command {
     arguments: {

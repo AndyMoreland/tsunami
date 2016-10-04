@@ -1,6 +1,6 @@
-import log from "../log";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
+import log from "../log";
 
 export interface ChangeCommand extends Command {
     arguments: {

@@ -1,12 +1,12 @@
 /// <reference path="../../typings/node/node.d.ts" />
 
-import { ModuleSpecifier } from "../imports/ImportStatement";
-import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
+import * as Promise from "bluebird";
 import * as fs from "fs";
 import * as ts from "typescript";
-import * as Promise from "bluebird";
 import { ImportBlock } from "../imports/ImportBlock";
+import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
 import { ImportEditor } from "../imports/ImportEditor";
+import { ModuleSpecifier } from "../imports/ImportStatement";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { applyCodeEdits } from "../utilities/ioUtils";
 

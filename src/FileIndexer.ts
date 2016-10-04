@@ -1,8 +1,8 @@
-import { DefinitionIndex, DefinitionType, Definition } from "./Indexer";
-import log from "./log";
-import * as ts from "typescript";
-import * as path from "path";
 import * as Promise from "bluebird";
+import * as path from "path";
+import * as ts from "typescript";
+import { Definition, DefinitionIndex, DefinitionType } from "./Indexer";
+import log from "./log";
 
 export class FileIndexer {
     private index: DefinitionIndex;

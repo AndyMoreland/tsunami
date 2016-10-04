@@ -1,6 +1,6 @@
-import { ImportRecord, NamedBinding, getTypeOfModuleSpecifier, ModuleSpecifier } from "./ImportStatement";
-import { ImportBlock, ImportRecords } from "./ImportBlock";
 import * as deepcopy from "deepcopy";
+import { ImportBlock, ImportRecords } from "./ImportBlock";
+import { ImportRecord, ModuleSpecifier, NamedBinding, getTypeOfModuleSpecifier } from "./ImportStatement";
 
 export class ImportBlockBuilder {
     private built = false;

@@ -1,10 +1,6 @@
-import log from "../log";
-import { ModuleSpecifier, mergeImportRecords } from "./ImportStatement";
 import * as ts from "typescript";
-import {
-    createImportRecordFromImportDeclaration,
-    ImportRecord
-} from "./ImportStatement";
+import log from "../log";
+import { ImportRecord, ModuleSpecifier, createImportRecordFromImportDeclaration, mergeImportRecords } from "./ImportStatement";
 
 export type ImportRecords = { [canonicalModuleName: string]: ImportRecord };
 

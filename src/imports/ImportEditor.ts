@@ -3,8 +3,8 @@ import * as ts from "typescript";
 import { CodeEdit, Extent } from "../protocol/types";
 import { convertPositionToLocation } from "../utilities/languageUtilities";
 import { ImportBlock } from "./ImportBlock";
-import x = require("typescript");
 import { ImportBlockFormatter } from "./ImportBlockFormatter";
+import x = require("typescript");
 
 export class ImportEditor {
     constructor(

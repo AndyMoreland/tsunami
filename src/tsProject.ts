@@ -1,10 +1,10 @@
-import * as ts from "typescript";
-import * as fs from "fs";
-import * as path from "path";
-import log from "./log";
 import * as Promise from "bluebird";
-import * as globAsync from "glob";
 import * as findRoot from "find-root";
+import * as fs from "fs";
+import * as globAsync from "glob";
+import * as path from "path";
+import * as ts from "typescript";
+import log from "./log";
 
 const glob = Promise.promisify(globAsync) as (pattern: string, options?: any) => Promise<string[]>;
 

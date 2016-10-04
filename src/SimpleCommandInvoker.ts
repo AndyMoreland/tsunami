@@ -1,7 +1,7 @@
-import { CommandInvoker } from "./CommandInvoker";
 import { Command, CommandDefinition } from "./Command";
+import { CommandInvoker } from "./CommandInvoker";
 import { TsunamiContext } from "./Context";
-import { getOutputForCommand, getErrorOutputForCommand } from "./Response";
+import { getErrorOutputForCommand, getOutputForCommand } from "./Response";
 import log from "./log";
 
 export class SimpleCommandInvoker implements CommandInvoker {

@@ -1,8 +1,8 @@
-import { ReferenceFinder } from "../referenceFinder";
-import { TsProject } from "../tsProject";
-import * as ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
+import * as ts from "typescript";
+import { ReferenceFinder } from "../referenceFinder";
+import { TsProject } from "../tsProject";
 
 function getSourceFileFor(filename: string): ts.SourceFile {
   return ts.createSourceFile(filename, fs.readFileSync(filename).toString(), ts.ScriptTarget.ES5, true);

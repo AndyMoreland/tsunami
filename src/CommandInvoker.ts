@@ -1,5 +1,5 @@
-import { TsunamiContext } from "./Context";
 import { Command } from "./Command";
+import { TsunamiContext } from "./Context";
 
 export interface CommandInvoker {
     isInvokableCommand(command: Command): boolean;
