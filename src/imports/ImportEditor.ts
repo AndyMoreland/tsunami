@@ -44,7 +44,7 @@ export class ImportEditor {
         if (importExtents.length === 0) {
             importExtents.push({
                 start: convertPositionToLocation(sourceFile, 0),
-                end: convertPositionToLocation(sourceFile, 0)
+                end: convertPositionToLocation(sourceFile, 1)
             });
         }
 

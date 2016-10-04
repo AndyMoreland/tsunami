@@ -41,5 +41,5 @@ describe("SimpleImportBlockFormatter", () => {
        () => expectMatches(new SimpleImportBlockFormatter(), "multiple-imports"));
 
     it("should properly rewrite aliased default imports",
-       () => expectMatches(new SimpleImportBlockFormatter(), "default-imports"))
+       () => expectMatches(new SimpleImportBlockFormatter(), "default-imports"));
 });
