@@ -11,6 +11,7 @@ tsconfig.json
 tsd.json
 tslint.json
 *.el
+tsunami-code/
 tsunami-emacs/
 log.txt
 #*
