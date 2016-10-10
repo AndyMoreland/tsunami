@@ -15,7 +15,7 @@
     "onCommand:extension.importSymbol",
     "onCommand:extension.reindexProject"
   ],
-  "main": "./out/src/extension",
+  "main": "./out/src/extension.js",
   "contributes": {
     "commands": [
       {
