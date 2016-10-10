@@ -79,7 +79,7 @@
                                         (popup-make-item text :value range))
                                       with-expressions))))
     (when (< 0 (length ranges))
-        (popup-menu* popup-items))))
+      (popup-menu* popup-items))))
 
 (defun tsunami--choose-containing-scope ()
   (let* ((ranges (tsunami--get-containing-scope-ranges))
@@ -100,21 +100,21 @@
                          (point-marker))))
 
     (with-atomic-undo
-      ;; Replace all expression instances
-      (save-excursion
-        (goto-char scope-start)
-        (while (re-search-forward expression-pattern scope-end t)
-          (replace-match new-name)))
-      ;; Insert new name
-      (save-excursion
-        (goto-char start-marker)
-        (kill-forward-chars (length new-name))
-        (insert new-name)
-        (goto-char scope-start)
-        (open-line-below)
-        (progn ; Generate the expression definition.
-          (insert (concat "const " new-name " = " expression-contents ";"))
-          (indent-according-to-mode))))
+     ;; Replace all expression instances
+     (save-excursion
+       (goto-char scope-start)
+       (while (re-search-forward expression-pattern scope-end t)
+         (replace-match new-name)))
+     ;; Insert new name
+     (save-excursion
+       (goto-char start-marker)
+       (kill-forward-chars (length new-name))
+       (insert new-name)
+       (goto-char scope-start)
+       (open-line-below)
+       (progn ; Generate the expression definition.
+         (insert (concat "const " new-name " = " expression-contents ";"))
+         (indent-according-to-mode))))
     (forward-char (length new-name))
     (iedit-mode)))
 
@@ -153,12 +153,14 @@
         (mark-sexp)
         (copy-region-as-kill (point) (mark))))))
 
-(defun tsunami-move-symbol ()
-  (interactive)
-  (let* ((from-filename (tsunami--helm-read-file-in-project "From: "))
-        (to-filename (tsunami--helm-read-file-in-project "To: "))
-        (symbol-name (read-from-minibuffer "SymbolName: "))
-        (response (tsunami--command:move-symbol from-filename to-filename symbol-name)))
+(defun tsunami-move-symbol (arg)
+  (interactive "P")
+  (let* ((from-filename (if arg
+                            (tsunami--helm-read-file-in-project "From: ")
+                          (buffer-file-name)))
+         (to-filename (tsunami--helm-read-file-in-project "To: "))
+         (symbol-name (read-from-minibuffer "SymbolName: " (thing-at-point 'symbol)))
+         (response (tsunami--command:move-symbol from-filename to-filename symbol-name)))
     (if (tide-response-success-p response)
         (let ((code-edit-groups (plist-get response :body)))
           (save-excursion
