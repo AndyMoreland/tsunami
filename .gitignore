@@ -5,3 +5,4 @@ log.txt
 *.elc
 .cask
 *.log
+#*
