@@ -1,4 +1,3 @@
-import { Tsunami } from "../Tsunami";
 import { ChangeCommandDefinition } from "../commands/ChangeCommand";
 import { FetchSymbolLocationsDefinition } from "../commands/FetchSymbolLocations";
 import { GetContainingExpressionsDefinition } from "../commands/GetContainingExpressions";
@@ -8,6 +7,7 @@ import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
 import { OrganizeImportsCommandDefinition } from "../commands/OrganizeImportsCommand";
 import { ReloadCommandDefinition } from "../commands/ReloadCommand";
 import { SaveToCommandDefinition } from "../commands/SaveToCommand";
+import { Tsunami } from "../Tsunami";
 import log, { logWithCallback } from "../log";
 import { TsProject } from "../tsProject";
 

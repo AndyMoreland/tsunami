@@ -23,16 +23,13 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
         try {
             let symbolLocations: SymbolLocation[] = [];
 
-            Object.keys(context.fileIndexerMap).forEach(filename => {
-                let definitions = context.fileIndexerMap[filename].getDefinitionIndex();
-                Object.keys(definitions).forEach(
-                    symbolName => {
-                        let definition = definitions[symbolName];
-                        let symbolLocation = {
+            context.fileIndexerMap.forEach(indexer => {
+                indexer.getDefinitionIndex().forEach((definition, symbolName) => {
+                        const symbolLocation = {
                             name: symbolName,
                             type: DefinitionType[definition.type],
                             location: {
-                                filename: definition.filename,
+                                filename: definition.moduleSpecifier,
                                 pos: definition.location
                             },
                             default: definition.default
@@ -41,16 +38,13 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
                     });
             });
 
-            Object.keys(context.moduleIndexerMap).forEach(moduleName => {
-                let definitions = context.moduleIndexerMap[moduleName].getDefinitionIndex();
-                Object.keys(definitions).forEach(
-                    symbolName => {
-                        let definition = definitions[symbolName];
-                        let symbolLocation = {
+            context.moduleIndexerMap.forEach((indexer, moduleName) => {
+                indexer.getDefinitionIndex().forEach((definition, symbolName) => {
+                        const symbolLocation = {
                             name: symbolName,
                             type: DefinitionType[definition.type],
                             location: {
-                                filename: moduleName,
+                                filename: definition.moduleSpecifier,
                                 pos: definition.location,
                                 isExternalModule: true
                             },

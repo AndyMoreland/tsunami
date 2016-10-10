@@ -2,32 +2,37 @@ import * as Promise from "bluebird";
 import * as path from "path";
 import * as ts from "typescript";
 import { Definition, DefinitionIndex, DefinitionType } from "./Indexer";
+import { AbsoluteFilename, ModuleSpecifier } from "./imports/ImportStatement";
 import log from "./log";
 
 export class FileIndexer {
     private index: DefinitionIndex;
 
     constructor(
+        private moduleSpecifier: ModuleSpecifier,
         private sourceFile: ts.SourceFile,
         private getSourceFileForAbsolutePath: (absolutePath: string) => Promise<ts.SourceFile>
     ) {}
 
     private addDefinitiontoIndex(definition: Definition): void {
         if (definition.text != null) {
-            this.index[definition.text] = definition;
+            this.index.set(definition.text, definition);
         }
     }
 
     private addIndex(index: DefinitionIndex): void {
-        Object.keys(index).filter(key => index[key].text != null)
-            .forEach(key => this.index[index[key].text!] = index[key]);
+        index.forEach(def => {
+            if (def.text != null) {
+                this.index.set(def.text!, def);
+            }
+        });
     }
 
     private getDefinitionForNode(node: ts.Node, name: string, type: DefinitionType, isDefault: boolean = false): Definition {
         return {
             text: name,
             location: node.getStart(),
-            filename: this.sourceFile.fileName,
+            moduleSpecifier: this.moduleSpecifier,
             type: type,
             default: this.isDefaultNode(node)
         };
@@ -35,7 +40,9 @@ export class FileIndexer {
 
     private indexClassDeclaration(node: ts.ClassDeclaration): void {
         try {
-            this.addDefinitiontoIndex(this.getDefinitionForNode(node, (node.name != null && node.name.getText()) || "", DefinitionType.CLASS));
+            this.addDefinitiontoIndex(
+                this.getDefinitionForNode(node, (node.name != null && node.name.getText()) || "", DefinitionType.CLASS)
+            );
         } catch (e) {
             log ("Node of death encountered.");
             log (e.stack);
@@ -115,12 +122,15 @@ export class FileIndexer {
                     const recursivePath = path.join(dirname, node.moduleSpecifier.getText().replace(/"|'/g, "")) + ".d.ts";
                     log("Recursively indexing: ", recursivePath);
                     const subindexPromise = this.getSourceFileForAbsolutePath(recursivePath).then(sourceFile => {
-                        const indexer = new FileIndexer(sourceFile, this.getSourceFileForAbsolutePath);
+                        const indexer = new FileIndexer(
+                            sourceFile.fileName as AbsoluteFilename,
+                            sourceFile,
+                            this.getSourceFileForAbsolutePath
+                        );
                         return indexer.indexFile().then(nothing => {
                             const recursiveIndex = indexer.getDefinitionIndex();
                             this.addIndex(recursiveIndex);
                         });
-
                     }).catch(e => {
                         log("Failed to index recursive module: ", recursivePath);
                     });
@@ -129,7 +139,7 @@ export class FileIndexer {
             }
         });
 
-        return Promise.all(promises) as any as Promise<void>;
+        return Promise.all(promises).thenReturn();
     }
 
     private indexExportSpecifier(node: ts.ExportSpecifier): void {
@@ -157,7 +167,7 @@ export class FileIndexer {
     };
 
     public indexFile(): Promise<void> {
-        this.index = {};
+        this.index = new Map<string, Definition>();
         const promises: Promise<void>[] = [];
 
         try {
@@ -168,7 +178,7 @@ export class FileIndexer {
             log("Failed during indexing of file ", this.sourceFile.fileName, ": ", e.stack);
         }
 
-        return Promise.all(promises) as any as Promise<void>;
+        return Promise.all(promises).thenReturn();
     }
 
     public getDefinitionIndex(): DefinitionIndex {

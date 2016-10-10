@@ -4,7 +4,6 @@ import { CodeEdit, Extent } from "../protocol/types";
 import { convertPositionToLocation } from "../utilities/languageUtilities";
 import { ImportBlock } from "./ImportBlock";
 import { ImportBlockFormatter } from "./ImportBlockFormatter";
-import x = require("typescript");
 
 export class ImportEditor {
     constructor(
@@ -27,7 +26,6 @@ export class ImportEditor {
             } else {
                 if (inExtent) {
                     inExtent = false;
-                    // console.log("[" + sourceFile.getFullText()[endOfExtent] + "]");
                     results.push({
                         start: convertPositionToLocation(sourceFile, startOfExtent),
                         end: convertPositionToLocation(sourceFile, endOfExtent + 1)
@@ -35,13 +33,6 @@ export class ImportEditor {
                 }
             }
         });
-
-        // if (inExtent) {
-        //     results.push({
-        //         start: convertPositionToLocation(sourceFile, startOfExtent),
-        //         end: convertPositionToLocation(sourceFile, endOfExtent),
-        //     });
-        // }
 
         return results;
     }

@@ -1,8 +1,8 @@
+import { ModuleName } from "./imports/ImportStatement";
 import * as JSONStream from "JSONStream";
 import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
-import * as path from "path";
 import * as ts from "typescript";
 import { BenchmarkingCommandInvoker } from "./BenchmarkingCommandInvoker";
 import { Command, CommandDefinition } from "./Command";
@@ -33,13 +33,14 @@ export class Tsunami {
 
     constructor(
         private tsProject: TsProject,
-        terminalCommandDefinitions: CommandDefinition<any, any>[],
-        nonterminalCommandDefinitions: CommandDefinition<any, any>[]
+        terminalCommandDefinitions: CommandDefinition<any, any>[] = [],
+        nonterminalCommandDefinitions: CommandDefinition<any, any>[] = [],
+        context?: TsunamiContext
     ) {
         this.terminalInvoker = new BenchmarkingCommandInvoker(new SimpleCommandInvoker(terminalCommandDefinitions));
         this.nonterminalInvoker = new BenchmarkingCommandInvoker(new SimpleCommandInvoker(nonterminalCommandDefinitions));
         this.documentRegistry = ts.createDocumentRegistry(true);
-        this.context = new MutableTsunamiContext(
+        this.context = context || new MutableTsunamiContext(
             this.tsProject,
             writeOutputToStdOut,
             this.documentRegistry
@@ -52,6 +53,10 @@ export class Tsunami {
         this.indexDependenciesOfProject();
         this.buildInitialProjectIndex();
         log("initialized");
+    }
+
+    public getContext(): TsunamiContext {
+        return this.context;
     }
 
     public buildRiggedTsServerProcess() {
@@ -150,8 +155,12 @@ export class Tsunami {
         return this.context.getSourceFileFor(filename).then(() => {
             return this.context.updateSourceFileFor(filename).then(sourceFile => {
                 log("Indexing definition file:", sourceFile.fileName);
-                let indexer = new FileIndexer(sourceFile, (filename: string) => this.context.getSourceFileFor(filename));
-                this.context.moduleIndexerMap[moduleName] = indexer;
+                const indexer = new FileIndexer(
+                    moduleName as ModuleName,
+                    sourceFile,
+                    filename => this.context.getSourceFileFor(filename)
+                );
+                this.context.moduleIndexerMap.set(moduleName, indexer);
                 return indexer.indexFile();
             });
         });

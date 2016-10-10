@@ -55,6 +55,12 @@ export class ImportBlockBuilder {
         return this;
     }
 
+    public renameModule(from: ModuleSpecifier, to: ModuleSpecifier): this {
+        this.importRecords[to] = this.importRecords[from];
+
+        return this;
+    }
+
     /** Specify `name === 'default' to remove default import`. Alias is ignored. */
     public withoutImport(moduleSpecifier: ModuleSpecifier, name: string): this {
         const importRecord = this.importRecords[moduleSpecifier];

@@ -1,7 +1,5 @@
-#! /usr/bin/env node
 /// <reference path="../../typings/node/node.d.ts" />
 
-import * as Promise from "bluebird";
 import * as fs from "fs";
 import * as glob from "glob";
 import * as ts from "typescript";
@@ -19,16 +17,14 @@ function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
     });
 }
 
-process.argv.slice(2).forEach((input) => {
-    promiseGlob(input).then(matches => {
-        matches.forEach(filename => {
-            const editor = new ImportEditor(new SimpleImportBlockFormatter());
-            getSourceFileFor(filename).then(sourceFile => {
-                const importBlock = ImportBlock.fromFile(sourceFile);
-                const edits = editor.applyImportBlockToFile(sourceFile, importBlock);
-
-                applyCodeEdits(filename, edits).then(() => console.log("Edited: ", filename));
-            });
-        });
+process.argv.slice(2).forEach(async (input) => {
+    const matches = await promiseGlob(input);
+    matches.forEach(async (filename) => {
+        const editor = new ImportEditor(new SimpleImportBlockFormatter());
+        const sourceFile = await getSourceFileFor(filename);
+        const importBlock = ImportBlock.fromFile(sourceFile);
+        const edits = editor.applyImportBlockToFile(sourceFile, importBlock);
+        await applyCodeEdits(filename, edits);
+        console.log("Edited: ", filename);
     });
 });

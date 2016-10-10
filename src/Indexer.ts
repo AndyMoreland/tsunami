@@ -2,14 +2,12 @@ export interface Indexer {
     getDefinitionIndex(): DefinitionIndex;
 }
 
-export interface DefinitionIndex {
-    [symbolName: string]: Definition;
-}
+export type DefinitionIndex = Map<string, Definition>;
 
 export interface Definition {
     text: string | undefined;
     location?: number;
-    filename: string;
+    moduleSpecifier: string;
     type: DefinitionType;
     default: boolean;
 };
