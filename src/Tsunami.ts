@@ -1,4 +1,3 @@
-import { ModuleName } from "./imports/ImportStatement";
 import * as JSONStream from "JSONStream";
 import * as p from "child_process";
 import * as es from "event-stream";
@@ -12,6 +11,7 @@ import { FileIndexer } from "./FileIndexer";
 import { MutableTsunamiContext } from "./MutableTsunamiContext";
 import { getErrorOutputForCommand } from "./Response";
 import { SimpleCommandInvoker } from "./SimpleCommandInvoker";
+import { ModuleName } from "./imports/ImportStatement";
 import log from "./log";
 import { TsProject } from "./tsProject";
 import { CallbackFunction, UnknownObject } from "./types";

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /// <reference path="../../typings/node/node.d.ts" />
 
+import * as Bluebird from "bluebird";
 import * as fs from "fs";
 import * as glob from "glob";
 import * as ts from "typescript";
-import * as Bluebird from "bluebird";
 import { ImportBlock } from "../imports/ImportBlock";
 import { ImportEditor } from "../imports/ImportEditor";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
