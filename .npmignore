@@ -15,5 +15,4 @@ tsunami-code/
 tsunami-emacs/
 log.txt
 #*
-src
 *.el*
