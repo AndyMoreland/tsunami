@@ -4,13 +4,14 @@
 import * as fs from "fs";
 import * as glob from "glob";
 import * as ts from "typescript";
+import * as Bluebird from "bluebird";
 import { ImportBlock } from "../imports/ImportBlock";
 import { ImportEditor } from "../imports/ImportEditor";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { applyCodeEdits } from "../utilities/ioUtils";
 
-const promiseGlob = Promise.promisify<string[], string>(glob);
-const readFilePromise = Promise.promisify(fs.readFile);
+const promiseGlob = Bluebird.promisify<string[], string>(glob);
+const readFilePromise = Bluebird.promisify(fs.readFile);
 
 function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
     return readFilePromise(filename).then(buffer => {
