@@ -70,15 +70,13 @@ export function activate(context: vscode.ExtensionContext) {
 
         context.fileIndexerMap.forEach((indexer, file) => {
             const definitions = indexer.getDefinitionIndex();
-            Object.keys(definitions).forEach(k => {
-                const def = definitions[k];
+            definitions.forEach(def => {
                 const item = {
                     definition: def,
                     label: def.text,
                     description: ""
                 };
                 results.push(item);
-
                 if (symbol && def.text === symbol) {
                     exactMatchResults.push(item);
                 }
