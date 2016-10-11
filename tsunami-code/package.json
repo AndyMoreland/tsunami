@@ -1,56 +1,56 @@
 {
-  "name": "tsunami-code",
-  "displayName": "tsunami-code",
-  "description": "Tsunami integration for vscode",
-  "version": "0.0.1",
-  "publisher": "derander",
-  "engines": {
-    "vscode": "^1.5.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onLanguage:typescript",
-    "onCommand:extension.importSymbol",
-    "onCommand:extension.reindexProject"
-  ],
-  "main": "./out/src/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "tsunami.importSymbol",
-        "title": "(tsu) Import Symbol"
-      },
-      {
-        "command": "tsunami.reindexProject",
-        "title": "(tsu) Reindex Exports"
-      }
+    "name": "tsunami-code",
+    "displayName": "tsunami-code",
+    "description": "Tsunami integration for vscode",
+    "version": "0.1.1",
+    "publisher": "derander",
+    "engines": {
+        "vscode": "^1.5.0"
+    },
+    "categories": [
+        "Other"
     ],
-    "keybindings": [
-      {
-        "command": "tsunami.importSymbol",
-        "key": "alt+enter",
-        "mac": "alt+enter",
-        "when": "editorTextFocus"
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "tsc -p ./",
-    "publish-extension": "vsce publish",
-    "compile": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install"
-  },
-  "devDependencies": {
-    "@types/mocha": "^2.2.32",
-    "@types/node": "^6.0.40",
-    "mocha": "^2.3.3",
-    "typescript": "^2.0.3",
-    "vsce": "1.15.0",
-    "vscode": "^1.0.0"
-  },
-  "dependencies": {
-    "@derander/tsunami": "0.1.4"
-  }
+    "activationEvents": [
+        "onLanguage:typescript",
+        "onCommand:extension.importSymbol",
+        "onCommand:extension.reindexProject"
+    ],
+    "main": "./out/src/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "tsunami.importSymbol",
+                "title": "(tsu) Import Symbol"
+            },
+            {
+                "command": "tsunami.reindexProject",
+                "title": "(tsu) Reindex Exports"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "tsunami.importSymbol",
+                "key": "alt+enter",
+                "mac": "alt+enter",
+                "when": "editorTextFocus"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "publish-extension": "vsce publish",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.32",
+        "@types/node": "^6.0.40",
+        "mocha": "^2.3.3",
+        "typescript": "^2.0.3",
+        "vsce": "1.15.0",
+        "vscode": "^1.0.0"
+    },
+    "dependencies": {
+        "@derander/tsunami": "0.1.4"
+    }
 }
