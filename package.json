@@ -1,6 +1,6 @@
 {
   "name": "@derander/tsunami",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Refactoring layer for tide-mode",
   "main": "lib/src/index.js",
   "typings": "lib/src/index.d.ts",
