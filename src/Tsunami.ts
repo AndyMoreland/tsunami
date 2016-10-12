@@ -1,4 +1,5 @@
 import * as JSONStream from "JSONStream";
+import * as Bluebird from "bluebird";
 import * as p from "child_process";
 import * as es from "event-stream";
 import * as fs from "fs";
@@ -76,7 +77,11 @@ export class Tsunami {
             .pipe(process.stdout);
     }
 
-    public indexDependenciesOfProject(): Promise<void> {
+    public buildInitialProjectIndex(): Promise<void> {
+        return Bluebird.all([this.buildInitialInternalProjectIndex(), this.indexDependenciesOfProject()]).thenReturn();
+    }
+
+    private indexDependenciesOfProject(): Promise<void> {
         try {
             // ts.createLanguageService(ts.createCompilerHost(tsProject.getCompilerOptions(), true), GLOBAL_DOCUMENT_REGISTRY);
             return this.tsProject.getDependencyFilenames().then(deps => {
@@ -107,7 +112,7 @@ export class Tsunami {
         return Promise.reject(new Error("Error during boot."));
     }
 
-    public buildInitialProjectIndex(): Promise<void> {
+    private buildInitialInternalProjectIndex(): Promise<void> {
         return this.tsProject.getFileNames().then(files => {
             let promises = files.map(file => {
                 let p = this.context.getSourceFileFor(file).then(() => {

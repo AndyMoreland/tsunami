@@ -46,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     tsunami.buildInitialProjectIndex()
-        .then(() => console.log("Done indexing: ", path.join(projectRoot, "tsconfig.json")))
+        .then(() => vscode.window.showInformationMessage("Done indexing: " + path.join(projectRoot, "tsconfig.json")))
         .catch(e => console.error(e));
 
     // The command has been defined in the package.json file
@@ -68,19 +68,17 @@ export function activate(context: vscode.ExtensionContext) {
         let results: CompletionItem[] = [];
         const exactMatchResults: CompletionItem[] = [];
 
-        context.fileIndexerMap.forEach((indexer, file) => {
-            const definitions = indexer.getDefinitionIndex();
-            definitions.forEach(def => {
-                const item = {
-                    definition: def,
-                    label: def.text,
-                    description: ""
-                };
-                results.push(item);
-                if (symbol && def.text === symbol) {
-                    exactMatchResults.push(item);
-                }
-            });
+        const definitions = await context.getMatchingSymbols(symbol!);
+        definitions.forEach(def => {
+            const item = {
+                definition: def,
+                label: def.text || "",
+                description: ""
+            };
+            results.push(item);
+            if (symbol && def.text === symbol) {
+                exactMatchResults.push(item);
+            }
         });
 
         if (results.length === 0) {
@@ -93,10 +91,13 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         const choice = results.length === 1 ? results[0] : await vscode.window.showQuickPick(results);
+        if (!choice) {
+            return;
+        }
         const sourceFile = ts.createSourceFile(editor.document.fileName, editor.document.getText(), ts.ScriptTarget.ES5, true);
         const newBlock = tsu.ImportBlockBuilder.from(tsu.ImportBlock.fromFile(sourceFile))
             .addImportBinding(choice.definition.moduleSpecifier.replace(/\.tsx?/g, "") as any,
-                              { symbolName: choice.definition.text }
+                              { symbolName: choice.definition.text || "" }
             ).build();
         const edits = (new tsu.ImportEditor(new tsu.SimpleImportBlockFormatter()))
             .applyImportBlockToFile(sourceFile, newBlock);
