@@ -2,7 +2,7 @@
     "name": "tsunami-code",
     "displayName": "tsunami-code",
     "description": "Tsunami integration for vscode",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "publisher": "derander",
     "engines": {
         "vscode": "^1.5.0"
@@ -51,6 +51,6 @@
         "vscode": "^1.0.0"
     },
     "dependencies": {
-        "@derander/tsunami": "0.1.4"
+        "@derander/tsunami": "0.1.8"
     }
 }
