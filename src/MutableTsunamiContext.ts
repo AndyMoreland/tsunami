@@ -51,12 +51,12 @@ export class MutableTsunamiContext implements TsunamiContext {
         }
 
         return readFilePromise(tmpfilename || filename).then(file => {
-            let sourceText = file.toString();
+            const sourceText = file.toString();
             this.fileVersionMap.set(filename, this.fileVersionMap.get(filename) + 1);
-            let sourceFile = this.documentRegistry.updateDocument(filename,
-                                                                  this.project.getCompilerOptions(),
-                                                                  ts.ScriptSnapshot.fromString(sourceText),
-                                                                  "" + this.fileVersionMap.get(filename));
+            const sourceFile = this.documentRegistry.updateDocument(filename,
+                                                                    this.project.getCompilerOptions(),
+                                                                    ts.ScriptSnapshot.fromString(sourceText),
+                                                                    "" + this.fileVersionMap.get(filename));
             return sourceFile;
         });
     }
