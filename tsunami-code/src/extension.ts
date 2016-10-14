@@ -1,4 +1,5 @@
 import { TsunamiCodeActionProvider } from "./TsunamiCodeActionProvider";
+import { TsunamiCodeCompletionProvider } from "./TsunamiCodeCompletionProvider";
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
@@ -61,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const secondCommand = vscode.commands.registerTextEditorCommand("tsunami.importSymbol", importSymbolCommand);
 
-    async function importSymbolCommand(editor, edit, symbol?: string) {
+    async function importSymbolCommand(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, symbol?: string) {
         // The code you place here will be executed every time your command is executed
         console.log("completion seeded with: ", symbol);
         const context = tsunami.getContext();
@@ -102,12 +103,14 @@ export function activate(context: vscode.ExtensionContext) {
         const edits = (new tsu.ImportEditor(new tsu.SimpleImportBlockFormatter()))
             .applyImportBlockToFile(sourceFile, newBlock);
         editor.edit((editBuilder) => applyCodeEdit(editBuilder, edits[0]));
-
+        editor.edit((editBuilder) => {
+            editor.selection.start
+        });
     }
 
+    vscode.languages.registerCompletionItemProvider(TS_MODE, new TsunamiCodeCompletionProvider(tsunami.getContext()))
     context.subscriptions.push(firstCommand, secondCommand);
-    context.subscriptions.push(
-        vscode.languages.registerCodeActionsProvider(TS_MODE, new TsunamiCodeActionProvider()));
+    context.subscriptions.push(vscode.languages.registerCodeActionsProvider(TS_MODE, new TsunamiCodeActionProvider()));
 }
 
 // this method is called when your extension is deactivated
