@@ -1,0 +1,11 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/types/npm-yargs/d5fd6b434aea07eefe463affac1ea292f96553cb/typings.json",
+    "raw": "registry:npm/yargs#5.0.0+20160907000723",
+    "main": "index.d.ts",
+    "version": "5.0.0",
+    "name": "yargs",
+    "type": "typings"
+  }
+}
