@@ -5,6 +5,7 @@ import * as Bluebird from "bluebird";
 import * as fs from "fs";
 import * as glob from "glob";
 import * as ts from "typescript";
+import * as yargs from "yargs";
 import { ImportBlock } from "../imports/ImportBlock";
 import { ImportEditor } from "../imports/ImportEditor";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
@@ -19,10 +20,17 @@ function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
     });
 }
 
-process.argv.slice(2).forEach(async (input) => {
+const args = yargs.usage("Usage: $0 --indent-size [num] <files>")
+    .number("indent-size")
+    .default("indent-size", 2)
+    .argv;
+
+args._.forEach(async (input) => {
     const matches = await promiseGlob(input);
     matches.forEach(async (filename) => {
-        const editor = new ImportEditor(new SimpleImportBlockFormatter());
+        const editor = new ImportEditor(new SimpleImportBlockFormatter({
+            indentSize: (args as any).indentSize
+        }));
         const sourceFile = await getSourceFileFor(filename);
         const importBlock = ImportBlock.fromFile(sourceFile);
         const edits = editor.applyImportBlockToFile(sourceFile, importBlock);
