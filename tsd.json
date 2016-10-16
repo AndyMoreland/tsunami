@@ -19,6 +19,9 @@
     },
     "minimatch/minimatch.d.ts": {
       "commit": "85af69c91599a6c904618545f0613970e1ff3f64"
+    },
+    "fuse/fuse.d.ts": {
+      "commit": "3f67905cbef90e9c86cce72e24e4cdaf165fcc0e"
     }
   }
 }

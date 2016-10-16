@@ -6,6 +6,8 @@ import { FileIndexer } from "./FileIndexer";
 import { Definition } from "./Indexer";
 import { Response } from "./Response";
 import { AbsoluteFilename } from "./imports/ImportStatement";
+import { FuzzAldrinPlusSymbolSearchIndex } from "./search/FuzzAldrinPlusSymbolSearchIndex";
+import { SymbolSearchIndex } from "./search/SymbolSearchIndex";
 import { TsProject } from "./tsProject";
 
 const readFilePromise = Promise.promisify(fs.readFile);
@@ -14,12 +16,15 @@ export class MutableTsunamiContext implements TsunamiContext {
     public fileIndexerMap: Map<string, FileIndexer> = new Map<string, FileIndexer>();
     public moduleIndexerMap: Map<string, FileIndexer> = new Map<string, FileIndexer>();
     private fileVersionMap: Map<string, number> = new Map<string, number>();
+    private symbolSearchIndex: SymbolSearchIndex;
 
     constructor(
         private project: TsProject,
         public writeOutput: <T>(response: Response<T>) => Promise<void>,
         private documentRegistry: ts.DocumentRegistry
-    ) {}
+    ) {
+        this.symbolSearchIndex = new FuzzAldrinPlusSymbolSearchIndex(this);
+    }
 
     public getSourceFileFor(filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
         return readFilePromise(sourceFileName || filename).then(file => {
@@ -65,20 +70,7 @@ export class MutableTsunamiContext implements TsunamiContext {
         return this.project;
     }
 
-    public getMatchingSymbols(search: string): Promise<Definition[]> {
-        const results: Definition[] = [];
-        this.fileIndexerMap.forEach(indexer => {
-            for (let definition of indexer.getDefinitionIndex().values()) {
-                results.push(definition);
-            }
-        });
-
-        this.moduleIndexerMap.forEach(indexer => {
-            for (let definition of indexer.getDefinitionIndex().values()) {
-                results.push(definition);
-            }
-        });
-
-        return Promise.resolve(results);
+    public getMatchingSymbols(search?: string): Promise<Definition[]> {
+        return this.symbolSearchIndex.getMatchingSymbols(search);
     }
 }
