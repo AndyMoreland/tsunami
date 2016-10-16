@@ -104,11 +104,12 @@ export function activate(context: vscode.ExtensionContext) {
             .applyImportBlockToFile(sourceFile, newBlock);
         editor.edit((editBuilder) => applyCodeEdit(editBuilder, edits[0]));
         editor.edit((editBuilder) => {
-            editor.selection.start
+            const currentWordRange = editor.document.getWordRangeAtPosition(editor.selection.start);
+            return editBuilder.replace(currentWordRange, choice.label);
         });
     }
 
-    vscode.languages.registerCompletionItemProvider(TS_MODE, new TsunamiCodeCompletionProvider(tsunami.getContext()))
+    vscode.languages.registerCompletionItemProvider(TS_MODE, new TsunamiCodeCompletionProvider(tsunami.getContext()));
     context.subscriptions.push(firstCommand, secondCommand);
     context.subscriptions.push(vscode.languages.registerCodeActionsProvider(TS_MODE, new TsunamiCodeActionProvider()));
 }
