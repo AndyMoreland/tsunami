@@ -10,8 +10,9 @@ export class ModuleIndexer implements Indexer {
             {
                 default: false,
                 moduleSpecifier: this.moduleName as ModuleName,
+                span: undefined!,
                 text: this.moduleName,
-                type: DefinitionType.EXTERNAL_MODULE
+                type: DefinitionType.EXTERNAL_MODULE,
             }
         ]]);
     }

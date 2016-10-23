@@ -25,7 +25,7 @@
 (defun tsunami--jump-to-matching-symbol (candidate)
   (let* ((location (tsunami--location-of-symbol candidate))
          (filename (plist-get location :filename))
-         (pos (+ 1 (plist-get location :pos))))
+         (pos (+ 1 (plist-get (plist-get location :span) :start))))
     (find-file filename)
     (goto-char pos)))
 

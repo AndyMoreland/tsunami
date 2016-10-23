@@ -1,4 +1,4 @@
-import * as Promise from "bluebird";
+import * as Bluebird from "bluebird";
 import { Command } from "./Command";
 import { CommandInvoker } from "./CommandInvoker";
 import { TsunamiContext } from "./Context";
@@ -14,7 +14,7 @@ export class BenchmarkingCommandInvoker implements CommandInvoker {
     public invoke(context: TsunamiContext, command: Command): Promise<void> {
         const startTime = process.hrtime();
         const invokationPromise = this.delegate.invoke(context, command);
-        invokationPromise.finally(() => {
+        Bluebird.resolve(invokationPromise).finally(() => {
             const diff = process.hrtime(startTime);
             log("[Benchmark]: ", command.command, " completed in ", (diff[0] * 1e9 + diff[1]), " nanoseconds");
         });

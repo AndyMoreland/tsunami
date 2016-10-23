@@ -1,3 +1,5 @@
+import { RegionSpan } from "./protocol/types";
+
 export interface Indexer {
     getDefinitionIndex(): DefinitionIndex;
 }
@@ -6,7 +8,7 @@ export type DefinitionIndex = Map<string, Definition>;
 
 export interface Definition {
     text: string | undefined;
-    location?: number;
+    span: RegionSpan;
     moduleSpecifier: string;
     type: DefinitionType;
     default: boolean;

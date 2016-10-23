@@ -30,7 +30,7 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
                             type: DefinitionType[definition.type],
                             location: {
                                 filename: definition.moduleSpecifier,
-                                pos: definition.location
+                                span: definition.span
                             },
                             default: definition.default
                         };
@@ -45,7 +45,7 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
                             type: DefinitionType[definition.type],
                             location: {
                                 filename: definition.moduleSpecifier,
-                                pos: definition.location,
+                                span: definition.span,
                                 isExternalModule: true
                             },
                             default: definition.default

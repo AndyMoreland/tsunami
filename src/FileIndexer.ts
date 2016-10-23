@@ -31,7 +31,10 @@ export class FileIndexer {
     private getDefinitionForNode(node: ts.Node, name: string, type: DefinitionType, isDefault: boolean = false): Definition {
         return {
             text: name,
-            location: node.getStart(),
+            span: {
+                start: node.getStart(),
+                end: node.getEnd()
+            },
             moduleSpecifier: this.moduleSpecifier,
             type: type,
             default: this.isDefaultNode(node)
