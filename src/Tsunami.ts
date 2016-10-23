@@ -83,7 +83,6 @@ export class Tsunami {
 
     private indexDependenciesOfProject(): Promise<void> {
         try {
-            // ts.createLanguageService(ts.createCompilerHost(tsProject.getCompilerOptions(), true), GLOBAL_DOCUMENT_REGISTRY);
             return this.tsProject.getDependencyFilenames().then(deps => {
                 log("Dependency typings: ", JSON.stringify(deps, null, 2));
 
