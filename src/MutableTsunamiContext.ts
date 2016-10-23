@@ -1,6 +1,7 @@
-import * as Promise from "bluebird";
 import * as fs from "fs";
+import * as path from "path";
 import * as ts from "typescript";
+import * as Bluebird from "bluebird";
 import { TsunamiContext } from "./Context";
 import { FileIndexer } from "./FileIndexer";
 import { Definition } from "./Indexer";
@@ -10,7 +11,7 @@ import { FuzzAldrinPlusSymbolSearchIndex } from "./search/FuzzAldrinPlusSymbolSe
 import { SymbolSearchIndex } from "./search/SymbolSearchIndex";
 import { TsProject } from "./tsProject";
 
-const readFilePromise = Promise.promisify(fs.readFile);
+const readFilePromise = Bluebird.promisify(fs.readFile);
 
 export class MutableTsunamiContext implements TsunamiContext {
     public fileIndexerMap: Map<string, FileIndexer> = new Map<string, FileIndexer>();
@@ -26,7 +27,19 @@ export class MutableTsunamiContext implements TsunamiContext {
         this.symbolSearchIndex = new FuzzAldrinPlusSymbolSearchIndex(this);
     }
 
-    public getSourceFileFor(filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
+    public getSourceFileForSync(filename: string, sourceFileName?: string): ts.SourceFile {
+        const file = fs.readFileSync(sourceFileName || filename);
+        let sourceText = file.toString();
+        this.fileVersionMap.set(filename, 1);
+        let sourceFile = this.documentRegistry.acquireDocument(
+            filename,
+            this.project.getCompilerOptions(),
+            ts.ScriptSnapshot.fromString(sourceText), "" + this.fileVersionMap.get(filename));
+        this.updateSourceFileFor(filename, sourceFileName);
+        return sourceFile;
+    }
+
+    public async getSourceFileFor(filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
         return readFilePromise(sourceFileName || filename).then(file => {
             let sourceText = file.toString();
             this.fileVersionMap.set(filename, 1);
@@ -72,5 +85,18 @@ export class MutableTsunamiContext implements TsunamiContext {
 
     public getMatchingSymbols(search?: string): Promise<Definition[]> {
         return this.symbolSearchIndex.getMatchingSymbols(search);
+    }
+
+    public async getProgram(): Promise<ts.Program> {
+        const project = this.getProject();
+        let files = await project.getAllFilenames();
+        files = files.map(f => path.resolve(project.getRoot(), f));
+        console.log(project.getCompilerOptions());
+        const program = ts.createProgram(
+            files,
+            project.getCompilerOptions(),
+            ts.createCompilerHost(project.getCompilerOptions(), true)
+        );
+        return program;
     }
 }
