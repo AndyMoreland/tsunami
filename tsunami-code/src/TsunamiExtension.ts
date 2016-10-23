@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 
 export class TsunamiExtension {
-    constructor(private context: vs.ExtensionContext) {}
+    constructor() {}
 
-    public activate() {
+    public bindToContext(context: vs.ExtensionContext) {
     }
 }
