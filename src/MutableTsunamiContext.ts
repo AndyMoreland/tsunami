@@ -39,16 +39,14 @@ export class MutableTsunamiContext implements TsunamiContext {
         return sourceFile;
     }
 
-    public async getSourceFileFor(filename: string, sourceFileName?: string): Promise<ts.SourceFile> {
-        return readFilePromise(sourceFileName || filename).then(file => {
-            let sourceText = file.toString();
-            this.fileVersionMap.set(filename, 1);
-            let sourceFile = this.documentRegistry.acquireDocument(
-                filename,
-                this.project.getCompilerOptions(),
-                ts.ScriptSnapshot.fromString(sourceText), "" + this.fileVersionMap.get(filename));
-            return sourceFile;
-        }).then(foo => this.updateSourceFileFor(filename, sourceFileName));
+    public async getSourceFileFor(filename: string, fileText?: string): Promise<ts.SourceFile> {
+        const sourceText = fileText == null ? (await readFilePromise(filename)).toString() : fileText;
+        this.fileVersionMap.set(filename, 1);
+        this.documentRegistry.acquireDocument(
+            filename,
+            this.project.getCompilerOptions(),
+            ts.ScriptSnapshot.fromString(sourceText), "" + this.fileVersionMap.get(filename));
+        return this.updateSourceFileFor(filename, fileText);
     }
 
     public async reloadFile(filename: string, fileText?: string): Promise<void> {
@@ -59,7 +57,7 @@ export class MutableTsunamiContext implements TsunamiContext {
             filename => this.getSourceFileFor(filename)
         );
         this.fileIndexerMap.set(filename, indexer);
-        await indexer.indexFile();
+        return await indexer.indexFile();
     }
 
     public async updateSourceFileFor(filename: string, fileText?: string): Promise<ts.SourceFile> {
@@ -67,7 +65,7 @@ export class MutableTsunamiContext implements TsunamiContext {
             return this.getSourceFileFor(filename, fileText);
         }
 
-        const sourceText = fileText === undefined ? (await readFilePromise(filename).toString()) : fileText;
+        const sourceText = fileText == null ? (await readFilePromise(filename)).toString() : fileText;
         this.fileVersionMap.set(filename, this.fileVersionMap.get(filename) + 1);
         const sourceFile = this.documentRegistry.updateDocument(filename,
                                                                 this.project.getCompilerOptions(),

@@ -129,6 +129,7 @@ export class Tsunami {
     private processPotentialTsunamiCommand = (data: UnknownObject, cb: CallbackFunction<string>) => {
         // log("Incoming command: ", JSON.stringify(data, null, 2));
         let command = parseCommand(data);
+
         if (this.terminalInvoker.isInvokableCommand(command)) {
             // log("Processing command with tsunami.");
             try {
@@ -138,7 +139,6 @@ export class Tsunami {
                 log("Error processing tsunami command: ", JSON.stringify(command, null, 2), e.stack);
                 writeOutputToStdOut<string>(getErrorOutputForCommand(command, e));
             }
-
             cb();
         } else {
             if (this.nonterminalInvoker.isInvokableCommand(command)) {
