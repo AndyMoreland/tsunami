@@ -112,6 +112,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.languages.registerCompletionItemProvider(TS_MODE, new TsunamiCodeCompletionProvider(tsunami.getContext()));
     context.subscriptions.push(firstCommand, secondCommand);
     context.subscriptions.push(vscode.languages.registerCodeActionsProvider(TS_MODE, new TsunamiCodeActionProvider()));
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
+        tsunami.getContext().reloadFile(e.document.fileName, e.document.getText());
+    }));
 }
 
 // this method is called when your extension is deactivated

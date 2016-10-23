@@ -8,7 +8,7 @@ import { TsProject } from "./tsProject";
 export interface TsunamiContext {
     getSourceFileFor(fileName: string, tmpFileName?: string): Promise<ts.SourceFile>;
     updateSourceFileFor(fileName: string, tmpFileName?: string): Promise<ts.SourceFile>;
-    reloadFile(filename: string, tmpfilename?: string): Promise<void>;
+    reloadFile(filename: string, fileText?: string): Promise<void>;
     writeOutput<T>(response: Response<T>): Promise<void>;
     getProject(): TsProject;
     fileIndexerMap: Map<string, FileIndexer>;

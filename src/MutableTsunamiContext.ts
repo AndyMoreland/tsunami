@@ -51,32 +51,29 @@ export class MutableTsunamiContext implements TsunamiContext {
         }).then(foo => this.updateSourceFileFor(filename, sourceFileName));
     }
 
-    public reloadFile(filename: string, tmpfilename: string): Promise<void> {
-        return this.updateSourceFileFor(filename, tmpfilename).then(sourceFile => {
-            let indexer = new FileIndexer(
-                sourceFile.fileName as AbsoluteFilename,
-                sourceFile,
-                filename => this.getSourceFileFor(filename)
-            );
-            this.fileIndexerMap.set(filename, indexer);
-            return indexer.indexFile();
-        }).thenReturn(null!);
+    public async reloadFile(filename: string, fileText?: string): Promise<void> {
+        const sourceFile = await this.updateSourceFileFor(filename, fileText);
+        let indexer = new FileIndexer(
+            sourceFile.fileName as AbsoluteFilename,
+            sourceFile,
+            filename => this.getSourceFileFor(filename)
+        );
+        this.fileIndexerMap.set(filename, indexer);
+        await indexer.indexFile();
     }
 
-    public updateSourceFileFor(filename: string, tmpfilename?: string): Promise<ts.SourceFile> {
+    public async updateSourceFileFor(filename: string, fileText?: string): Promise<ts.SourceFile> {
         if (this.fileVersionMap.get(filename) == null) {
-            return this.getSourceFileFor(filename, tmpfilename);
+            return this.getSourceFileFor(filename, fileText);
         }
 
-        return readFilePromise(tmpfilename || filename).then(file => {
-            const sourceText = file.toString();
-            this.fileVersionMap.set(filename, this.fileVersionMap.get(filename) + 1);
-            const sourceFile = this.documentRegistry.updateDocument(filename,
-                                                                    this.project.getCompilerOptions(),
-                                                                    ts.ScriptSnapshot.fromString(sourceText),
-                                                                    "" + this.fileVersionMap.get(filename));
-            return sourceFile;
-        });
+        const sourceText = fileText === undefined ? (await readFilePromise(filename).toString()) : fileText;
+        this.fileVersionMap.set(filename, this.fileVersionMap.get(filename) + 1);
+        const sourceFile = this.documentRegistry.updateDocument(filename,
+                                                                this.project.getCompilerOptions(),
+                                                                ts.ScriptSnapshot.fromString(sourceText),
+                                                                "" + this.fileVersionMap.get(filename));
+        return sourceFile;
     }
 
     public getProject(): TsProject {
