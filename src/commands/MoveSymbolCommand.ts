@@ -1,9 +1,9 @@
-import * as Promise from "bluebird";
+import * as Bluebird from "bluebird";
 import { ImportEditor } from "../imports/ImportEditor";
 import { AbsoluteFilename, ModuleSpecifier } from "../imports/ImportStatement";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { CodeEditGroup } from "../protocol/types";
-import { rewriteFile } from "../utilities/moveSymbolUtils";
+import { rewriteSymbolImportInFile } from "../utilities/moveSymbolUtils";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
 
@@ -28,40 +28,34 @@ export class MoveSymbolCommandDefinition implements CommandDefinition<MoveSymbol
         return command.command === "MOVE_SYMBOL";
     }
 
-    public processor(context: TsunamiContext, command: MoveSymbolCommand): Promise<CodeEditGroup[] | null> {
+    public async processor(context: TsunamiContext, command: MoveSymbolCommand): Bluebird<CodeEditGroup[] | null> {
         const { fromFilename, toFilename, symbolName } = command.arguments;
 
         if (fromFilename === toFilename) {
-            return Promise.reject(new Error("Can't move symbol from file to itself."));
+            return Bluebird.reject(new Error("Can't move symbol from file to itself."));
         }
 
-        try {
-            const editor = new ImportEditor(new SimpleImportBlockFormatter());
-            const fromModuleSpecifier = assertAbsolute(fromFilename).replace(/\.tsx?/g, "") as ModuleSpecifier;
-            const toModuleSpecifier = assertAbsolute(toFilename).replace(/\.tsx?/g, "") as ModuleSpecifier;
+        const edits: CodeEditGroup[] = [];
+        const editor = new ImportEditor(new SimpleImportBlockFormatter());
+        const fromModuleSpecifier = assertAbsolute(fromFilename).replace(/\.tsx?/g, "") as ModuleSpecifier;
+        const toModuleSpecifier = assertAbsolute(toFilename).replace(/\.tsx?/g, "") as ModuleSpecifier;
+        const fileNames = await context.getProject().getFileNames();
 
-            return context.getProject().getFileNames().then(fileNames => {
-                const promises = fileNames.map(
-                    file => context.getSourceFileFor(file).then(
-                        (sourceFile) => rewriteFile(
-                            sourceFile,
-                            editor,
-                            fromModuleSpecifier,
-                            toModuleSpecifier,
-                            symbolName
-                        )));
-                promises.push(context.getSourceFileFor(fromFilename).then(
-                    (sourceFile) => rewriteFile(
-                        sourceFile,
-                        editor,
-                        fromModuleSpecifier,
-                        toModuleSpecifier,
-                        symbolName
-                    )));
-                return Promise.all(promises).then(x => ([] as CodeEditGroup[]).concat(...x));
-            });
-        } catch (e) {
-            return Promise.reject(e);
+        for (let file of fileNames) {
+            const sourceFile = await context.getSourceFileFor(file);
+            const fileEdits = rewriteSymbolImportInFile(
+                sourceFile,
+                editor,
+                fromModuleSpecifier,
+                toModuleSpecifier,
+                symbolName
+            );
+
+            if (fileEdits != null) {
+                edits.push(fileEdits);
+            }
         }
+
+        return edits;
     }
 }

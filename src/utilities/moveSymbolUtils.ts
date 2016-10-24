@@ -5,13 +5,13 @@ import { ImportEditor } from "../imports/ImportEditor";
 import { ModuleSpecifier } from "../imports/ImportStatement";
 import { CodeEditGroup } from "../protocol/types";
 
-export function rewriteFile(
+export function rewriteSymbolImportInFile(
     sourceFile: ts.SourceFile,
     editor: ImportEditor,
     fromModuleSpecifier: ModuleSpecifier,
     toModuleSpecifier: ModuleSpecifier,
     symbolName: string
-): CodeEditGroup | any[] {
+): CodeEditGroup | undefined {
     const currentBlock = ImportBlock.fromFile(sourceFile);
     if (currentBlock.mayContainImport(fromModuleSpecifier, symbolName)) {
         const currentName = currentBlock.getCurrentName(fromModuleSpecifier, symbolName);
@@ -26,6 +26,6 @@ export function rewriteFile(
         const edits = editor.applyImportBlockToFile(sourceFile, newBlock);
         return { file: sourceFile.fileName, edits };
     } else {
-        return [];
+        return undefined;
     }
 }
