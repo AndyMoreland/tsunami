@@ -1,3 +1,4 @@
+import { isExportedNode } from "./utilities/languageUtilities";
 import * as Promise from "bluebird";
 import * as path from "path";
 import * as ts from "typescript";
@@ -11,7 +12,7 @@ export class FileIndexer {
     constructor(
         private moduleSpecifier: ModuleSpecifier,
         private sourceFile: ts.SourceFile,
-        private getSourceFileForAbsolutePath: (absolutePath: string) => Promise<ts.SourceFile>
+        private getSourceFileForAbsolutePath?: (absolutePath: string) => Promise<ts.SourceFile>
     ) {}
 
     private addDefinitiontoIndex(definition: Definition): void {
@@ -55,7 +56,6 @@ export class FileIndexer {
 
     private indexVariableStatement(node: ts.VariableStatement): void {
         let firstDeclaration = node.declarationList.declarations.map(declaration => declaration)[0];
-        // log("indexing Variable: ", firstDeclaration.name.getText());
         this.addDefinitiontoIndex(
             this.getDefinitionForNode(
                 firstDeclaration,
@@ -64,32 +64,26 @@ export class FileIndexer {
     }
 
     private indexFunctionDeclaration(node: ts.FunctionDeclaration): void {
-        // log("indexing Function: ", node.name.getText());
         this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name != null ? node.name.getText() : "", DefinitionType.FUNCTION));
     }
 
     private indexInterfaceDeclaration(node: ts.InterfaceDeclaration): void {
-        // log("indexing Interface: ", node.name.getText());
         this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.INTERFACE));
     }
 
     private indexEnumDeclaration(node: ts.EnumDeclaration): void {
-        // log("indexing Enum: ", node.name.getText());
         this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.ENUM));
     }
 
     private indexTypeAliasDeclaration(node: ts.TypeAliasDeclaration): void {
-        // log("indexing Type Alias: ", node.name.getText());
         this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.TYPE));
     }
 
     private indexModuleDeclaration(node: ts.ModuleDeclaration): void {
-        // log("indexing Module: ", node.name.getText());
         this.addDefinitiontoIndex(this.getDefinitionForNode(node, node.name && node.name.getText(), DefinitionType.MODULE));
     }
 
     private indexExportedSymbol(node: ts.Node): void {
-        // log("Found export declaration.");
         if (node.kind === ts.SyntaxKind.ClassDeclaration) {
             this.indexClassDeclaration(node as ts.ClassDeclaration);
         } else if (node.kind === ts.SyntaxKind.VariableStatement) {
@@ -121,7 +115,7 @@ export class FileIndexer {
             if (child.kind === ts.SyntaxKind.AsteriskToken) {
                 const dirname = path.dirname(this.sourceFile.fileName);
                 /* HACK: assumes .d.ts because we're only operating in libraries, really. */
-                if (node.moduleSpecifier != null) {
+                if (node.moduleSpecifier != null && this.getSourceFileForAbsolutePath !== undefined) {
                     const recursivePath = path.join(dirname, node.moduleSpecifier.getText().replace(/"|'/g, "")) + ".d.ts";
                     log("Recursively indexing: ", recursivePath);
                     const subindexPromise = this.getSourceFileForAbsolutePath(recursivePath).then(sourceFile => {
@@ -154,13 +148,8 @@ export class FileIndexer {
             && node.modifiers.filter(modifierNode => modifierNode.kind === ts.SyntaxKind.DefaultKeyword).length > 0;
     }
 
-    private isExportedNode(node: ts.Node): boolean {
-        return (node.modifiers != null)
-            && node.modifiers.filter(modifierNode => modifierNode.kind === ts.SyntaxKind.ExportKeyword).length > 0;
-    }
-
     public indexNode = (node: ts.Node): Promise<void> => {
-        if (this.isExportedNode(node)) {
+        if (isExportedNode(node)) {
             return Promise.resolve(this.indexExportedSymbol(node));
         } else if (node.kind === ts.SyntaxKind.ExportDeclaration) {
             return this.indexExportDeclaration(node as ts.ExportDeclaration);
