@@ -16,7 +16,7 @@ export class BenchmarkingCommandInvoker implements CommandInvoker {
         const invokationPromise = this.delegate.invoke(context, command);
         Bluebird.resolve(invokationPromise).finally(() => {
             const diff = process.hrtime(startTime);
-            log("[Benchmark]: ", command.command, " completed in ", (diff[0] * 1e9 + diff[1]), " nanoseconds");
+            log("[Benchmark]: ", command.command, " completed in ", (diff[0] * 1e9 + diff[1]) / 1e6, " milliseconds");
         });
 
         return invokationPromise;
