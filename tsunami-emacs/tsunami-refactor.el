@@ -156,11 +156,11 @@
 
 (defun tsunami-move-symbol (arg)
   (interactive "P")
-  (let* ((from-filename (if arg
+  (let* ((symbol-name (read-from-minibuffer "SymbolName: " (thing-at-point 'symbol)))
+         (from-filename (if arg
                             (tsunami--helm-read-file-in-project "From: ")
                           (buffer-file-name)))
          (to-filename (tsunami--helm-read-file-in-project "To: "))
-         (symbol-name (read-from-minibuffer "SymbolName: " (thing-at-point 'symbol)))
          (response (tsunami--command:move-symbol from-filename to-filename symbol-name)))
     (if (tide-response-success-p response)
         (let ((code-edit-groups (plist-get response :body)))
