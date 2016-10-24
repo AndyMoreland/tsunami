@@ -56,6 +56,7 @@ export class MutableTsunamiContext implements TsunamiContext {
             sourceFile,
             filename => this.getSourceFileFor(filename)
         );
+
         this.fileIndexerMap.set(filename, indexer);
         return await indexer.indexFile();
     }
@@ -93,5 +94,15 @@ export class MutableTsunamiContext implements TsunamiContext {
             ts.createCompilerHost(project.getCompilerOptions(), true)
         );
         return program;
+    }
+
+    public * getIndexedDefinitions(): IterableIterator<Definition> {
+        for (let index of this.fileIndexerMap.values()) {
+            yield* index.getDefinitionIndex().values();
+        }
+
+        for (let index of this.moduleIndexerMap.values()) {
+            yield* index.getDefinitionIndex().values();
+        }
     }
 }

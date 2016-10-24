@@ -15,4 +15,5 @@ export interface TsunamiContext {
     moduleIndexerMap: Map<string, FileIndexer>;
     getMatchingSymbols(search?: string): Promise<Definition[]>;
     getProgram(): Promise<ts.Program>;
+    getIndexedDefinitions(): IterableIterator<Definition>;
 }
