@@ -1,5 +1,10 @@
+import * as Bluebird from "bluebird";
+import * as fs from "fs";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
+
+const readFile = Bluebird.promisify(fs.readFile);
+
 export interface ReloadCommand extends Command {
     arguments: {
         file: string;
@@ -12,7 +17,9 @@ export class ReloadCommandDefinition implements CommandDefinition<ReloadCommand,
         return command.command === "reload";
     }
 
-    public processor(context: TsunamiContext, command: ReloadCommand): Promise<void> {
-        return context.reloadFile(command.arguments.file, command.arguments.tmpfile);
+    public async processor(context: TsunamiContext, command: ReloadCommand): Promise<void> {
+        const tmp = command.arguments.tmpfile;
+        const text = tmp != null ? (await readFile(tmp)).toString() : undefined;
+        return context.reloadFile(command.arguments.file, text);
     }
 }
