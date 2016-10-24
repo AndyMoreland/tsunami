@@ -1,12 +1,36 @@
 import * as deepcopy from "deepcopy";
+import * as ts from "typescript";
 import { ImportBlock, ImportRecords } from "./ImportBlock";
-import { ImportRecord, ModuleSpecifier, NamedBinding, getTypeOfModuleSpecifier } from "./ImportStatement";
+import {
+    ImportRecord,
+    ModuleSpecifier,
+    NamedBinding,
+    createImportRecordFromImportDeclaration,
+    getTypeOfModuleSpecifier,
+    mergeImportRecords
+} from "./ImportStatement";
 
 export class ImportBlockBuilder {
     private built = false;
 
     public static from(block: ImportBlock) {
         const importRecords = deepcopy(block.importRecords);
+
+        return new ImportBlockBuilder(importRecords);
+    }
+
+    public static fromFile(sourceFile: ts.SourceFile) {
+        const importRecords: ImportRecords = {};
+
+        ts.forEachChild(sourceFile, (node) => {
+            if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+                const record = createImportRecordFromImportDeclaration(node as ts.ImportDeclaration);
+                importRecords[record.moduleSpecifier] = mergeImportRecords(
+                    record,
+                    importRecords[record.moduleSpecifier]
+                ).record;
+            }
+        });
 
         return new ImportBlockBuilder(importRecords);
     }

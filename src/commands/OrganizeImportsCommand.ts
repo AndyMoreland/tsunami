@@ -1,11 +1,10 @@
 import * as Promise from "bluebird";
-import { ImportBlock } from "../imports/ImportBlock";
+import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
 import { ImportEditor } from "../imports/ImportEditor";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { CodeEdit } from "../protocol/types";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
-
 export interface OrganizeImportsCommand extends Command {
     arguments: {
         filename: string;
@@ -20,7 +19,7 @@ export class OrganizeImportsCommandDefinition implements CommandDefinition<Organ
     public processor(context: TsunamiContext, command: OrganizeImportsCommand): Promise<CodeEdit[] | null> {
         return context.getSourceFileFor(command.arguments.filename).then(sourceFile => {
             const editor = new ImportEditor(new SimpleImportBlockFormatter());
-            const importBlock = ImportBlock.fromFile(sourceFile);
+            const importBlock = ImportBlockBuilder.fromFile(sourceFile).build();
             return editor.applyImportBlockToFile(sourceFile, importBlock);
         });
     }

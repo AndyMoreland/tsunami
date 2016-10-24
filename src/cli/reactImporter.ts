@@ -3,7 +3,6 @@
 import * as Promise from "bluebird";
 import * as fs from "fs";
 import * as ts from "typescript";
-import { ImportBlock } from "../imports/ImportBlock";
 import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
 import { ImportEditor } from "../imports/ImportEditor";
 import { ModuleSpecifier } from "../imports/ImportStatement";
@@ -21,7 +20,7 @@ function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
 process.argv.slice(2).forEach((filename) => {
     const editor = new ImportEditor(new SimpleImportBlockFormatter());
     getSourceFileFor(filename).then(sourceFile => {
-        const importBlock = ImportBlockBuilder.from(ImportBlock.fromFile(sourceFile))
+        const importBlock = ImportBlockBuilder.fromFile(sourceFile)
             .addNamespaceSpecifier("react" as ModuleSpecifier, "React").build();
         const edits = editor.applyImportBlockToFile(sourceFile, importBlock);
 

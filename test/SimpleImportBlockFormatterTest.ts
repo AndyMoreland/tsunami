@@ -2,7 +2,7 @@ import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
-import { ImportBlock } from "../src/imports/ImportBlock";
+import { ImportBlockBuilder } from "../src/imports/ImportBlockBuilder";
 import { ImportBlockFormatter } from "../src/imports/ImportBlockFormatter";
 import { SimpleImportBlockFormatter } from "../src/imports/SimpleImportBlockFormatter";
 
@@ -15,7 +15,7 @@ function getSourceFileFor(filename: string): ts.SourceFile {
 
 function expectMatches(formatter: ImportBlockFormatter, fileName: string): void {
     const sourceFile = getSourceFileFor(path.join(__dirname, "fixtures", `${fileName}.ts.pre`));
-    const result = formatter.formatImportBlock(path.join(__dirname, "fixtures"), ImportBlock.fromFile(sourceFile));
+    const result = formatter.formatImportBlock(path.join(__dirname, "fixtures"), ImportBlockBuilder.fromFile(sourceFile).build());
 
     /* Account for trailing \n in fixture file */
     expect(result.trim()).to.eql(fs.readFileSync(path.join(__dirname, "fixtures", `${fileName}.ts.post`)).toString().trim());

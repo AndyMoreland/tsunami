@@ -32,7 +32,7 @@ args._.forEach(async (input) => {
             indentSize: (args as any).indentSize
         }));
         const sourceFile = await getSourceFileFor(filename);
-        const importBlock = ImportBlock.fromFile(sourceFile);
+        const importBlock = ImportBlockBuilder.fromFile(sourceFile).build();
         const edits = editor.applyImportBlockToFile(sourceFile, importBlock);
         await applyCodeEdits(filename, edits);
         console.log("Edited: ", filename);

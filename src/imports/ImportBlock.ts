@@ -1,6 +1,4 @@
-import * as ts from "typescript";
-import log from "../log";
-import { ImportRecord, ModuleSpecifier, createImportRecordFromImportDeclaration, mergeImportRecords } from "./ImportStatement";
+import { ImportRecord, ModuleSpecifier } from "./ImportStatement";
 
 export type ImportRecords = { [canonicalModuleName: string]: ImportRecord };
 
@@ -30,21 +28,5 @@ export class ImportBlock {
 
         return specifier.importClause.namedBindings.find(x => x.symbolName === symbolName) != null ||
             this.importRecords[moduleSpecifier].namespaceImport != null;
-    }
-
-    public static fromFile(sourceFile: ts.SourceFile) {
-        const importRecords: ImportRecords = {};
-
-        ts.forEachChild(sourceFile, (node) => {
-            if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-                const record = createImportRecordFromImportDeclaration(node as ts.ImportDeclaration);
-                importRecords[record.moduleSpecifier] = mergeImportRecords(
-                    record,
-                    importRecords[record.moduleSpecifier]
-                ).record;
-            }
-        });
-
-        return new ImportBlock(importRecords);
     }
 }

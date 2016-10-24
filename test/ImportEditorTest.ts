@@ -1,18 +1,14 @@
-import { ImportBlockFormatter } from "../src/imports/ImportBlockFormatter";
-import * as Promise from "bluebird";
+import { ImportBlockBuilder } from "../src/imports/ImportBlockBuilder";
 import { expect } from "chai";
 import * as fs from "fs";
 import * as ts from "typescript";
 import * as path from "path";
-import { ImportBlock, ImportRecords } from "../src/imports/ImportBlock";
 import { ImportEditor } from "../src/imports/ImportEditor";
 import { SimpleImportBlockFormatter } from "../src/imports/SimpleImportBlockFormatter";
-import { applyCodeEditsInMemory, applyCodeEdits } from "../src/utilities/ioUtils";
+import { applyCodeEditsInMemory } from "../src/utilities/ioUtils";
 
 declare function describe(foo: string, cb: Function): void;
 declare function it(foo: string, cb: Function): void;
-
-const readFilePromise = Promise.promisify(fs.readFile);
 
 function getSourceFileFor(filename: string): ts.SourceFile {
     const buffer = fs.readFileSync(filename);
@@ -21,7 +17,7 @@ function getSourceFileFor(filename: string): ts.SourceFile {
 
 function expectMatches(editor: ImportEditor, fileName: string): void {
     const sourceFile = getSourceFileFor(path.join(__dirname, "fixtures", `${fileName}.ts.pre`));
-    const edits = editor.applyImportBlockToFile(sourceFile, ImportBlock.fromFile(sourceFile));
+    const edits = editor.applyImportBlockToFile(sourceFile, ImportBlockBuilder.fromFile(sourceFile).build());
     const result = applyCodeEditsInMemory(sourceFile.getFullText(), edits);
 
     /* Account for trailing \n in fixture file */
@@ -35,10 +31,10 @@ describe("ImportEditor", () => {
        () => expectMatches(editor, "global-scope-project"));
 
     it("should not add extra whitespace when imports are split into two chunks by a non-import statement",
-       () => expectMatches(editor, "split-imports"))
+       () => expectMatches(editor, "split-imports"));
 
     it("should not munch comments that follow the import block",
-       () => expectMatches(editor, "imports-followed-by-comments"))
+       () => expectMatches(editor, "imports-followed-by-comments"));
 
     it("should not screw with leading comments",
        () => expectMatches(editor, "leading-comment"));

@@ -12,7 +12,7 @@ export function rewriteSymbolImportInFile(
     toModuleSpecifier: ModuleSpecifier,
     symbolName: string
 ): CodeEditGroup | undefined {
-    const currentBlock = ImportBlock.fromFile(sourceFile);
+    const currentBlock = ImportBlockBuilder.fromFile(sourceFile).build();
     if (currentBlock.mayContainImport(fromModuleSpecifier, symbolName)) {
         const currentName = currentBlock.getCurrentName(fromModuleSpecifier, symbolName);
         const newBlock = ImportBlockBuilder.from(currentBlock)
