@@ -81,49 +81,38 @@ export class Tsunami {
         return Bluebird.all([this.buildInitialInternalProjectIndex(), this.indexDependenciesOfProject()]).thenReturn();
     }
 
-    private indexDependenciesOfProject(): Promise<void> {
-        try {
-            return this.tsProject.getDependencyFilenames().then(deps => {
-                log("Dependency typings: ", JSON.stringify(deps, null, 2));
+    private async indexDependenciesOfProject(): Promise<void> {
+        return this.tsProject.getDependencyFilenames().then(deps => {
+            log("Dependency typings: ", JSON.stringify(deps, null, 2));
 
-                Object.keys(deps).forEach(dep => {
-                    /* indexExternalModule(dep); */
-                    try {
-                        fs.accessSync(deps[dep]);
-                        let typings = deps[dep];
+            Object.keys(deps).forEach(dep => {
+                /* indexExternalModule(dep); */
+                try {
+                    fs.accessSync(deps[dep]);
+                    let typings = deps[dep];
 
-                        if (typings) {
-                            this.indexDefinitionFile(dep, typings);
-                        }
-                    } catch (e) {
-                        log("Failed to index: ", dep);
+                    if (typings) {
+                        this.indexDefinitionFile(dep, typings);
                     }
-                });
-            }).catch(error => {
-                log("Failed to get dependency filenames.");
-                log(error.stack);
+                } catch (e) {
+                    log("Failed to index: ", dep);
+                }
             });
-        } catch (e) {
-            log("Error during boot.");
-            log(e.stack);
-        }
-
-        return Promise.reject(new Error("Error during boot."));
+        }).catch(error => {
+            log("Failed to get dependency filenames.");
+            log(error.stack);
+        });
     }
 
-    private buildInitialInternalProjectIndex(): Promise<void> {
-        return this.tsProject.getFileNames().then(files => {
-            let promises = files.map(file => {
-                let p = this.context.getSourceFileFor(file).then(() => {
-                    return this.context.reloadFile(file);
-                });
-                return p;
-            });
+    private async buildInitialInternalProjectIndex(): Promise<void> {
+        const files = await this.tsProject.getFileNames();
 
-            return Promise.all(promises).then(() => {
-                log("Finished starting server.");
-            });
-        });
+        const promises = files.map(file => this.context.getSourceFileFor(file).then(() => {
+            return this.context.reloadFile(file);
+        }));
+
+        await Bluebird.all(promises);
+        log("Finished starting server.");
     }
 
     private processPotentialTsunamiCommand = (data: UnknownObject, cb: CallbackFunction<string>) => {

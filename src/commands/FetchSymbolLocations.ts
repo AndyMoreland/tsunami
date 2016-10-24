@@ -1,4 +1,4 @@
-import * as Promise from "bluebird";
+import * as Bluebird from "bluebird";
 import { SymbolLocation } from "../protocol/types";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
@@ -19,46 +19,42 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
         return command.command === "SYMBOL_LOCATIONS";
     }
 
-    public processor(context: TsunamiContext, command: FetchSymbolLocationsCommand): Promise<FetchSymbolLocationsResponseBody> {
-        try {
-            let symbolLocations: SymbolLocation[] = [];
+    public async processor(context: TsunamiContext, command: FetchSymbolLocationsCommand): Bluebird<FetchSymbolLocationsResponseBody> {
+        let symbolLocations: SymbolLocation[] = [];
 
-            context.fileIndexerMap.forEach(indexer => {
-                indexer.getDefinitionIndex().forEach((definition, symbolName) => {
-                        const symbolLocation = {
-                            name: symbolName,
-                            type: DefinitionType[definition.type],
-                            location: {
-                                filename: definition.moduleSpecifier,
-                                span: definition.span
-                            },
-                            default: definition.default
-                        };
-                        symbolLocations.push(symbolLocation);
-                    });
+        context.fileIndexerMap.forEach(indexer => {
+            indexer.getDefinitionIndex().forEach((definition, symbolName) => {
+                const symbolLocation = {
+                    name: symbolName,
+                    type: DefinitionType[definition.type],
+                    location: {
+                        filename: definition.moduleSpecifier,
+                        span: definition.span
+                    },
+                    default: definition.default
+                };
+                symbolLocations.push(symbolLocation);
             });
+        });
 
-            context.moduleIndexerMap.forEach((indexer, moduleName) => {
-                indexer.getDefinitionIndex().forEach((definition, symbolName) => {
-                        const symbolLocation = {
-                            name: symbolName,
-                            type: DefinitionType[definition.type],
-                            location: {
-                                filename: definition.moduleSpecifier,
-                                span: definition.span,
-                                isExternalModule: true
-                            },
-                            default: definition.default
-                        };
-                        symbolLocations.push(symbolLocation);
-                    });
+        context.moduleIndexerMap.forEach((indexer, moduleName) => {
+            indexer.getDefinitionIndex().forEach((definition, symbolName) => {
+                const symbolLocation = {
+                    name: symbolName,
+                    type: DefinitionType[definition.type],
+                    location: {
+                        filename: definition.moduleSpecifier,
+                        span: definition.span,
+                        isExternalModule: true
+                    },
+                    default: definition.default
+                };
+                symbolLocations.push(symbolLocation);
             });
+        });
 
-            return Promise.resolve({
-                symbolLocations
-            });
-        } catch (e) {
-            return Promise.reject(e);
-        }
+        return Bluebird.resolve({
+            symbolLocations
+        });
     }
 }

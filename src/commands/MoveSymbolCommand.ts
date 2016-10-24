@@ -41,8 +41,10 @@ export class MoveSymbolCommandDefinition implements CommandDefinition<MoveSymbol
         const toModuleSpecifier = assertAbsolute(toFilename).replace(/\.tsx?/g, "") as ModuleSpecifier;
         const fileNames = await context.getProject().getFileNames();
 
-        for (let file of fileNames) {
-            const sourceFile = await context.getSourceFileFor(file);
+        const sourceFilePromises = fileNames.map(file => context.getSourceFileFor(file));
+
+        for (let sourceFilePromise of sourceFilePromises) {
+            const sourceFile = await sourceFilePromise;
             const fileEdits = rewriteSymbolImportInFile(
                 sourceFile,
                 editor,
