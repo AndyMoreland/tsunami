@@ -1,9 +1,10 @@
-import * as Bluebird from "bluebird";
+import * as fs from "fs";
 import { ImportEditor } from "../imports/ImportEditor";
 import { AbsoluteFilename, ModuleSpecifier } from "../imports/ImportStatement";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { CodeEditGroup } from "../protocol/types";
-import { rewriteSymbolImportInFile } from "../utilities/moveSymbolUtils";
+import { appendNode, withoutNode } from "../utilities/editUtils";
+import { findNodeForSymbolName, rewriteSymbolImportInFile } from "../utilities/moveSymbolUtils";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
 
@@ -23,16 +24,24 @@ function assertAbsolute(filename: string): AbsoluteFilename {
     return filename as AbsoluteFilename;
 }
 
-export class MoveSymbolCommandDefinition implements CommandDefinition<MoveSymbolCommand, CodeEditGroup[] | null> {
+export class MoveSymbolCommandDefinition implements CommandDefinition<MoveSymbolCommand, CodeEditGroup[]> {
     public predicate(command: Command): command is MoveSymbolCommand {
         return command.command === "MOVE_SYMBOL";
     }
 
-    public async processor(context: TsunamiContext, command: MoveSymbolCommand): Bluebird<CodeEditGroup[] | null> {
+    public async processor(context: TsunamiContext, command: MoveSymbolCommand): Promise<CodeEditGroup[]> {
         const { fromFilename, toFilename, symbolName } = command.arguments;
 
         if (fromFilename === toFilename) {
-            return Bluebird.reject(new Error("Can't move symbol from file to itself."));
+            throw new Error("Can't move symbol from file to itself.");
+        }
+
+        if (!fs.existsSync(fromFilename)) {
+            throw new Error(`File ${fromFilename} does not exist`);
+        }
+
+        if (!fs.existsSync(toFilename)) {
+            throw new Error(`File ${toFilename} does not exist`);
         }
 
         const edits: CodeEditGroup[] = [];
@@ -56,6 +65,21 @@ export class MoveSymbolCommandDefinition implements CommandDefinition<MoveSymbol
             if (fileEdits != null) {
                 edits.push(fileEdits);
             }
+        }
+
+        const fromSourceFile = await context.getSourceFileFor(fromFilename);
+        const toSourceFile = await context.getSourceFileFor(toFilename);
+
+        const symbolNode = findNodeForSymbolName(fromSourceFile, symbolName);
+        if (symbolNode != null) {
+            edits.unshift({
+                file: fromFilename,
+                edits: [withoutNode(fromSourceFile, symbolNode)]
+            });
+            edits.unshift({
+                file: toFilename,
+                edits: [appendNode(toSourceFile, symbolNode)]
+            });
         }
 
         return edits;

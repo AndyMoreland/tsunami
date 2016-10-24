@@ -1,5 +1,4 @@
 import * as ts from "typescript";
-import { ImportBlock } from "../imports/ImportBlock";
 import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
 import { ImportEditor } from "../imports/ImportEditor";
 import { ModuleSpecifier } from "../imports/ImportStatement";
@@ -28,4 +27,34 @@ export function rewriteSymbolImportInFile(
     } else {
         return undefined;
     }
+}
+
+export function findNodeForSymbolName(sourceFile: ts.SourceFile, symbolName: string): ts.Node | undefined {
+    return (sourceFile.statements || sourceFile.endOfFileToken).find(node => {
+        if (node.kind === ts.SyntaxKind.ClassDeclaration) {
+            const castNode = node as ts.ClassDeclaration;
+            return castNode.name && (castNode.name.getText() === symbolName) || false;
+        } else if (node.kind === ts.SyntaxKind.VariableStatement) {
+            const castNode = node as ts.VariableStatement;
+            const firstDeclaration = castNode.declarationList.declarations.map(declaration => declaration)[0];
+            return firstDeclaration.name && (firstDeclaration.name.getText() === symbolName) || false;
+        } else if (node.kind === ts.SyntaxKind.FunctionDeclaration) {
+            const castNode = node as ts.FunctionDeclaration;
+            return castNode.name && (castNode.name.getText() === symbolName) || false;
+        } else if (node.kind === ts.SyntaxKind.InterfaceDeclaration) {
+            const castNode = node as ts.InterfaceDeclaration;
+            return castNode.name && (castNode.name.getText() === symbolName) || false;
+        } else if (node.kind === ts.SyntaxKind.EnumDeclaration) {
+            const castNode = node as ts.EnumDeclaration;
+            return castNode.name && (castNode.name.getText() === symbolName) || false;
+        } else if (node.kind === ts.SyntaxKind.TypeAliasDeclaration) {
+            const castNode = node as ts.TypeAliasDeclaration;
+            return castNode.name && (castNode.name.getText() === symbolName) || false;
+        } else if (node.kind === ts.SyntaxKind.ModuleDeclaration) {
+            const castNode = node as ts.ModuleDeclaration;
+            return castNode.name && ((castNode.name.getText() === symbolName)) || false;
+        }
+
+        return false;
+    });
 }

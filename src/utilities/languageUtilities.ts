@@ -7,6 +7,11 @@ export function nodeContainsPoint(node: ts.Node, point: number): boolean {
     return node.getStart() <= point && node.getEnd() >= point;
 }
 
+export function isExportedNode(node: ts.Node): boolean {
+    return (node.modifiers != null)
+        && node.modifiers.filter(modifierNode => modifierNode.kind === ts.SyntaxKind.ExportKeyword).length > 0;
+}
+
 /* Ripped from palantir's tslint */
 export function isScopeBoundary(node: ts.Node): boolean {
     return node.kind === ts.SyntaxKind.FunctionDeclaration

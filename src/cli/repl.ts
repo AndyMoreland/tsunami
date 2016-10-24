@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 
 import * as fs from "fs";
-import * as ts from "typescript";
 import * as path from "path";
 import * as readline from "readline";
+import * as ts from "typescript";
+import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
 import { getNodesContainingPoint } from "../utilities/languageUtilities";
 import { TsunamiContext } from "../Context";
 import * as tsu from "../index";
+
+const MOVE_SYMBOL = new MoveSymbolCommandDefinition();
 
 async function startRepl() {
     const projectRoot = process.argv[2];
@@ -57,37 +60,56 @@ async function processGetDiagnostics(context: TsunamiContext, fileName: string) 
     console.log(diags);
 }
 
-async function processCommand(context: TsunamiContext, input: string) {
-    const [commandName, ...args] = input.split(" ");
+async function processMoveSymbol(context: TsunamiContext, fromFileName: string, toFileName: string, symbolName: string) {
+    console.log(`Executing [moveSymbol] on "${symbolName}" from "${path.resolve(fromFileName)}" to "${path.resolve(toFileName)}"`);
+    const command = {
+        command: "MOVE_SYMBOL",
+        seq: 0,
+        arguments: {
+            fromFilename: path.resolve(fromFileName),
+            toFilename: path.resolve(toFileName),
+            symbolName
+        }
+    };
 
-    switch (commandName) {
-        case "c": return processSearch(context, args[0]);
-        case "t": return processTypeQuery(context, args[0], parseInt(args[1], 10));
-        case "d": return processGetDiagnostics(context, args[0]);
+    const edits = await MOVE_SYMBOL.processor(context, command);
+    console.log(JSON.stringify(edits, null, 2));
+}
+
+async function processCommand(context: TsunamiContext, commandLineArgs: string[]) {
+    const start = process.hrtime();
+    try {
+        const [commandName, ...args] = commandLineArgs;
+        switch (commandName) {
+            case "c": return await processSearch(context, args[0]);
+            case "t": return await processTypeQuery(context, args[0], parseInt(args[1], 10));
+            case "d": return await processGetDiagnostics(context, args[0]);
+            case "m": return await processMoveSymbol(context, args[0], args[1], args[2]);
+        }
+    } catch (e) {
+        console.error("While processing command, got error: ", e, e.stack);
     }
+    const diff = process.hrtime(start);
+    console.log(`[${(diff[0] * 1e9 + diff[1]) / 1e6} milliseconds]`);
 }
 
 async function main() {
     console.log("Starting main.");
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-
-    const prompt = (query: string) => new Promise<string>((resolve, reject) => rl.question(query, resolve));
-
     const context = (await startRepl()).getContext();
 
-    while (true) {
-        const input = await prompt("> ");
-        const start = process.hrtime();
-        try {
-            await processCommand(context, input);
-        } catch (e) {
-            console.error("While processing command, got error: ", e, e.stack);
+    if (process.argv.length > 3) {
+        const args = process.argv.slice(3);
+        await processCommand(context, args);
+    } else {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+        const prompt = (query: string) => new Promise<string>((resolve, reject) => rl.question(query, resolve));
+        while (true) {
+            const input = await prompt("> ");
+            await processCommand(context, input.split(" "));
         }
-        const diff = process.hrtime(start);
-        console.log(`[${(diff[0] * 1e9 + diff[1]) / 1e6} milliseconds]`);
     }
 }
 
