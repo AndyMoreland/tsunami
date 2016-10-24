@@ -1,16 +1,18 @@
 import * as fs from "fs";
 
-const LOGGING_ENABLED = false;
+const TSUNAMI_LOG_FILE = process.env["TSUNAMI_LOG_FILE"];
+
+const LOGGING_ENABLED = TSUNAMI_LOG_FILE != null;
 
 export default function log(...args: any[]): void {
     if (LOGGING_ENABLED) {
-        fs.appendFile("/Users/amoreland/tsunami/log.txt", "\n\n" + "[" + process.pid + "]: " + args.join(", "));
+        fs.appendFile(TSUNAMI_LOG_FILE, "\n\n" + "[" + process.pid + "]: " + args.join(", "));
     }
 }
 
 export function logWithCallback(cb: Function, ...args: any[]): void {
     if (LOGGING_ENABLED) {
-        fs.appendFile("/Users/amoreland/tsunami/log.txt", "\n\n" + "[" + process.pid + "]: " + args.join(", "), cb);
+        fs.appendFile(TSUNAMI_LOG_FILE, "\n\n" + "[" + process.pid + "]: " + args.join(", "), cb);
     } else {
         cb();
     }
@@ -18,6 +20,6 @@ export function logWithCallback(cb: Function, ...args: any[]): void {
 
 export function logSync(...args: any[]): void {
     if (LOGGING_ENABLED) {
-        fs.appendFileSync("/Users/amoreland/tsunami/log.txt", "\n\n" + "[" + process.pid + "]: " + args.join(", "));
+        fs.appendFileSync(TSUNAMI_LOG_FILE, "\n\n" + "[" + process.pid + "]: " + args.join(", "));
     }
 }
