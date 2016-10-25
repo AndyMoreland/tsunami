@@ -81,6 +81,7 @@ export class ImportBlockBuilder {
 
     public renameModule(from: ModuleSpecifier, to: ModuleSpecifier): this {
         this.importRecords[to] = this.importRecords[from];
+        delete this.importRecords[from];
 
         return this;
     }
