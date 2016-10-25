@@ -63,11 +63,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     const secondCommand = vscode.commands.registerTextEditorCommand("tsunami.importSymbol", importSymbolCommand);
 
-    async function importSymbolCommand(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, symbol?: string) {
+    async function importSymbolCommand(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, symbol?: string | {}) {
         // The code you place here will be executed every time your command is executed
         const context = tsunami.getContext();
         let results: CompletionItem[] = [];
         const exactMatchResults: CompletionItem[] = [];
+
+        symbol = typeof symbol === "object" ? undefined : symbol;
 
         const definitions = await context.getMatchingSymbols(symbol);
         definitions.forEach(def => {
