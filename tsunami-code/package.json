@@ -12,8 +12,8 @@
     ],
     "activationEvents": [
         "onLanguage:typescript",
-        "onCommand:extension.importSymbol",
-        "onCommand:extension.reindexProject"
+        "onCommand:tsunami.importSymbol",
+        "onCommand:tsunami.reindexProject"
     ],
     "main": "./out/src/extension.js",
     "contributes": {
