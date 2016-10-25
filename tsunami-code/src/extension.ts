@@ -7,10 +7,14 @@ import { TsunamiCodeActionProvider } from "./TsunamiCodeActionProvider";
 import { TsunamiCodeCompletionProvider } from "./TsunamiCodeCompletionProvider";
 import { toPrettyModuleSpecifier } from "./util";
 
-const TS_MODE: vscode.DocumentFilter = {
-    language: "typescript",
-    scheme: "file"
-};
+const TS_MODE: vscode.DocumentSelector = [
+    {
+        language: "typescriptreact"
+    },
+    {
+        language: "typescript"
+    }
+];
 
 function applyCodeEdit(editBuilder: vscode.TextEditorEdit, edit: tsu.CodeEdit): void {
     editBuilder.replace(new vscode.Range(

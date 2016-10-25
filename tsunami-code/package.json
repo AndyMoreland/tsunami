@@ -12,6 +12,7 @@
     ],
     "activationEvents": [
         "onLanguage:typescript",
+        "onLanguage:typescriptreact",
         "onCommand:tsunami.importSymbol",
         "onCommand:tsunami.reindexProject"
     ],
