@@ -51,6 +51,6 @@
         "vscode": "^1.0.0"
     },
     "dependencies": {
-        "@derander/tsunami": "0.1.8"
+        "@derander/tsunami": "0.3.0"
     }
 }
