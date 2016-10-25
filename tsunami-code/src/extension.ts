@@ -1,10 +1,11 @@
-import { TsunamiCodeActionProvider } from "./TsunamiCodeActionProvider";
-import { TsunamiCodeCompletionProvider } from "./TsunamiCodeCompletionProvider";
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
 import * as vscode from "vscode";
 import * as tsu from "@derander/tsunami";
+import { TsunamiCodeActionProvider } from "./TsunamiCodeActionProvider";
+import { TsunamiCodeCompletionProvider } from "./TsunamiCodeCompletionProvider";
+import { toPrettyModuleSpecifier } from "./util";
 
 const TS_MODE: vscode.DocumentFilter = {
     language: "typescript",
@@ -47,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     tsunami.buildInitialProjectIndex()
-        .then(() => vscode.window.showInformationMessage("Done indexing: " + path.join(projectRoot, "tsconfig.json")))
+        .then(() => vscode.window.setStatusBarMessage("[tsunami] $(thumbsup) Done indexing: " + path.basename(projectRoot), 3000))
         .catch(e => console.error(e));
 
     // The command has been defined in the package.json file
@@ -64,17 +65,16 @@ export function activate(context: vscode.ExtensionContext) {
 
     async function importSymbolCommand(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, symbol?: string) {
         // The code you place here will be executed every time your command is executed
-        console.log("completion seeded with: ", symbol);
         const context = tsunami.getContext();
         let results: CompletionItem[] = [];
         const exactMatchResults: CompletionItem[] = [];
 
-        const definitions = await context.getMatchingSymbols(symbol!);
+        const definitions = await context.getMatchingSymbols(symbol);
         definitions.forEach(def => {
             const item = {
                 definition: def,
                 label: def.text || "",
-                description: ""
+                description: toPrettyModuleSpecifier(editor.document.fileName, def.moduleSpecifier)
             };
             results.push(item);
             if (symbol && def.text === symbol) {
@@ -96,24 +96,32 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
         const sourceFile = ts.createSourceFile(editor.document.fileName, editor.document.getText(), ts.ScriptTarget.ES5, true);
-        const newBlock = tsu.ImportBlockBuilder.from(tsu.ImportBlock.fromFile(sourceFile))
+        const newBlock = tsu.ImportBlockBuilder.fromFile(sourceFile)
             .addImportBinding(choice.definition.moduleSpecifier.replace(/\.tsx?/g, "") as any,
-                              { symbolName: choice.definition.text || "" }
-            ).build();
+                              { symbolName: choice.definition.text || "" })
+            .build();
         const edits = (new tsu.ImportEditor(new tsu.SimpleImportBlockFormatter()))
             .applyImportBlockToFile(sourceFile, newBlock);
         editor.edit((editBuilder) => applyCodeEdit(editBuilder, edits[0]));
         editor.edit((editBuilder) => {
             const currentWordRange = editor.document.getWordRangeAtPosition(editor.selection.start);
-            return editBuilder.replace(currentWordRange, choice.label);
+            if (currentWordRange) {
+                return editBuilder.replace(currentWordRange, choice.label);
+            }
         });
     }
 
     vscode.languages.registerCompletionItemProvider(TS_MODE, new TsunamiCodeCompletionProvider(tsunami.getContext()));
     context.subscriptions.push(firstCommand, secondCommand);
     context.subscriptions.push(vscode.languages.registerCodeActionsProvider(TS_MODE, new TsunamiCodeActionProvider()));
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
-        tsunami.getContext().reloadFile(e.document.fileName, e.document.getText());
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
+        TS_MODE,
+        new TsunamiCodeCompletionProvider(tsunami.getContext())
+    ));
+    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(document => {
+        if (vscode.languages.match(TS_MODE, document) > 0) {
+            tsunami.getContext().reloadFile(document.fileName, document.getText());
+        }
     }));
 }
 
