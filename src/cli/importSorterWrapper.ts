@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as glob from "glob";
 import * as ts from "typescript";
 import * as yargs from "yargs";
-import { ImportBlock } from "../imports/ImportBlock";
+import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
 import { ImportEditor } from "../imports/ImportEditor";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
 import { applyCodeEdits } from "../utilities/ioUtils";

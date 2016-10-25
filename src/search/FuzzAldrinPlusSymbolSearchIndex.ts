@@ -4,20 +4,13 @@ import { Definition } from "../Indexer";
 import { SymbolSearchIndex } from "./SymbolSearchIndex";
 
 export class FuzzAldrinPlusSymbolSearchIndex implements SymbolSearchIndex {
-    constructor(private context: TsunamiContext) {}
+    constructor(private context: TsunamiContext) { }
 
     public getMatchingSymbols(search?: string): Promise<Definition[]> {
-        let results: Definition[] = [];
-        this.context.fileIndexerMap.forEach(indexer => {
-            results = [...results, ...indexer.getDefinitionIndex().values()];
-        });
-
-        this.context.moduleIndexerMap.forEach(indexer => {
-            results = [...results, ...indexer.getDefinitionIndex().values()];
-        });
+        let results = [...this.context.getIndexedDefinitions()];
 
         if (search != null) {
-            results = fz.filter(results, search, { key: "text" });
+            results = fz.filter(results, search, { key: "text" }).slice(0, 10);
         }
 
         return Promise.resolve(results);
