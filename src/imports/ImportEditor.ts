@@ -34,7 +34,18 @@ export class ImportEditor {
             }
         });
 
-        return results;
+        return results.length > 0 ? results : [
+            {
+                start: {
+                    line: 1,
+                    offset: 1
+                },
+                end: {
+                    line: 1,
+                    offset: 2
+                }
+            }
+        ];
     }
 
     public applyImportBlockToFile(sourceFile: ts.SourceFile, importBlock: ImportBlock): CodeEdit[] {
