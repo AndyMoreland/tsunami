@@ -12,7 +12,7 @@ export function toTextEdit(edit: tsu.CodeEdit): vscode.TextEdit {
 }
 
 export function toPrettyModuleSpecifier(localFileName: string, moduleSpecifier: string) {
-    if (moduleSpecifier.startsWith("/")) {
+    if (path.isAbsolute(moduleSpecifier)) {
         return path.relative(localFileName, moduleSpecifier);
     } else {
         return moduleSpecifier;

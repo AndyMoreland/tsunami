@@ -5,7 +5,7 @@ import { TsProject } from "./tsProject";
 export class ImportIndexerAccumulator {
     private moduleSpecifiers: string[] = [];
 
-    constructor(private indexer: ImportIndexer) {}
+    constructor(private indexer: ImportIndexer) { }
 
     public visitNode = (node: ts.Node) => {
         if (node.kind === ts.SyntaxKind.ImportDeclaration) {
@@ -38,7 +38,7 @@ export class ImportIndexer {
 
     public resolveModuleName(moduleName: string): string {
         /* Node module */
-        if (moduleName[0] !== "." && moduleName[0] !== "/") {
+        if (moduleName[0] !== "." && moduleName[0] !== path.sep) {
             return moduleName;
         } else {
             return path.resolve(path.dirname(this.sourceFile.fileName), moduleName);
@@ -63,7 +63,7 @@ export class ImportIndexer {
 }
 
 export class ReferenceFinder {
-    constructor(private tsProject: TsProject, private getSourceFileFor: (filename: string) => ts.SourceFile) {}
+    constructor(private tsProject: TsProject, private getSourceFileFor: (filename: string) => ts.SourceFile) { }
 
     /* Absolute path to file or node module name */
     public findModulesImportingModule(moduleName: string): Promise<string[]> {

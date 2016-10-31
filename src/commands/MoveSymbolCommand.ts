@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 import { ImportEditor } from "../imports/ImportEditor";
 import { AbsoluteFilename, ModuleSpecifier } from "../imports/ImportStatement";
 import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatter";
@@ -17,7 +18,7 @@ export interface MoveSymbolCommand extends Command {
 }
 
 function assertAbsolute(filename: string): AbsoluteFilename {
-    if (!filename.startsWith("/") && !filename.startsWith("\\")) {
+    if (!filename.startsWith(path.sep)) {
         throw new Error("Must pass absolute filename.");
     }
 

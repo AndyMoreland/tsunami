@@ -32,7 +32,7 @@ export interface ImportRecord {
 }
 
 export function getTypeOfModuleSpecifier(moduleSpecifier: string): ImportStatementType {
-    if (moduleSpecifier.charAt(0) === "." || moduleSpecifier.charAt(0) === "/") {
+    if (moduleSpecifier.charAt(0) === "." || moduleSpecifier.charAt(0) === path.sep) {
         return ImportStatementType.PROJECT_RELATIVE;
     } else if (moduleSpecifier.charAt(0) === "@") {
         return ImportStatementType.SCOPED_NODE;
@@ -96,7 +96,7 @@ function parseImportClause(importClause: ts.ImportClause): ImportClause | Namesp
 
 function canonicalizeModuleSpecifier(localDirectory: string, moduleSpecifier: string): AbsoluteFilename | ModuleName {
     const firstChar = moduleSpecifier.charAt(0);
-    if (firstChar !== "." && firstChar !== "/") {
+    if (firstChar !== "." && firstChar !== path.sep) {
         return moduleSpecifier as ModuleName;
     } else {
         return path.resolve(localDirectory, moduleSpecifier).replace(/\.tsx?/g, "") as AbsoluteFilename;
