@@ -120,7 +120,7 @@ export class FileIndexer {
                     log("Recursively indexing: ", recursivePath);
                     const subindexPromise = this.getSourceFileForAbsolutePath(recursivePath).then(sourceFile => {
                         const indexer = new FileIndexer(
-                            sourceFile.fileName as AbsoluteFilename,
+                            this.moduleSpecifier,
                             sourceFile,
                             this.getSourceFileForAbsolutePath
                         );
