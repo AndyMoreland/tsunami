@@ -1,3 +1,4 @@
+ import { ImplementInterfaceCommandDefinition } from "../commands/ImplementInterface";
 import { ChangeCommandDefinition } from "../commands/ChangeCommand";
 import { FetchSymbolLocationsDefinition } from "../commands/FetchSymbolLocations";
 import { GetContainingExpressionsDefinition } from "../commands/GetContainingExpressions";
@@ -22,7 +23,8 @@ const terminalCommandDefinitions = [
     new GetContainingExpressionsDefinition(),
     new GetContainingScopesDefinition(),
     new GetPropertiesOfSymbolDefinition(),
-    new MoveSymbolCommandDefinition()
+    new MoveSymbolCommandDefinition(),
+    new ImplementInterfaceCommandDefinition()
 ];
 
 const nonterminalCommandDefinitions = [
@@ -34,7 +36,7 @@ const nonterminalCommandDefinitions = [
 let projectConfig = process.cwd();
 
 log("Attempting to start server.");
-TsProject.constructFromFilename(projectConfig)
+TsProject.fromRootDir(projectConfig)
     .then(project => {
         log("Constructing tsunami");
         const tsunami = new Tsunami(project, terminalCommandDefinitions, nonterminalCommandDefinitions);

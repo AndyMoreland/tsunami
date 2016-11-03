@@ -1,5 +1,6 @@
 import * as ts from "typescript";
 import { Location } from "../protocol/types";
+import log from "../log";
 
 /* Taken from typescript compiler because they are not exported. */
 
@@ -186,4 +187,18 @@ export function getNodesContainingPoint(sourceFile: ts.SourceFile, point: number
     ts.forEachChild(sourceFile, visitNode);
 
     return results;
+}
+
+export function getMemberNames(node: ts.ClassDeclaration): string[] {
+    const result: string[] = [];
+
+    node.members.forEach(member => {
+        if (member.kind === ts.SyntaxKind.MethodDeclaration) {
+            result.push((member as ts.MethodDeclaration).name.getText());
+        } else if (member.kind === ts.SyntaxKind.PropertyDeclaration) {
+            result.push((member as ts.PropertyDeclaration).name.getText());
+        }
+    });
+
+    return result;
 }

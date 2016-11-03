@@ -51,7 +51,6 @@ export class Tsunami {
     public initialize() {
         log("initializing");
         this.buildRiggedTsServerProcess();
-        this.indexDependenciesOfProject();
         this.buildInitialProjectIndex();
         log("initialized");
     }

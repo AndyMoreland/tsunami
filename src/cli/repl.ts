@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import * as fs from "fs";
 import * as path from "path";
 import * as readline from "readline";
 import * as ts from "typescript";
@@ -14,10 +13,8 @@ const MOVE_SYMBOL = new MoveSymbolCommandDefinition();
 async function startRepl() {
     const projectRoot = process.argv[2];
     console.log("Starting in: ", projectRoot);
-    const settings = JSON.parse(fs.readFileSync(path.join(projectRoot, "tsconfig.json")).toString());
-    const tsunami = new tsu.Tsunami(
-        new tsu.TsProject(projectRoot, settings)
-    );
+    const project = await tsu.TsProject.fromRootDir(projectRoot);
+    const tsunami = new tsu.Tsunami(project);
 
     await tsunami.buildInitialProjectIndex();
 
@@ -36,11 +33,11 @@ async function processSearch(context: TsunamiContext, query: string) {
 }
 
 async function processTypeQuery(context: TsunamiContext, fileName: string, pos: number) {
-    fileName = path.resolve(fileName);
     console.log("Examining position ", pos, " in ", fileName);
-    const sourceFile = await context.getSourceFileFor(fileName);
-    const nodes = getNodesContainingPoint(sourceFile, pos);
+    fileName = path.resolve(fileName);
     const program = await context.getProgram();
+    const sourceFile = program.getSourceFile(fileName);
+    const nodes = getNodesContainingPoint(sourceFile, pos);
     const checker = program.getTypeChecker();
     nodes.forEach(node => {
         try {
@@ -76,6 +73,52 @@ async function processMoveSymbol(context: TsunamiContext, fromFileName: string, 
     console.log(JSON.stringify(edits, null, 2));
 }
 
+async function processGetFilenames(context: TsunamiContext) {
+    console.log("Getting filenames.");
+    const project = context.getProject();
+    const filenames = await project.getFileNames();
+    console.log(filenames.join("\n"));
+}
+
+async function processImplementInterface(context: TsunamiContext, filename: string, position: number) {
+    console.log("Implement interface at location ", position, " in file ", filename);
+    const program = await context.getProgram();
+    const sourceFile = await program.getSourceFile(filename);
+    const containingNodes = getNodesContainingPoint(sourceFile, position);
+    const checker = program.getTypeChecker();
+
+    const expressions = containingNodes.filter(
+        node => node.kind === ts.SyntaxKind.ExpressionWithTypeArguments
+    ) as ts.ExpressionWithTypeArguments[];
+
+    if (expressions.length !== 1) {
+        return null;
+    }
+
+    const node = expressions[0];
+    console.log("Children kinds: ", node.getChildren().map(child => ts.SyntaxKind[child.kind]));
+    const props = checker.getTypeAtLocation(node).getProperties();
+
+    console.log("Names: ");
+    console.log(props.map(
+        prop => prop.getName()
+    ));
+
+    console.log("First declaration types: ");
+    console.log(props.map(
+        prop => checker.typeToString(checker.getTypeAtLocation(prop.getDeclarations()[0]))
+    ));
+
+    console.log("Call signatures: ");
+    console.log(props.map(
+        prop => checker.getTypeAtLocation(prop.getDeclarations()[0]).getCallSignatures()[0].getParameters().map(
+            param => [param.getName(), checker.typeToString(checker.getTypeAtLocation(param.getDeclarations()[0]))]
+        )
+    ));
+
+    return null;
+}
+
 async function processCommand(context: TsunamiContext, commandLineArgs: string[]) {
     const start = process.hrtime();
     try {
@@ -85,6 +128,8 @@ async function processCommand(context: TsunamiContext, commandLineArgs: string[]
             case "t": return await processTypeQuery(context, args[0], parseInt(args[1], 10));
             case "d": return await processGetDiagnostics(context, args[0]);
             case "m": return await processMoveSymbol(context, args[0], args[1], args[2]);
+            case "f": return await processGetFilenames(context);
+            case "i": return await processImplementInterface(context, args[0], parseInt(args[1], 10));
         }
     } catch (e) {
         console.error("While processing command, got error: ", e, e.stack);
@@ -98,9 +143,11 @@ async function main() {
     const context = (await startRepl()).getContext();
 
     if (process.argv.length > 3) {
+        console.log("Running immediately.");
         const args = process.argv.slice(3);
         await processCommand(context, args);
     } else {
+        console.log("Starting repl.");
         const rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
@@ -113,4 +160,6 @@ async function main() {
     }
 }
 
-main();
+main().catch(e => {
+    console.error("Failed: ", e);
+});

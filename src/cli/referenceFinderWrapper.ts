@@ -11,7 +11,7 @@ function getSourceFileFor(filename: string): ts.SourceFile {
 let args = process.argv.slice(2);
 let [moduleName] = args.map(arg => path.resolve(arg));
 
-TsProject.constructFromFilename("./")
+TsProject.fromRootDir("./")
     .then(tsproject => {
         // console.log("Looking for [", moduleName, "] in [", filename, "]");
 

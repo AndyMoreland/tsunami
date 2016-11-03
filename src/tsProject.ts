@@ -1,3 +1,4 @@
+import { ParseConfigHost } from "./typescript-tools/ParseConfigHost";
 import * as Bluebird from "bluebird";
 import * as findRoot from "find-root";
 import * as fs from "fs";
@@ -6,75 +7,72 @@ import * as path from "path";
 import * as ts from "typescript";
 import log from "./log";
 
+const readFilePromise = Bluebird.promisify(fs.readFile);
+
 const glob = Bluebird.promisify(globAsync) as (pattern: string, options?: any) => Bluebird<string[]>;
 
 export class TsProject {
-    constructor(private projectRoot: string,
-                private tsconfig: any) {}
+    public static async fromRootDir(tsconfigFolder: string): Bluebird<TsProject> {
+        const filename = path.join(tsconfigFolder, "tsconfig.json");
+        const parseConfigHost = new ParseConfigHost();
+        const data = await readFilePromise(filename);
 
-    public getRoot() {
+        const config = ts.parseJsonConfigFileContent(
+            JSON.parse("" + data), parseConfigHost, tsconfigFolder
+        );
+
+        return new TsProject( tsconfigFolder, config);
+    }
+
+    constructor(private projectRoot: string,
+                private tsconfig: ts.ParsedCommandLine) {}
+
+    public getRoot(): string {
         return this.projectRoot;
     }
 
-    private getProjectFilenames(): Bluebird<string[]> {
-        return glob(path.join(this.projectRoot, "src", "**/*.@(ts|tsx)"));
+    private async getProjectFilenames(): Bluebird<string[]> {
+        return this.tsconfig.fileNames;
     }
 
-    public getAllFilenames(): Bluebird<string[]> {
-        return glob(path.join(this.projectRoot, "**/*.@(ts|tsx)"));
+    private async getTypingsFileForModuleName(baseDir: string, moduleName: string): Bluebird<string> {
+        const nodeModulesFolder = path.join(baseDir, "node_modules");
+        const moduleFolder = path.join(nodeModulesFolder, moduleName);
+        const modulePackage = path.join(moduleFolder, "package.json");
+
+        const data = readFilePromise(modulePackage);
+        const typingsFile = JSON.parse(data.toString()).typings || "index.d.ts";
+
+        return path.join(moduleFolder, typingsFile);
     }
 
-    public getFileNames(): Bluebird<string[]> {
+    public async getAllFilenames(): Bluebird<string[]> {
         return this.getProjectFilenames();
     }
 
-    private getTypingsFileForModuleName(baseDir: string, moduleName: string): Bluebird<string> {
-        let nodeModulesFolder = path.join(baseDir, "node_modules");
-        let moduleFolder = path.join(nodeModulesFolder, moduleName);
-        let modulePackage = path.join(moduleFolder, "package.json");
-
-        return Bluebird.promisify(fs.readFile)(modulePackage).then(data => {
-            let typingsFile = JSON.parse(data.toString()).typings || "index.d.ts";
-            return path.join(moduleFolder, typingsFile);
-        });
+    public async getFileNames(): Bluebird<string[]> {
+        return this.getProjectFilenames();
     }
 
-    public getDependencyFilenames(): Bluebird<{ [index: string]: string }> {
-        let packageJsonFolder = findRoot(this.projectRoot);
-        let packageJsonFilename = path.join(packageJsonFolder, "package.json");
+    public async getDependencyFilenames(): Bluebird<{ [index: string]: string }> {
+        const packageJsonFolder = findRoot(this.projectRoot);
+        const packageJsonFilename = path.join(packageJsonFolder, "package.json");
         log("Searching for dependencies in: ", packageJsonFilename);
-        return Bluebird.promisify(fs.readFile)(packageJsonFilename).then(data => {
-            let packageJson = JSON.parse(data.toString());
-            log(Object.keys(packageJson.dependencies));
+        const data = await readFilePromise(packageJsonFilename);
+        const packageJson = JSON.parse(data.toString());
+        log(Object.keys(packageJson.dependencies));
 
-            let deps = packageJson.dependencies as { [index: string]: string };
-            let response: { [index: string]: string } = {};
-            return Bluebird.all(Object.keys(deps).map(dep => {
-                return this.getTypingsFileForModuleName(packageJsonFolder, dep).then(typingsFile => {
-                    response[dep] = typingsFile;
-                });
-            }))
-                .then(() => { return response; });
-        });
+        const deps = packageJson.dependencies as { [index: string]: string };
+        const response: { [index: string]: string } = {};
+        await Bluebird.all(Object.keys(deps).map(
+            dep => this.getTypingsFileForModuleName(packageJsonFolder, dep)
+                .tap(typingsFile => response[dep] = typingsFile)
+        ));
+
+        return response;
     }
 
     public getCompilerOptions(): ts.CompilerOptions {
-        return this.tsconfig.compilerOptions as ts.CompilerOptions;
-    }
-
-    public static constructFromFilename(tsconfigFolder: string): Bluebird<TsProject> {
-        let filename = path.join(tsconfigFolder, "tsconfig.json");
-
-        return Bluebird.promisify(fs.readFile)(filename)
-            .then(data => {
-                let config = JSON.parse("" + data);
-                log("Configuration:", JSON.stringify(config, null, 2));
-
-                return new TsProject(tsconfigFolder, config);
-            })
-            .catch(err => {
-                console.error("Couldn't read file: ", err, filename);
-                log("Couldn't read file: ", err, filename);
-            });
+        return this.tsconfig.options;
     }
 }
