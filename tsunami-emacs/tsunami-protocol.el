@@ -8,7 +8,7 @@
   (tide-send-command "ORGANIZE_IMPORTS" `(:filename ,filename) cb))
 
 (defun tsunami--command:implement-interface (filename position cb)
-  (tide-send-command "IMPLEMENT_INTERFACE " `(:filename ,filename :position ,position) cb))
+  (tide-send-command "IMPLEMENT_INTERFACE" `(:filename ,filename :position ,position) cb))
 
 (defun tsunami--command:get-containing-expressions (filename line offset)
   (tide-send-command-sync "GET_CONTAINING_EXPRESSIONS" `(:file ,filename

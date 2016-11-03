@@ -35,14 +35,12 @@ export class TsProject {
         return this.tsconfig.fileNames;
     }
 
-    private async getTypingsFileForModuleName(baseDir: string, moduleName: string): Bluebird<string> {
+    private async getTypingsFileForModuleName(baseDir: string, moduleName: string): Promise<string> {
         const nodeModulesFolder = path.join(baseDir, "node_modules");
         const moduleFolder = path.join(nodeModulesFolder, moduleName);
         const modulePackage = path.join(moduleFolder, "package.json");
-
-        const data = readFilePromise(modulePackage);
+        const data = await readFilePromise(modulePackage);
         const typingsFile = JSON.parse(data.toString()).typings || "index.d.ts";
-
         return path.join(moduleFolder, typingsFile);
     }
 
@@ -54,7 +52,7 @@ export class TsProject {
         return this.getProjectFilenames();
     }
 
-    public async getDependencyFilenames(): Bluebird<{ [index: string]: string }> {
+    public async getDependencyFilenames(): Promise<{ [index: string]: string }> {
         const packageJsonFolder = findRoot(this.projectRoot);
         const packageJsonFilename = path.join(packageJsonFolder, "package.json");
         log("Searching for dependencies in: ", packageJsonFilename);
@@ -66,7 +64,7 @@ export class TsProject {
         const response: { [index: string]: string } = {};
         await Bluebird.all(Object.keys(deps).map(
             dep => this.getTypingsFileForModuleName(packageJsonFolder, dep)
-                .tap(typingsFile => response[dep] = typingsFile)
+                .then(typingsFile => response[dep] = typingsFile)
         ));
 
         return response;

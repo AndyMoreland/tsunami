@@ -10,6 +10,11 @@ import * as tsu from "../index";
 
 const MOVE_SYMBOL = new MoveSymbolCommandDefinition();
 
+process.on("uncaughtException", (err: Error) => {
+    console.error(err);
+    process.exit(1);
+})
+
 async function startRepl() {
     const projectRoot = process.argv[2];
     console.log("Starting in: ", projectRoot);
@@ -124,12 +129,12 @@ async function processCommand(context: TsunamiContext, commandLineArgs: string[]
     try {
         const [commandName, ...args] = commandLineArgs;
         switch (commandName) {
-            case "c": return await processSearch(context, args[0]);
-            case "t": return await processTypeQuery(context, args[0], parseInt(args[1], 10));
-            case "d": return await processGetDiagnostics(context, args[0]);
-            case "m": return await processMoveSymbol(context, args[0], args[1], args[2]);
-            case "f": return await processGetFilenames(context);
-            case "i": return await processImplementInterface(context, args[0], parseInt(args[1], 10));
+        case "c": await processSearch(context, args[0]); break;
+        case "t": await processTypeQuery(context, args[0], parseInt(args[1], 10)); break;
+        case "d": await processGetDiagnostics(context, args[0]); break;
+        case "m": await processMoveSymbol(context, args[0], args[1], args[2]); break;
+        case "f": await processGetFilenames(context); break;
+        case "i": await processImplementInterface(context, args[0], parseInt(args[1], 10)); break;
         }
     } catch (e) {
         console.error("While processing command, got error: ", e, e.stack);
