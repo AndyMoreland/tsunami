@@ -35,7 +35,6 @@ export class ImplementInterfaceCommandDefinition implements CommandDefinition<Im
 
     public async processor(context: TsunamiContext, command: ImplementInterfaceCommand): Bluebird<CodeEdit | null> {
         const { filename, position } = command.arguments;
-        console.log("Implement interface at location ", position, " in file ", filename);
         const program = await context.getProgram();
         const sourceFile = await program.getSourceFile(filename);
         const containingNodes = getNodesContainingPoint(sourceFile, position);
@@ -45,7 +44,6 @@ export class ImplementInterfaceCommandDefinition implements CommandDefinition<Im
         const childNames = new Set<string>(getMemberNames(classNode));
 
         classNode.getChildren().forEach((child: any) => {
-            log(child.name);
             if (child.name != null) {
                 childNames.add(child.getName());
             }
@@ -60,10 +58,8 @@ export class ImplementInterfaceCommandDefinition implements CommandDefinition<Im
         }
 
         const node = expressions[0];
-        console.log("Children kinds: ", node.getChildren().map(child => ts.SyntaxKind[child.kind]));
         const props = checker.getTypeAtLocation(node).getProperties();
 
-        console.log("method descriptors: ");
         const methodDescriptors = props.filter(prop => !childNames.has(prop.getName())).map(
             prop => {
                 let result = prop.getName();
