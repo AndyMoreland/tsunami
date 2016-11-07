@@ -18,3 +18,12 @@ export function toPrettyModuleSpecifier(localFileName: string, moduleSpecifier: 
         return moduleSpecifier;
     }
 }
+
+export function applyCodeEdit(editBuilder: vscode.TextEditorEdit, edit: tsu.CodeEdit): void {
+    editBuilder.replace(new vscode.Range(
+        edit.start.line - 1,
+        edit.start.offset - 1,
+        edit.end.line - 1,
+        edit.end.offset - 1
+    ), edit.newText);
+}
