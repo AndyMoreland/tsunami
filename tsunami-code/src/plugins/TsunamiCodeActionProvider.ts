@@ -1,6 +1,15 @@
 import * as vscode from "vscode";
+import { TsunamiPlugin } from "../TsunamiPlugin";
+import { TS_MODE } from "../TypescriptDocumentFilter";
 
-export class TsunamiCodeActionProvider implements vscode.CodeActionProvider {
+export class TsunamiCodeActionProvider implements vscode.CodeActionProvider, TsunamiPlugin {
+    public bindToContext(context: vscode.ExtensionContext): void {
+        context.subscriptions.push(vscode.languages.registerCodeActionsProvider(
+            TS_MODE,
+            this
+        ));
+    }
+
     public async provideCodeActions(
         document: vscode.TextDocument,
         range: vscode.Range,
