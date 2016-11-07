@@ -3,7 +3,7 @@ import * as Promise from "bluebird";
 import * as path from "path";
 import * as ts from "typescript";
 import { Definition, DefinitionIndex, DefinitionType } from "./Indexer";
-import { AbsoluteFilename, ModuleSpecifier } from "./imports/ImportStatement";
+import { ModuleSpecifier } from "./imports/ImportStatement";
 import log from "./log";
 
 export class FileIndexer {
@@ -117,7 +117,7 @@ export class FileIndexer {
                 /* HACK: assumes .d.ts because we're only operating in libraries, really. */
                 if (node.moduleSpecifier != null && this.getSourceFileForAbsolutePath !== undefined) {
                     const recursivePath = path.join(dirname, node.moduleSpecifier.getText().replace(/"|'/g, "")) + ".d.ts";
-                    log("Recursively indexing: ", recursivePath);
+                    log(`[${this.moduleSpecifier}] ${this.sourceFile.fileName} -> ${recursivePath}`);
                     const subindexPromise = this.getSourceFileForAbsolutePath(recursivePath).then(sourceFile => {
                         const indexer = new FileIndexer(
                             this.moduleSpecifier,
@@ -129,7 +129,7 @@ export class FileIndexer {
                             this.addIndex(recursiveIndex);
                         });
                     }).catch(e => {
-                        log("Failed to index recursive module: ", recursivePath);
+                        log("Failed to index recursive module: ", recursivePath, e, e.stack);
                     });
                     promises.push(subindexPromise);
                 }

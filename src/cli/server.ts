@@ -38,9 +38,9 @@ let projectConfig = process.cwd();
 
 log("Attempting to start server.");
 TsProject.fromRootDir(projectConfig)
-    .then(project => {
+    .then(async project => {
         log("Constructing tsunami");
         const tsunami = new Tsunami(project, buildFormatOptions(), terminalCommandDefinitions, nonterminalCommandDefinitions);
-        tsunami.initialize();
+        await tsunami.initialize();
         log("Done with .initialize");
     }).catch(e => log(e));

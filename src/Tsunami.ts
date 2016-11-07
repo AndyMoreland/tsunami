@@ -13,7 +13,6 @@ import { MutableTsunamiContext } from "./MutableTsunamiContext";
 import { getErrorOutputForCommand } from "./Response";
 import { SimpleCommandInvoker } from "./SimpleCommandInvoker";
 import { InitializedFormatOptions } from "./formatting/FormatOptions";
-import { ImportBlockFormatterOptions } from "./imports/ImportBlockFormatter";
 import { ModuleName } from "./imports/ImportStatement";
 import log from "./log";
 import { TsProject } from "./tsProject";
@@ -52,10 +51,10 @@ export class Tsunami {
         );
     }
 
-    public initialize() {
+    public async initialize(): Promise<void> {
         log("initializing");
-        this.buildRiggedTsServerProcess();
-        this.buildInitialProjectIndex();
+        await this.buildRiggedTsServerProcess();
+        await this.buildInitialProjectIndex();
         log("initialized");
     }
 
@@ -91,6 +90,7 @@ export class Tsunami {
         try {
             const deps = await this.tsProject.getDependencyFilenames();
             log("Dependency typings: ", JSON.stringify(deps, null, 2));
+            const promises: Promise<void>[] = [];
 
             Object.keys(deps).forEach(dep => {
                 /* indexExternalModule(dep); */
@@ -99,12 +99,14 @@ export class Tsunami {
                     let typings = deps[dep];
 
                     if (typings) {
-                        this.indexDefinitionFile(dep, typings);
+                        promises.push(this.indexDefinitionFile(dep, typings));
                     }
                 } catch (e) {
                     log("Failed to index: ", dep);
                 }
             });
+
+            await Bluebird.all(promises);
         } catch (error) {
             log("Failed to get dependency filenames.");
             log(error.stack);
@@ -114,7 +116,9 @@ export class Tsunami {
     private async buildInitialInternalProjectIndex(): Promise<void> {
         const files = await this.tsProject.getFileNames();
 
+        log(JSON.stringify(files, null, 2));
         const promises = files.map(file => this.context.getSourceFileFor(file).then(() => {
+            log("Indexing: ", file);
             return this.context.reloadFile(file);
         }));
 
@@ -153,12 +157,12 @@ export class Tsunami {
 
     private async indexDefinitionFile(moduleName: string, filename: string): Promise<void> {
         await this.context.getSourceFileFor(filename);
-        const sourceFile = await this.context.reloadFile(filename); // FIXME: Why?????????
-        log("Indexing definition file:", sourceFile.fileName);
+        const sourceFile = await this.context.updateSourceFileFor(filename); // FIXME: Why?????????
+        log("Indexing definition file:", sourceFile.fileName, moduleName);
         const indexer = new FileIndexer(
             moduleName as ModuleName,
             sourceFile,
-            this.context.getSourceFileFor.bind(this)
+            fileName => this.context.getSourceFileFor(fileName)
         );
         this.context.moduleIndexerMap.set(moduleName, indexer);
         return indexer.indexFile();

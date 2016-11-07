@@ -4,6 +4,7 @@ import { SymbolLocation } from "../protocol/types";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
 import { DefinitionType } from "../Indexer";
+import log from "../log";
 
 export interface FetchSymbolLocationsCommand extends Command {
     arguments: {
@@ -24,6 +25,7 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
         let symbolLocations: SymbolLocation[] = [];
 
         for (let definition of context.getIndexedDefinitions()) {
+            log(definition.moduleSpecifier);
             const symbolLocation = {
                 name: definition.text || "",
                 type: DefinitionType[definition.type],

@@ -8,8 +8,8 @@ import { FileIndexer } from "./FileIndexer";
 import { Definition } from "./Indexer";
 import { Response } from "./Response";
 import { InitializedFormatOptions } from "./formatting/FormatOptions";
-import { ImportBlockFormatterOptions } from "./imports/ImportBlockFormatter";
 import { AbsoluteFilename } from "./imports/ImportStatement";
+import log from "./log";
 import { FuzzAldrinPlusSymbolSearchIndex } from "./search/FuzzAldrinPlusSymbolSearchIndex";
 import { SymbolSearchIndex } from "./search/SymbolSearchIndex";
 import { TsProject } from "./tsProject";
@@ -50,10 +50,12 @@ export class MutableTsunamiContext implements TsunamiContext {
             filename,
             this.project.getCompilerOptions(),
             ts.ScriptSnapshot.fromString(sourceText), "" + this.fileVersionMap.get(filename));
+
         return this.updateSourceFileFor(filename, fileText);
     }
 
     public async reloadFile(filename: string, fileText?: string): Promise<ts.SourceFile> {
+        log("reloading ", filename);
         const sourceFile = await this.updateSourceFileFor(filename, fileText);
         let indexer = new FileIndexer(
             sourceFile.fileName as AbsoluteFilename,
@@ -67,7 +69,7 @@ export class MutableTsunamiContext implements TsunamiContext {
         return sourceFile;
     }
 
-    private async updateSourceFileFor(filename: string, fileText?: string): Promise<ts.SourceFile> {
+    public async updateSourceFileFor(filename: string, fileText?: string): Promise<ts.SourceFile> {
         if (this.fileVersionMap.get(filename) == null) {
             return this.getSourceFileFor(filename, fileText);
         }
