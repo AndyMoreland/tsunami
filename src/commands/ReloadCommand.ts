@@ -20,6 +20,6 @@ export class ReloadCommandDefinition implements CommandDefinition<ReloadCommand,
     public async processor(context: TsunamiContext, command: ReloadCommand): Promise<void> {
         const tmp = command.arguments.tmpfile;
         const text = tmp != null ? (await readFile(tmp)).toString() : undefined;
-        return context.reloadFile(command.arguments.file, text);
+        await context.reloadFile(command.arguments.file, text);
     }
 }

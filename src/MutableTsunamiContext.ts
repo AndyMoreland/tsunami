@@ -1,11 +1,14 @@
+
+import * as Bluebird from "bluebird";
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
-import * as Bluebird from "bluebird";
 import { TsunamiContext } from "./Context";
 import { FileIndexer } from "./FileIndexer";
 import { Definition } from "./Indexer";
 import { Response } from "./Response";
+import { InitializedFormatOptions } from "./formatting/FormatOptions";
+import { ImportBlockFormatterOptions } from "./imports/ImportBlockFormatter";
 import { AbsoluteFilename } from "./imports/ImportStatement";
 import { FuzzAldrinPlusSymbolSearchIndex } from "./search/FuzzAldrinPlusSymbolSearchIndex";
 import { SymbolSearchIndex } from "./search/SymbolSearchIndex";
@@ -21,6 +24,7 @@ export class MutableTsunamiContext implements TsunamiContext {
 
     constructor(
         private project: TsProject,
+        private formatOptions: InitializedFormatOptions,
         public writeOutput: <T>(response: Response<T>) => Promise<void>,
         private documentRegistry: ts.DocumentRegistry
     ) {
@@ -41,7 +45,7 @@ export class MutableTsunamiContext implements TsunamiContext {
 
     public async getSourceFileFor(filename: string, fileText?: string): Promise<ts.SourceFile> {
         const sourceText = fileText == null ? (await readFilePromise(filename)).toString() : fileText;
-        this.fileVersionMap.set(filename, 1);
+        this.fileVersionMap.set(filename, (this.fileVersionMap.get(filename) || 0) + 1);
         this.documentRegistry.acquireDocument(
             filename,
             this.project.getCompilerOptions(),
@@ -49,7 +53,7 @@ export class MutableTsunamiContext implements TsunamiContext {
         return this.updateSourceFileFor(filename, fileText);
     }
 
-    public async reloadFile(filename: string, fileText?: string): Promise<void> {
+    public async reloadFile(filename: string, fileText?: string): Promise<ts.SourceFile> {
         const sourceFile = await this.updateSourceFileFor(filename, fileText);
         let indexer = new FileIndexer(
             sourceFile.fileName as AbsoluteFilename,
@@ -58,10 +62,12 @@ export class MutableTsunamiContext implements TsunamiContext {
         );
 
         this.fileIndexerMap.set(filename, indexer);
-        return await indexer.indexFile();
+        await indexer.indexFile();
+
+        return sourceFile;
     }
 
-    public async updateSourceFileFor(filename: string, fileText?: string): Promise<ts.SourceFile> {
+    private async updateSourceFileFor(filename: string, fileText?: string): Promise<ts.SourceFile> {
         if (this.fileVersionMap.get(filename) == null) {
             return this.getSourceFileFor(filename, fileText);
         }
@@ -93,6 +99,7 @@ export class MutableTsunamiContext implements TsunamiContext {
             project.getCompilerOptions(),
             ts.createCompilerHost(project.getCompilerOptions(), true)
         );
+
         return program;
     }
 
@@ -104,5 +111,9 @@ export class MutableTsunamiContext implements TsunamiContext {
         for (let index of this.moduleIndexerMap.values()) {
             yield* index.getDefinitionIndex().values();
         }
+    }
+
+    public getFormatOptions(): InitializedFormatOptions {
+        return this.formatOptions;
     }
 }

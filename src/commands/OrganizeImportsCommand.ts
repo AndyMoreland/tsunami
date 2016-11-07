@@ -5,6 +5,7 @@ import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatte
 import { CodeEdit } from "../protocol/types";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
+
 export interface OrganizeImportsCommand extends Command {
     arguments: {
         filename: string;
@@ -18,7 +19,7 @@ export class OrganizeImportsCommandDefinition implements CommandDefinition<Organ
 
     public processor(context: TsunamiContext, command: OrganizeImportsCommand): Promise<CodeEdit[] | null> {
         return context.getSourceFileFor(command.arguments.filename).then(sourceFile => {
-            const editor = new ImportEditor(new SimpleImportBlockFormatter());
+            const editor = new ImportEditor(new SimpleImportBlockFormatter(context.getFormatOptions()));
             const importBlock = ImportBlockBuilder.fromFile(sourceFile).build();
             return editor.applyImportBlockToFile(sourceFile, importBlock);
         });

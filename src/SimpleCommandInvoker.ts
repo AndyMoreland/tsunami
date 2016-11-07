@@ -22,7 +22,7 @@ export class SimpleCommandInvoker implements CommandInvoker {
                 }
             })
             .catch(error => {
-                log("Failed while executing command: ", command, " error: ", error.stack);
+                log("Failed while executing command: ", JSON.stringify(command, null, 2), " error: ", error.stack);
                 context.writeOutput(getErrorOutputForCommand(command, error));
             });
     }

@@ -12,6 +12,8 @@ import { FileIndexer } from "./FileIndexer";
 import { MutableTsunamiContext } from "./MutableTsunamiContext";
 import { getErrorOutputForCommand } from "./Response";
 import { SimpleCommandInvoker } from "./SimpleCommandInvoker";
+import { InitializedFormatOptions } from "./formatting/FormatOptions";
+import { ImportBlockFormatterOptions } from "./imports/ImportBlockFormatter";
 import { ModuleName } from "./imports/ImportStatement";
 import log from "./log";
 import { TsProject } from "./tsProject";
@@ -34,6 +36,7 @@ export class Tsunami {
 
     constructor(
         private tsProject: TsProject,
+        private formatOptions: InitializedFormatOptions,
         terminalCommandDefinitions: CommandDefinition<any, any>[] = [],
         nonterminalCommandDefinitions: CommandDefinition<any, any>[] = [],
         context?: TsunamiContext
@@ -43,6 +46,7 @@ export class Tsunami {
         this.documentRegistry = ts.createDocumentRegistry(true);
         this.context = context || new MutableTsunamiContext(
             this.tsProject,
+            this.formatOptions,
             writeOutputToStdOut,
             this.documentRegistry
         );
@@ -68,20 +72,24 @@ export class Tsunami {
             .pipe(es.map(this.processPotentialTsunamiCommand))
             .pipe(tsserver.stdin);
 
+        tsserver.stdout.pipe(process.stdout);
         tsserver.stdout
             .pipe(es.map((data: any, cb: CallbackFunction<any>) => {
                 log(data);
                 cb(null, data);
-            }))
-            .pipe(process.stdout);
+            }));
     }
 
-    public buildInitialProjectIndex(): Promise<void> {
-        return Bluebird.all([this.buildInitialInternalProjectIndex(), this.indexDependenciesOfProject()]).thenReturn();
+    public async buildInitialProjectIndex(): Promise<void> {
+        await Bluebird.all([
+            this.buildInitialInternalProjectIndex(),
+            this.indexDependenciesOfProject()
+        ]);
     }
 
     private async indexDependenciesOfProject(): Promise<void> {
-        return this.tsProject.getDependencyFilenames().then(deps => {
+        try {
+            const deps = await this.tsProject.getDependencyFilenames();
             log("Dependency typings: ", JSON.stringify(deps, null, 2));
 
             Object.keys(deps).forEach(dep => {
@@ -97,10 +105,10 @@ export class Tsunami {
                     log("Failed to index: ", dep);
                 }
             });
-        }).catch(error => {
+        } catch (error) {
             log("Failed to get dependency filenames.");
             log(error.stack);
-        });
+        }
     }
 
     private async buildInitialInternalProjectIndex(): Promise<void> {
@@ -143,18 +151,16 @@ export class Tsunami {
         }
     }
 
-    private indexDefinitionFile(moduleName: string, filename: string): Promise<void> {
-        return this.context.getSourceFileFor(filename).then(() => {
-            return this.context.updateSourceFileFor(filename).then(sourceFile => {
-                log("Indexing definition file:", sourceFile.fileName);
-                const indexer = new FileIndexer(
-                    moduleName as ModuleName,
-                    sourceFile,
-                    filename => this.context.getSourceFileFor(filename)
-                );
-                this.context.moduleIndexerMap.set(moduleName, indexer);
-                return indexer.indexFile();
-            });
-        });
+    private async indexDefinitionFile(moduleName: string, filename: string): Promise<void> {
+        await this.context.getSourceFileFor(filename);
+        const sourceFile = await this.context.reloadFile(filename); // FIXME: Why?????????
+        log("Indexing definition file:", sourceFile.fileName);
+        const indexer = new FileIndexer(
+            moduleName as ModuleName,
+            sourceFile,
+            this.context.getSourceFileFor.bind(this)
+        );
+        this.context.moduleIndexerMap.set(moduleName, indexer);
+        return indexer.indexFile();
     }
 }

@@ -9,8 +9,6 @@ import log from "./log";
 
 const readFilePromise = Bluebird.promisify(fs.readFile);
 
-const glob = Bluebird.promisify(globAsync) as (pattern: string, options?: any) => Bluebird<string[]>;
-
 export class TsProject {
     public static async fromRootDir(tsconfigFolder: string): Bluebird<TsProject> {
         const filename = path.join(tsconfigFolder, "tsconfig.json");

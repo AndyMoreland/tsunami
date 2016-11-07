@@ -5,6 +5,7 @@ import * as readline from "readline";
 import * as ts from "typescript";
 import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
 import { getNodesContainingPoint } from "../utilities/languageUtilities";
+import { buildFormatOptions } from "../formatting/FormatOptions";
 import { TsunamiContext } from "../Context";
 import * as tsu from "../index";
 
@@ -19,7 +20,7 @@ async function startRepl() {
     const projectRoot = process.argv[2];
     console.log("Starting in: ", projectRoot);
     const project = await tsu.TsProject.fromRootDir(projectRoot);
-    const tsunami = new tsu.Tsunami(project);
+    const tsunami = new tsu.Tsunami(project, buildFormatOptions());
 
     await tsunami.buildInitialProjectIndex();
 

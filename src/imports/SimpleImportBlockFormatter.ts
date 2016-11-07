@@ -86,12 +86,12 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                     return [binding.symbolName, binding.alias].filter(x => x != null).join(" as ");
                 });
 
-                const extraStuffInImportStateLength = 22;
+                const extraStuffInImportStatementLength = "import * as {} from  ;".length;
 
                 const totalLen = sortedStringBindings.reduce((totalLen, str) => totalLen + str.length + 2, 0)
                     + (defaultName != null ? defaultName.length : 0)
                     + localSpecifier.length
-                    + extraStuffInImportStateLength;
+                    + extraStuffInImportStatementLength;
                 const multilineFormat = totalLen > 140;
                 const newlineOrSpace = multilineFormat ? "\n" : " ";
                 const bindingsJoinStr = multilineFormat ? ",\n" + this.getIndentSpaces() : ", ";

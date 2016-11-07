@@ -1,4 +1,5 @@
 import * as Bluebird from "bluebird";
+import * as path from "path";
 import { SymbolLocation } from "../protocol/types";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
@@ -22,36 +23,20 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
     public async processor(context: TsunamiContext, command: FetchSymbolLocationsCommand): Bluebird<FetchSymbolLocationsResponseBody> {
         let symbolLocations: SymbolLocation[] = [];
 
-        context.fileIndexerMap.forEach(indexer => {
-            indexer.getDefinitionIndex().forEach((definition, symbolName) => {
-                const symbolLocation = {
-                    name: symbolName,
-                    type: DefinitionType[definition.type],
-                    location: {
-                        filename: definition.moduleSpecifier,
-                        span: definition.span
-                    },
-                    default: definition.default
-                };
-                symbolLocations.push(symbolLocation);
-            });
-        });
+        for (let definition of context.getIndexedDefinitions()) {
+            const symbolLocation = {
+                name: definition.text || "",
+                type: DefinitionType[definition.type],
+                location: {
+                    filename: definition.moduleSpecifier,
+                    span: definition.span,
+                    isExternalModule: !path.isAbsolute(definition.moduleSpecifier)
+                },
+                default: definition.default
+            };
 
-        context.moduleIndexerMap.forEach((indexer, moduleName) => {
-            indexer.getDefinitionIndex().forEach((definition, symbolName) => {
-                const symbolLocation = {
-                    name: symbolName,
-                    type: DefinitionType[definition.type],
-                    location: {
-                        filename: definition.moduleSpecifier,
-                        span: definition.span,
-                        isExternalModule: true
-                    },
-                    default: definition.default
-                };
-                symbolLocations.push(symbolLocation);
-            });
-        });
+            symbolLocations.push(symbolLocation);
+        }
 
         return Bluebird.resolve({
             symbolLocations

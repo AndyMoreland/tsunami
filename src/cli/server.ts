@@ -1,13 +1,14 @@
- import { ImplementInterfaceCommandDefinition } from "../commands/ImplementInterface";
 import { ChangeCommandDefinition } from "../commands/ChangeCommand";
 import { FetchSymbolLocationsDefinition } from "../commands/FetchSymbolLocations";
 import { GetContainingExpressionsDefinition } from "../commands/GetContainingExpressions";
 import { GetContainingScopesDefinition } from "../commands/GetContainingScopes";
 import { GetPropertiesOfSymbolDefinition } from "../commands/GetPropertiesOfSymbol";
+import { ImplementInterfaceCommandDefinition } from "../commands/ImplementInterface";
 import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
 import { OrganizeImportsCommandDefinition } from "../commands/OrganizeImportsCommand";
 import { ReloadCommandDefinition } from "../commands/ReloadCommand";
 import { SaveToCommandDefinition } from "../commands/SaveToCommand";
+import { buildFormatOptions } from "../formatting/FormatOptions";
 import { Tsunami } from "../Tsunami";
 import log, { logWithCallback } from "../log";
 import { TsProject } from "../tsProject";
@@ -39,7 +40,7 @@ log("Attempting to start server.");
 TsProject.fromRootDir(projectConfig)
     .then(project => {
         log("Constructing tsunami");
-        const tsunami = new Tsunami(project, terminalCommandDefinitions, nonterminalCommandDefinitions);
+        const tsunami = new Tsunami(project, buildFormatOptions(), terminalCommandDefinitions, nonterminalCommandDefinitions);
         tsunami.initialize();
         log("Done with .initialize");
-    });
+    }).catch(e => log(e));
