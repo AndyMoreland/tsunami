@@ -75,6 +75,11 @@
     (when (tsunami--buffer-contains-regexp (concat "import .*? from " string-regexp module-name string-regexp))
       t)))
 
+(defun tsunami--exact-matching-symbols (symbol-name)
+  (-filter (lambda (def)
+             (equal (plist-get def :name) symbol-name))
+           tsunami--matching-symbols))
+
 (defun tsunami--module-imported-wildcard-p (module-name)
   "Returns nil or string alias for MODULE-NAME"
   (let* ((quote-regexp (regexp-opt '("\"" "'")))
@@ -184,8 +189,11 @@
 
 (defun tsunami-import-symbol-at-point (&optional arg)
   (interactive "P")
-  (let ((symbol (thing-at-point 'symbol t)))
-    (tsunami--helm '(("Import `RET'" . tsunami--import-and-complete-symbol)) arg symbol)))
+  (let* ((symbol (thing-at-point 'symbol t))
+         (exact-matches (tsunami--exact-matching-symbols symbol)))
+    (if (= 1 (length exact-matches))
+        (tsunami--import-and-complete-symbol (-first-item exact-matches))
+      (tsunami--helm '(("Import `RET'" . tsunami--import-and-complete-symbol)) arg symbol))))
 
 (defun helm-tsunami-symbols (&optional arg)
   (interactive "P")
