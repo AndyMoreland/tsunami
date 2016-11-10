@@ -8,7 +8,7 @@ import { ReindexProjectCommand } from "./commands/ReindexProjectCommand";
 import { TsunamiCodeActionProvider } from "./plugins/TsunamiCodeActionProvider";
 import { TsunamiCodeCompletionProvider } from "./plugins/TsunamiCodeCompletionProvider";
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const projectRoot = vscode.workspace.rootPath;
     console.log("Activating!");
 
@@ -22,10 +22,10 @@ export function activate(context: vscode.ExtensionContext) {
         return;
     }
 
-    const settings = JSON.parse(fs.readFileSync(path.join(projectRoot, "tsconfig.json")).toString());
-
+    const project = await tsu.TsProject.fromRootDir(projectRoot);
     const tsunami = new tsu.Tsunami(
-        new tsu.TsProject(projectRoot, settings)
+        project,
+        tsu.buildFormatOptions()
     );
 
     const extension = new TsunamiExtension(
