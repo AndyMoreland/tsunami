@@ -6,7 +6,7 @@ import { TsunamiContext } from "../Context";
 import { CodeEdit } from "../protocol/types";
 import { Command, CommandDefinition } from "../Command";
 
-interface ImplementInterfaceCommand extends Command {
+export interface ImplementInterfaceCommand extends Command {
     arguments: {
         filename: string;
         position: number;
