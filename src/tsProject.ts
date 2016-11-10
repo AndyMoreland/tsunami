@@ -15,7 +15,7 @@ export class TsProject {
         const parseConfigHost = new ParseConfigHost();
         const data = await readFilePromise(filename);
 
-        const config = ts.parseJsonConfigFileContent(
+        const config = () => ts.parseJsonConfigFileContent(
             JSON.parse("" + data), parseConfigHost, tsconfigFolder
         );
 
@@ -23,14 +23,14 @@ export class TsProject {
     }
 
     constructor(private projectRoot: string,
-                private tsconfig: ts.ParsedCommandLine) {}
+                private getTsconfig: () => ts.ParsedCommandLine) {}
 
     public getRoot(): string {
         return this.projectRoot;
     }
 
     private async getProjectFilenames(): Bluebird<string[]> {
-        return this.tsconfig.fileNames;
+        return this.getTsconfig().fileNames;
     }
 
     private async getTypingsFileForModuleName(baseDir: string, moduleName: string): Promise<string> {
@@ -69,6 +69,6 @@ export class TsProject {
     }
 
     public getCompilerOptions(): ts.CompilerOptions {
-        return this.tsconfig.options;
+        return this.getTsconfig().options;
     }
 }
