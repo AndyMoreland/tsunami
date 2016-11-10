@@ -42,7 +42,7 @@ export class ImportEditor {
                 },
                 end: {
                     line: 1,
-                    offset: 2
+                    offset: 1
                 }
             }
         ];
