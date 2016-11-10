@@ -1,10 +1,11 @@
-import { isExportedNode } from "./utilities/languageUtilities";
-import * as Promise from "bluebird";
+import * as Bluebird from "bluebird";
+import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
 import { Definition, DefinitionIndex, DefinitionType } from "./Indexer";
 import { ModuleSpecifier } from "./imports/ImportStatement";
 import log from "./log";
+import { isExportedNode } from "./utilities/languageUtilities";
 
 export class FileIndexer {
     private index: DefinitionIndex;
@@ -12,7 +13,7 @@ export class FileIndexer {
     constructor(
         private moduleSpecifier: ModuleSpecifier,
         private sourceFile: ts.SourceFile,
-        private getSourceFileForAbsolutePath?: (absolutePath: string) => Promise<ts.SourceFile>
+        private getSourceFileForAbsolutePath?: (absolutePath: string) => Bluebird<ts.SourceFile>
     ) {}
 
     private addDefinitiontoIndex(definition: Definition): void {
@@ -103,8 +104,8 @@ export class FileIndexer {
         }
     }
 
-    private indexExportDeclaration(node: ts.ExportDeclaration): Promise<void> {
-        const promises: Promise<void>[] = [];
+    private indexExportDeclaration(node: ts.ExportDeclaration): Bluebird<void> {
+        const promises: Bluebird<void>[] = [];
 
         if (node.exportClause && node.exportClause.elements) {
             node.exportClause.elements
@@ -116,27 +117,35 @@ export class FileIndexer {
                 const dirname = path.dirname(this.sourceFile.fileName);
                 /* HACK: assumes .d.ts because we're only operating in libraries, really. */
                 if (node.moduleSpecifier != null && this.getSourceFileForAbsolutePath !== undefined) {
-                    const recursivePath = path.join(dirname, node.moduleSpecifier.getText().replace(/"|'/g, "")) + ".d.ts";
-                    log(`[${this.moduleSpecifier}] ${this.sourceFile.fileName} -> ${recursivePath}`);
-                    const subindexPromise = this.getSourceFileForAbsolutePath(recursivePath).then(sourceFile => {
-                        const indexer = new FileIndexer(
-                            this.moduleSpecifier,
-                            sourceFile,
-                            this.getSourceFileForAbsolutePath
-                        );
-                        return indexer.indexFile().then(nothing => {
+                    const specifier = node.moduleSpecifier.getText().replace(/"|'/g, "");
+                    const recursivePaths = [
+                        path.join(dirname, specifier) + ".d.ts",
+                        path.join(dirname, specifier, "index") + ".d.ts",
+                    ];
+                    for (let recursivePath of recursivePaths) {
+                        log(`[${this.moduleSpecifier}] ${this.sourceFile.fileName} -> ${recursivePath}`);
+                        if (!fs.existsSync(recursivePath)) {
+                            continue;
+                        }
+                        const subindexPromise = this.getSourceFileForAbsolutePath(recursivePath).then(async sourceFile => {
+                            const indexer = new FileIndexer(
+                                this.moduleSpecifier,
+                                sourceFile,
+                                this.getSourceFileForAbsolutePath
+                            );
+                            await indexer.indexFile();
                             const recursiveIndex = indexer.getDefinitionIndex();
                             this.addIndex(recursiveIndex);
+                        }).catch(e => {
+                            log("Failed to index recursive module: ", recursivePath, e, e.stack);
                         });
-                    }).catch(e => {
-                        log("Failed to index recursive module: ", recursivePath, e, e.stack);
-                    });
-                    promises.push(subindexPromise);
+                        promises.push(subindexPromise);
+                    }
                 }
             }
         });
 
-        return Promise.all(promises).thenReturn();
+        return Bluebird.all(promises).thenReturn();
     }
 
     private indexExportSpecifier(node: ts.ExportSpecifier): void {
@@ -148,19 +157,19 @@ export class FileIndexer {
             && node.modifiers.filter(modifierNode => modifierNode.kind === ts.SyntaxKind.DefaultKeyword).length > 0;
     }
 
-    public indexNode = (node: ts.Node): Promise<void> => {
+    public indexNode = (node: ts.Node): Bluebird<void> => {
         if (isExportedNode(node)) {
-            return Promise.resolve(this.indexExportedSymbol(node));
+            return Bluebird.resolve(this.indexExportedSymbol(node));
         } else if (node.kind === ts.SyntaxKind.ExportDeclaration) {
             return this.indexExportDeclaration(node as ts.ExportDeclaration);
         }
 
-        return Promise.resolve<void>(null!);
+        return Bluebird.resolve<void>(null!);
     };
 
-    public indexFile(): Promise<void> {
+    public indexFile(): Bluebird<void> {
         this.index = new Map<string, Definition>();
-        const promises: Promise<void>[] = [];
+        const promises: Bluebird<void>[] = [];
 
         try {
             ts.forEachChild(this.sourceFile, node => {
@@ -170,7 +179,7 @@ export class FileIndexer {
             log("Failed during indexing of file ", this.sourceFile.fileName, ": ", e.stack);
         }
 
-        return Promise.all(promises).thenReturn();
+        return Bluebird.all(promises).thenReturn();
     }
 
     public getDefinitionIndex(): DefinitionIndex {
