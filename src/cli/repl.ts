@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
+import * as Bluebird from "bluebird";
 import * as path from "path";
 import * as readline from "readline";
 import * as ts from "typescript";
 import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
-import { getNodesContainingPoint } from "../utilities/languageUtilities";
 import { buildFormatOptions } from "../formatting/FormatOptions";
+import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
+import { ImportStatementType, AbsoluteFilename, ModuleSpecifier, getTypeOfModuleSpecifier } from "../imports/ImportStatement";
+import { getNodesContainingPoint } from "../utilities/languageUtilities";
 import { TsunamiContext } from "../Context";
+import { Definition } from "../Indexer";
 import * as tsu from "../index";
 
 const MOVE_SYMBOL = new MoveSymbolCommandDefinition();
@@ -86,6 +90,38 @@ async function processGetFilenames(context: TsunamiContext) {
     console.log(filenames.join("\n"));
 }
 
+async function processFindDeadCode(context: TsunamiContext) {
+    console.log("Finding dead code.");
+    const files = await context.getProject().getFileNames();
+
+    const promises = files.map(async file => {
+        const sourceFile = await context.getSourceFileFor(file);
+        return ImportBlockBuilder.fromFile(sourceFile).build();
+    });
+
+    const importBlocks = await Bluebird.all(promises);
+    const usedSymbols: Map<ModuleSpecifier, Set<string>> = new Map<ModuleSpecifier, Set<string>>();
+
+    for (let block of importBlocks) {
+        Object.keys(block.importRecords).forEach((specifier: ModuleSpecifier) => {
+            const symbols = usedSymbols.has(specifier) ? usedSymbols.get(specifier)! : new Set<string>();
+            block.importRecords[specifier].importClause.namedBindings.forEach(x => symbols.add(x.symbolName));
+            usedSymbols.set(specifier, symbols);
+        });
+    }
+
+    const unused: Definition[] = [];
+
+    for (let def of context.getIndexedDefinitions()) {
+        const moduleSpecifier = def.moduleSpecifier.replace(/.tsx?/, "") as ModuleSpecifier;
+        if (getTypeOfModuleSpecifier(moduleSpecifier) === ImportStatementType.PROJECT_RELATIVE
+            && (!usedSymbols.has(moduleSpecifier) || !usedSymbols.get(moduleSpecifier)!.has(def.text!))) {
+            console.log(moduleSpecifier, def.text);
+            unused.push(def);
+        }
+    }
+}
+
 async function processImplementInterface(context: TsunamiContext, filename: string, position: number) {
     console.log("Implement interface at location ", position, " in file ", filename);
     const program = await context.getProgram();
@@ -136,6 +172,8 @@ async function processCommand(context: TsunamiContext, commandLineArgs: string[]
         case "m": await processMoveSymbol(context, args[0], args[1], args[2]); break;
         case "f": await processGetFilenames(context); break;
         case "i": await processImplementInterface(context, args[0], parseInt(args[1], 10)); break;
+        case "dc": await processFindDeadCode(context); break;
+        default: console.error("Unknown command: " + commandName);
         }
     } catch (e) {
         console.error("While processing command, got error: ", e, e.stack);
