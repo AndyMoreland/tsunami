@@ -93,7 +93,6 @@ export class Tsunami {
             const promises: Promise<void>[] = [];
 
             Object.keys(deps).forEach(dep => {
-                /* indexExternalModule(dep); */
                 try {
                     fs.accessSync(deps[dep]);
                     let typings = deps[dep];
