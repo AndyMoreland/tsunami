@@ -5,6 +5,7 @@ import * as path from "path";
 import * as readline from "readline";
 import * as ts from "typescript";
 import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
+import { FetchSymbolLocationsDefinition } from "../commands/FetchSymbolLocations";
 import { buildFormatOptions } from "../formatting/FormatOptions";
 import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
 import { ImportStatementType, AbsoluteFilename, ModuleSpecifier, getTypeOfModuleSpecifier } from "../imports/ImportStatement";
@@ -14,11 +15,12 @@ import { Definition } from "../Indexer";
 import * as tsu from "../index";
 
 const MOVE_SYMBOL = new MoveSymbolCommandDefinition();
+const FETCH_SYMBOL_LOCATIONS = new FetchSymbolLocationsDefinition();
 
 process.on("uncaughtException", (err: Error) => {
     console.error(err);
     process.exit(1);
-})
+});
 
 async function startRepl() {
     const projectRoot = process.argv[2];
@@ -81,6 +83,20 @@ async function processMoveSymbol(context: TsunamiContext, fromFileName: string, 
 
     const edits = await MOVE_SYMBOL.processor(context, command);
     console.log(JSON.stringify(edits, null, 2));
+}
+
+async function processFetchSymbolLocations(context: TsunamiContext) {
+    console.log(`Executing [fetchSymbols]`);
+    const command = {
+        command: "SYMBOL_LOCATIONS",
+        seq: 0,
+        arguments: {
+            prefix: "foo"
+        }
+    };
+
+    const locations = await FETCH_SYMBOL_LOCATIONS.processor(context, command);
+    console.log(locations);
 }
 
 async function processGetFilenames(context: TsunamiContext) {
@@ -171,6 +187,7 @@ async function processCommand(context: TsunamiContext, commandLineArgs: string[]
         case "d": await processGetDiagnostics(context, args[0]); break;
         case "m": await processMoveSymbol(context, args[0], args[1], args[2]); break;
         case "f": await processGetFilenames(context); break;
+        case "fsl": await processFetchSymbolLocations(context); break;
         case "i": await processImplementInterface(context, args[0], parseInt(args[1], 10)); break;
         case "dc": await processFindDeadCode(context); break;
         default: console.error("Unknown command: " + commandName);
