@@ -6,7 +6,7 @@ const LOGGING_ENABLED = TSUNAMI_LOG_FILE != null;
 
 export default function log(...args: any[]): void {
     if (LOGGING_ENABLED) {
-        fs.appendFile(TSUNAMI_LOG_FILE, "\n\n" + "[" + process.pid + "]: " + args.join(", "));
+        fs.appendFile(TSUNAMI_LOG_FILE, "\n\n" + "[" + process.pid + "]: " + args.join(", "), () => { /* do nothing */ });
     }
 }
 
