@@ -1,4 +1,3 @@
-
 import * as Bluebird from "bluebird";
 import * as fs from "fs";
 import * as path from "path";
@@ -13,6 +12,7 @@ import log from "./log";
 import { FuzzAldrinPlusSymbolSearchIndex } from "./search/FuzzAldrinPlusSymbolSearchIndex";
 import { SymbolSearchIndex } from "./search/SymbolSearchIndex";
 import { TsProject } from "./tsProject";
+import { fileNameToModuleSpecifier } from "./utilities/filenameUtils";
 
 const readFilePromise = Bluebird.promisify(fs.readFile);
 
@@ -58,7 +58,7 @@ export class MutableTsunamiContext implements TsunamiContext {
         log("reloading ", filename);
         const sourceFile = await this.updateSourceFileFor(filename, fileText);
         let indexer = new FileIndexer(
-            sourceFile.fileName as AbsoluteFilename,
+            fileNameToModuleSpecifier(sourceFile.fileName) as AbsoluteFilename,
             sourceFile,
             filename => this.getSourceFileFor(filename)
         );
