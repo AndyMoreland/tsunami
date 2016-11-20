@@ -50,7 +50,7 @@ export class TsProject {
         return this.getProjectFilenames();
     }
 
-    public async getDependencyFilenames(): Promise<{ [index: string]: string }> {
+    public async getDependencyFilenames(): Promise<{ [moduleName: string]: string }> {
         const packageJsonFolder = findRoot(this.projectRoot);
         const packageJsonFilename = path.join(packageJsonFolder, "package.json");
         log("Searching for dependencies in: ", packageJsonFilename);

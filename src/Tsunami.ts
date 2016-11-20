@@ -1,3 +1,4 @@
+import { ProjectIndexer } from "./ProjectIndexer";
 import * as JSONStream from "JSONStream";
 import * as Bluebird from "bluebird";
 import * as p from "child_process";
@@ -32,6 +33,7 @@ export class Tsunami {
     private nonterminalInvoker: CommandInvoker;
     private documentRegistry: ts.DocumentRegistry;
     private context: TsunamiContext;
+    private projectIndexer: ProjectIndexer;
 
     constructor(
         private tsProject: TsProject,
@@ -49,6 +51,7 @@ export class Tsunami {
             writeOutputToStdOut,
             this.documentRegistry
         );
+        this.projectIndexer = new ProjectIndexer(tsProject, this.context);
     }
 
     public async initialize(): Promise<void> {
@@ -80,49 +83,7 @@ export class Tsunami {
     }
 
     public async buildInitialProjectIndex(): Promise<void> {
-        await Bluebird.all([
-            this.buildInitialInternalProjectIndex(),
-            this.indexDependenciesOfProject()
-        ]);
-    }
-
-    private async indexDependenciesOfProject(): Promise<void> {
-        try {
-            const deps = await this.tsProject.getDependencyFilenames();
-            log("Dependency typings: ", JSON.stringify(deps, null, 2));
-            const promises: Promise<void>[] = [];
-
-            Object.keys(deps).forEach(dep => {
-                try {
-                    fs.accessSync(deps[dep]);
-                    let typings = deps[dep];
-
-                    if (typings) {
-                        promises.push(this.indexDefinitionFile(dep, typings));
-                    }
-                } catch (e) {
-                    log("Failed to index: ", dep);
-                }
-            });
-
-            await Bluebird.all(promises);
-        } catch (error) {
-            log("Failed to get dependency filenames.");
-            log(error.stack);
-        }
-    }
-
-    private async buildInitialInternalProjectIndex(): Promise<void> {
-        const files = await this.tsProject.getFileNames();
-
-        log(JSON.stringify(files, null, 2));
-        const promises = files.map(file => this.context.getSourceFileFor(file).then(() => {
-            log("Indexing: ", file);
-            return this.context.reloadFile(file);
-        }));
-
-        await Bluebird.all(promises);
-        log("Finished starting server.");
+        await this.projectIndexer.indexProject();
     }
 
     private processPotentialTsunamiCommand = (data: UnknownObject, cb: CallbackFunction<string>) => {
@@ -154,16 +115,5 @@ export class Tsunami {
         }
     }
 
-    private async indexDefinitionFile(moduleName: string, filename: string): Promise<void> {
-        await this.context.getSourceFileFor(filename);
-        const sourceFile = await this.context.updateSourceFileFor(filename); // FIXME: Why?????????
-        log("Indexing definition file:", sourceFile.fileName, moduleName);
-        const indexer = new FileIndexer(
-            moduleName as ModuleName,
-            sourceFile,
-            fileName => this.context.getSourceFileFor(fileName)
-        );
-        this.context.moduleIndexerMap.set(moduleName, indexer);
-        return indexer.indexFile();
-    }
+
 }
