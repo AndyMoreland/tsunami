@@ -1,13 +1,21 @@
-import { ParseConfigHost } from "./typescript-tools/ParseConfigHost";
 import * as Bluebird from "bluebird";
 import * as findRoot from "find-root";
 import * as fs from "fs";
-import * as globAsync from "glob";
 import * as path from "path";
 import * as ts from "typescript";
 import log from "./log";
+import { ParseConfigHost } from "./typescript-tools/ParseConfigHost";
+import { globPromise } from "./utilities/ioUtils";
 
 const readFilePromise = Bluebird.promisify(fs.readFile);
+
+/**
+ * Given a `rootModuleName` like "@foo/bar" and a fileName like "quuxModule.d.ts",
+ * returns "@foo/bar/quuxModule"
+ */
+function guessModuleNameForTypingsFile(rootModuleName: string, fileName: string): string {
+    return path.join(rootModuleName, path.basename(fileName, ".d.ts"));
+}
 
 export class TsProject {
     public static async fromRootDir(tsconfigFolder: string): Bluebird<TsProject> {
@@ -33,13 +41,28 @@ export class TsProject {
         return this.tsconfig.fileNames;
     }
 
-    private async getTypingsFileForModuleName(baseDir: string, moduleName: string): Promise<string> {
+    /**
+     * Returns set of absolute filenames of typings files in `moduleName`.
+     * Returns root-level types + the file specified in "typings".
+     */
+    private async getTypingsFilesForNodeModule(baseDir: string, moduleName: string): Bluebird<{
+        index: string,
+        extraModules: Set<string>
+    }> {
         const nodeModulesFolder = path.join(baseDir, "node_modules");
         const moduleFolder = path.join(nodeModulesFolder, moduleName);
         const modulePackage = path.join(moduleFolder, "package.json");
-        const data = await readFilePromise(modulePackage);
-        const typingsFile = JSON.parse(data.toString()).typings || "index.d.ts";
-        return path.join(moduleFolder, typingsFile);
+        const packageJson = await readFilePromise(modulePackage);
+        const indexTypingsFile = JSON.parse(packageJson.toString()).typings || "index.d.ts";
+
+        const extraModules = await globPromise("*.d.ts", {
+            cwd: moduleFolder
+        });
+
+        return {
+            index: path.join(moduleFolder, indexTypingsFile),
+            extraModules: new Set(extraModules.map(x => path.join(moduleFolder, x)))
+        };
     }
 
     public async getAllFilenames(): Bluebird<string[]> {
@@ -60,10 +83,15 @@ export class TsProject {
 
         const deps = packageJson.dependencies as { [index: string]: string };
         const response: { [index: string]: string } = {};
-        await Bluebird.all(Object.keys(deps).map(
-            dep => this.getTypingsFileForModuleName(packageJsonFolder, dep)
-                .then(typingsFile => response[dep] = typingsFile)
-        ));
+        await Bluebird.all(Object.keys(deps).map(async depName => {
+            const result = await this.getTypingsFilesForNodeModule(packageJsonFolder, depName);
+            response[depName] = result.index;
+
+            for (let typingsFile of result.extraModules) {
+                guessModuleNameForTypingsFile(depName, typingsFile);
+                response[depName] = typingsFile;
+            }
+        }));
 
         return response;
     }

@@ -1,11 +1,12 @@
-import * as Promise from "bluebird";
+import * as Bluebird from "bluebird";
 import * as fs from "fs";
+import * as glob from "glob";
 import { CodeEdit } from "../protocol/types";
 import { Response } from "../Response";
 import log from "../log";
 
-const readFilePromise = Promise.promisify(fs.readFile);
-const writeFilePromise = Promise.promisify<void, string, string>(fs.writeFile);
+const readFilePromise = Bluebird.promisify(fs.readFile);
+const writeFilePromise = Bluebird.promisify<void, string, string>(fs.writeFile);
 
 export function writeOutput<T>(stream: NodeJS.WritableStream, response: Response<T>) {
     let output = JSON.stringify(response);
@@ -16,7 +17,7 @@ export function writeOutput<T>(stream: NodeJS.WritableStream, response: Response
     stream.write("Content-Length: " + outputLength + "\n\n");
     stream.write(output + "\n");
 
-    return Promise.resolve<void>(null!);
+    return Bluebird.resolve<void>(null!);
 }
 
 export function writeOutputToStdOut<T>(response: Response<T>) {
@@ -54,8 +55,21 @@ export function applyCodeEditsInMemory(fileContents: string, sortedCodeEdits: Co
 }
 
 /* Assumes codeEdits are sorted end-to-start of file. */
-export function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Promise<void> {
+export function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Bluebird<void> {
     return readFilePromise(path).then(buffer => {
         return writeFilePromise(path, applyCodeEditsInMemory(buffer.toString(), sortedCodeEdits));
+    });
+}
+
+export function globPromise(pattern: string, options: glob.IOptions): Promise<string[]> {
+    return new Bluebird<string[]>((resolve, reject) => {
+        glob(pattern, options, (err, matches) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve(matches);
+        });
     });
 }
