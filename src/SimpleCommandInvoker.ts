@@ -13,7 +13,7 @@ export class SimpleCommandInvoker implements CommandInvoker {
         return !!this.commandDefinitions.filter(def => def.predicate(command))[0];
     }
 
-    public invoke(context: TsunamiContext, command: Command): Promise<void> {
+    public async invoke(context: TsunamiContext, command: Command): Promise<void> {
         return this.commandDefinitions.filter(def => def.predicate(command))[0]
             .processor(context, command)
             .then(response => {

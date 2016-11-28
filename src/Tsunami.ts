@@ -1,20 +1,16 @@
 import { ProjectIndexer } from "./ProjectIndexer";
 import * as JSONStream from "JSONStream";
-import * as Bluebird from "bluebird";
 import * as p from "child_process";
 import * as es from "event-stream";
-import * as fs from "fs";
 import * as ts from "typescript";
 import { BenchmarkingCommandInvoker } from "./BenchmarkingCommandInvoker";
 import { Command, CommandDefinition } from "./Command";
 import { CommandInvoker } from "./CommandInvoker";
 import { TsunamiContext } from "./Context";
-import { FileIndexer } from "./FileIndexer";
 import { MutableTsunamiContext } from "./MutableTsunamiContext";
 import { getErrorOutputForCommand } from "./Response";
 import { SimpleCommandInvoker } from "./SimpleCommandInvoker";
 import { InitializedFormatOptions } from "./formatting/FormatOptions";
-import { ModuleName } from "./imports/ImportStatement";
 import log from "./log";
 import { TsProject } from "./tsProject";
 import { CallbackFunction, UnknownObject } from "./types";
@@ -114,6 +110,4 @@ export class Tsunami {
             cb(null, JSON.stringify(command) + "\n");
         }
     }
-
-
 }
