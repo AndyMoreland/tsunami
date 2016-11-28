@@ -5,7 +5,6 @@
 
 /// <reference path="../node/node.d.ts" />
 /// <reference path="../minimatch/minimatch.d.ts" />
-
 declare module "glob" {
 
 	import events = require("events");
@@ -23,7 +22,7 @@ declare module "glob" {
 		var Glob: IGlobStatic;
 		var GlobSync: IGlobSyncStatic;
 
-		interface IOptions extends minimatch.IOptions {
+  export interface IOptions extends minimatch.IOptions {
 			cwd?: string;
 			root?: string;
 			dot?: boolean;
