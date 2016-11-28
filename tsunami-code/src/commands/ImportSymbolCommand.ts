@@ -1,3 +1,4 @@
+import { addImportToFile } from "../importUtilities";
 import * as ts from "typescript";
 import * as vs from "vscode";
 import * as tsu from "@derander/tsunami";
@@ -13,7 +14,9 @@ interface CompletionItem {
 export class ImportSymbolCommand implements VscodeTextEditorCommand {
     public commandName = "tsunami.importSymbol";
 
-    constructor(private context: tsu.TsunamiContext) { }
+    constructor(
+        private context: tsu.TsunamiContext
+    ) { }
 
     private async getChoice(rootPath: string, symbol?: string): Promise<CompletionItem | undefined> {
         let results: CompletionItem[] = [];
@@ -45,20 +48,29 @@ export class ImportSymbolCommand implements VscodeTextEditorCommand {
 
     private async editImportBlock(editor: vs.TextEditor, definition: tsu.Definition): Promise<void> {
         const sourceFile = ts.createSourceFile(editor.document.fileName, editor.document.getText(), ts.ScriptTarget.ES5, true);
-        const newBlock = tsu.ImportBlockBuilder.fromFile(sourceFile)
-            .addImportBinding(
-                definition.moduleSpecifier.replace(/\.tsx?/g, "") as any,
-                { symbolName: definition.text || "" }
-            )
-            .build();
-        const edits = (new tsu.ImportEditor(new tsu.SimpleImportBlockFormatter()))
-            .applyImportBlockToFile(sourceFile, newBlock);
+        const moduleSpecifier = definition.moduleSpecifier.replace(/\.tsx?/g, "") as any; // goofy cast
+
+        const edits = addImportToFile(
+            sourceFile,
+            this.context.getImportConfig().namespaceAliases,
+            moduleSpecifier,
+            definition.text!
+        );
+
         editor.edit((editBuilder) => applyCodeEdit(editBuilder, edits[0]));
     }
 
-    private async editSymbolAtPoint(editor: vs.TextEditor, chosenSymbolName: string): Promise<void> {
+    private async editSymbolAtPoint(editor: vs.TextEditor, moduleFileName: string, chosenSymbolName: string): Promise<void> {
+        const namespaceAliases = this.context.getImportConfig().namespaceAliases;
+        const moduleSpecifier = moduleFileName.replace(/\.tsx?/g, "") as any; // goofy cast
+
         editor.edit((editBuilder) => {
             const currentWordRange = editor.document.getWordRangeAtPosition(editor.selection.start);
+
+            if (namespaceAliases.has(moduleSpecifier as any)) {
+                chosenSymbolName = namespaceAliases.get(moduleSpecifier as any) + "." + chosenSymbolName;
+            }
+
             if (currentWordRange) {
                 return editBuilder.replace(currentWordRange, chosenSymbolName);
             }
@@ -75,6 +87,6 @@ export class ImportSymbolCommand implements VscodeTextEditorCommand {
         }
 
         await this.editImportBlock(editor, choice.definition);
-        await this.editSymbolAtPoint(editor, choice.label);
+        await this.editSymbolAtPoint(editor, choice.definition.moduleSpecifier, choice.label);
     }
 }

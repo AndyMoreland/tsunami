@@ -22,10 +22,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         return;
     }
 
+    const config = vscode.workspace.getConfiguration("tsunami").get("namespaceImports", {});
+    const importConfig =  { namespaceAliases: new Map<any, string>() }; // FIXME bogus types
+    Object.keys(config).forEach(k => importConfig.namespaceAliases.set(k, config[k]));
     const project = await tsu.TsProject.fromRootDir(projectRoot);
     const tsunami = new tsu.Tsunami(
         project,
-        tsu.buildFormatOptions()
+        tsu.buildFormatOptions(),
+        importConfig
     );
 
     const extension = new TsunamiExtension(
@@ -36,7 +40,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         ],
         [
             new ReindexProjectCommand(tsunami)
-        ], [
+        ],
+        [
             new ImportSymbolCommand(tsunami.getContext())
         ]
     );

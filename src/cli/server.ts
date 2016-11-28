@@ -40,7 +40,13 @@ log("Attempting to start server.");
 TsProject.fromRootDir(projectConfig)
     .then(async project => {
         log("Constructing tsunami");
-        const tsunami = new Tsunami(project, buildFormatOptions(), terminalCommandDefinitions, nonterminalCommandDefinitions);
+        const tsunami = new Tsunami(
+            project,
+            buildFormatOptions(),
+            { namespaceAliases: new Map() },
+            terminalCommandDefinitions,
+            nonterminalCommandDefinitions
+        );
         await tsunami.initialize();
         log("Done with .initialize");
     }).catch(e => log(e));

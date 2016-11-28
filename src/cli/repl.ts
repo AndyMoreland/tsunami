@@ -8,7 +8,7 @@ import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
 import { FetchSymbolLocationsDefinition } from "../commands/FetchSymbolLocations";
 import { buildFormatOptions } from "../formatting/FormatOptions";
 import { ImportBlockBuilder } from "../imports/ImportBlockBuilder";
-import { ImportStatementType, AbsoluteFilename, ModuleSpecifier, getTypeOfModuleSpecifier } from "../imports/ImportStatement";
+import { ImportStatementType, ModuleSpecifier, getTypeOfModuleSpecifier } from "../imports/ImportStatement";
 import { getNodesContainingPoint } from "../utilities/languageUtilities";
 import { TsunamiContext } from "../Context";
 import { Definition } from "../Indexer";
@@ -26,7 +26,7 @@ async function startRepl() {
     const projectRoot = process.argv[2];
     console.log("Starting in: ", projectRoot);
     const project = await tsu.TsProject.fromRootDir(projectRoot);
-    const tsunami = new tsu.Tsunami(project, buildFormatOptions());
+    const tsunami = new tsu.Tsunami(project, buildFormatOptions(), { namespaceAliases: new Map() });
 
     await tsunami.buildInitialProjectIndex();
 

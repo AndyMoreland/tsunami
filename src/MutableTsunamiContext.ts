@@ -1,3 +1,4 @@
+import { ImportConfig } from "./config/ImportConfig";
 import * as Bluebird from "bluebird";
 import * as fs from "fs";
 import * as path from "path";
@@ -25,6 +26,7 @@ export class MutableTsunamiContext implements TsunamiContext {
     constructor(
         private project: TsProject,
         private formatOptions: InitializedFormatOptions,
+        private importConfig: ImportConfig,
         public writeOutput: <T>(response: Response<T>) => Promise<void>,
         private documentRegistry: ts.DocumentRegistry
     ) {
@@ -117,5 +119,9 @@ export class MutableTsunamiContext implements TsunamiContext {
 
     public getFormatOptions(): InitializedFormatOptions {
         return this.formatOptions;
+    }
+
+    public getImportConfig(): ImportConfig {
+        return this.importConfig;
     }
 }

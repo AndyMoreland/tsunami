@@ -1,3 +1,4 @@
+import { addImportToFile } from "../importUtilities";
 import * as Bluebird from "bluebird";
 import * as ts from "typescript";
 import * as vs from "vscode";
@@ -17,18 +18,32 @@ class ExternalSymbolCompletionItem extends vs.CompletionItem {
 
     get additionalTextEdits(): vs.TextEdit[] {
         const sourceFile = ts.createSourceFile(this.document.fileName, this.document.getText(), ts.ScriptTarget.ES5, true);
-        const newBlock = ImportBlockBuilder.fromFile(sourceFile)
-            .addImportBinding(this.definition.moduleSpecifier.replace(/\.tsx?/g, "") as any,
-                              { symbolName: this.definition.text || "" })
-            .build();
-        const edits = (new ImportEditor(new SimpleImportBlockFormatter()))
-            .applyImportBlockToFile(sourceFile, newBlock);
+        const moduleSpecifier = this.definition.moduleSpecifier.replace(/\.tsx?/g, "") as any;
+
+        const edits = addImportToFile(
+            sourceFile,
+            this.context.getImportConfig().namespaceAliases,
+            moduleSpecifier,
+            this.definition.text!
+        );
 
         return edits.map(toTextEdit);
     }
 
     get detail(): string {
         return toPrettyModuleSpecifier(this.document.fileName, this.definition.moduleSpecifier);
+    }
+
+    get insertText(): string {
+        const aliases = this.context.getImportConfig().namespaceAliases;
+        const moduleSpecifier = this.definition.moduleSpecifier.replace(/\.tsx?/g, "") as any;
+        let result = this.definition.text!;
+
+        if (aliases.has(moduleSpecifier)) {
+            result = aliases.get(moduleSpecifier) + "." + result;
+        }
+
+        return result;
     }
 }
 

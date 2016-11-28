@@ -1,3 +1,4 @@
+import { ImportConfig } from "./config/ImportConfig";
 import * as Promise from "bluebird";
 import * as ts from "typescript";
 import { FileIndexer } from "./FileIndexer";
@@ -18,4 +19,5 @@ export interface TsunamiContext {
     getProgram(): Promise<ts.Program>;
     getIndexedDefinitions(): IterableIterator<Definition>;
     getFormatOptions(): ImportBlockFormatterOptions;
+    getImportConfig(): ImportConfig;
 }

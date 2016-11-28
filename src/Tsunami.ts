@@ -1,3 +1,4 @@
+import { ImportConfig } from "./config/ImportConfig";
 import { ProjectIndexer } from "./ProjectIndexer";
 import * as JSONStream from "JSONStream";
 import * as p from "child_process";
@@ -34,6 +35,7 @@ export class Tsunami {
     constructor(
         private tsProject: TsProject,
         private formatOptions: InitializedFormatOptions,
+        private importConfig: ImportConfig,
         terminalCommandDefinitions: CommandDefinition<any, any>[] = [],
         nonterminalCommandDefinitions: CommandDefinition<any, any>[] = [],
         context?: TsunamiContext
@@ -44,6 +46,7 @@ export class Tsunami {
         this.context = context || new MutableTsunamiContext(
             this.tsProject,
             this.formatOptions,
+            this.importConfig,
             writeOutputToStdOut,
             this.documentRegistry
         );
