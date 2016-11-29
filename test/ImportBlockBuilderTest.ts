@@ -10,6 +10,7 @@ function toModuleSpecifier(specifier: string): ModuleSpecifier {
 }
 
 const TYPESCRIPT = toModuleSpecifier("typescript");
+const LODASH = toModuleSpecifier("lodash");
 
 const UA_SYNTAX_KIND = { symbolName: "SyntaxKind" };
 const UA_LANGUAGE_SERVICE = { symbolName: "LanguageService" };
@@ -70,5 +71,17 @@ describe("ImportBlockBuilder", () => {
             .build();
 
         it("should remove the import record", () => expect(importBlock.importRecords).to.not.contain.keys(TYPESCRIPT));
+    });
+
+    describe("it should be able to rename a module", () => {
+        const importBlock = ImportBlockBuilder.empty()
+            .addImportBinding(TYPESCRIPT, UA_SYNTAX_KIND)
+            .renameModule(TYPESCRIPT, LODASH)
+            .build();
+
+        it("should rename the import record", () => {
+            expect(importBlock.importRecords).to.not.contain.keys(TYPESCRIPT);
+            expect(importBlock.importRecords).to.contain.keys(LODASH);
+        });
     });
 });
