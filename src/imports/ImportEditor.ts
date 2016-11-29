@@ -51,14 +51,16 @@ export class ImportEditor {
     public applyImportBlockToFile(sourceFile: ts.SourceFile, importBlock: ImportBlock): CodeEdit[] {
         const importExtents = this.getImportExtents(sourceFile);
 
-        if (importExtents.length === 0) {
+        const newText = this.formatter.formatImportBlock(path.dirname(sourceFile.fileName), importBlock) + "\n";
+
+        if (newText.length === 1) {
             return [];
         }
 
         const firstEdit: CodeEdit = {
             start: importExtents[0].start,
             end: importExtents[0].end,
-            newText: this.formatter.formatImportBlock(path.dirname(sourceFile.fileName), importBlock) + "\n"
+            newText
         };
 
         const deletions: CodeEdit[] = importExtents.slice(1).map(extent => {
