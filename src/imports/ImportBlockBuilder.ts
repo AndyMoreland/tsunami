@@ -80,7 +80,13 @@ export class ImportBlockBuilder {
     }
 
     public renameModule(from: ModuleSpecifier, to: ModuleSpecifier): this {
-        this.importRecords[to] = Object.assign({}, this.importRecords[from]);
+        let newRecord = Object.assign({}, this.importRecords[from]);
+        newRecord.moduleSpecifier = to;
+        if (this.importRecords[to] != null) {
+            newRecord = mergeImportRecords(newRecord, this.importRecords[to]).record;
+        }
+
+        this.importRecords[to] = newRecord;
         this.importRecords[to].moduleSpecifier = to;
         delete this.importRecords[from];
 

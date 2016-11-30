@@ -82,6 +82,7 @@ export class ImportSymbolCommand implements VscodeTextEditorCommand {
         symbol = typeof symbol === "object" ? undefined : symbol;
 
         const choice = await this.getChoice(editor.document.fileName, symbol);
+
         if (!choice) {
             return;
         }
