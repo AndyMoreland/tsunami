@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { ImportBlock } from "../imports/ImportBlock";
 import * as Bluebird from "bluebird";
 import * as path from "path";
 import * as readline from "readline";
@@ -115,7 +116,7 @@ async function processFindDeadCode(context: TsunamiContext) {
         return ImportBlockBuilder.fromFile(sourceFile).build();
     });
 
-    const importBlocks = await Bluebird.all(promises);
+    const importBlocks = await Bluebird.all<ImportBlock>(promises);
     const usedSymbols: Map<ModuleSpecifier, Set<string>> = new Map<ModuleSpecifier, Set<string>>();
 
     for (let block of importBlocks) {

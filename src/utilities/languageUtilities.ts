@@ -87,7 +87,8 @@ export function isExpression(node: ts.Node): boolean {
         case ts.SyntaxKind.PostfixUnaryExpression:
         case ts.SyntaxKind.BinaryExpression:
         case ts.SyntaxKind.ConditionalExpression:
-        case ts.SyntaxKind.SpreadElementExpression:
+        case ts.SyntaxKind.SpreadAssignment:
+        case ts.SyntaxKind.SpreadElement:
         case ts.SyntaxKind.TemplateExpression:
         case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
         case ts.SyntaxKind.OmittedExpression:

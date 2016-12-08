@@ -4,6 +4,10 @@ import * as ts from "typescript";
 export class ParseConfigHost implements ts.ParseConfigHost {
     public useCaseSensitiveFileNames = true;
 
+    public readFile(path: string): string {
+        return ts.sys.readFile(path);
+    }
+
     public readDirectory(rootDir: string, extensions: string[], excludes: string[], includes: string[]): string[] {
         return ts.sys.readDirectory(rootDir, extensions, excludes, includes);
     }
