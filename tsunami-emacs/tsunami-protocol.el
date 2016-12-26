@@ -1,5 +1,10 @@
 (require 'tide)
 
+(defun tsunami--command:get-implementation (file line offset)
+  (tide-send-command-sync "implementation" `(:file ,file
+                                             :line ,line
+                                             :offset ,offset)))
+
 (defun tsunami--command:fetch-all-symbols (prefix cb)
   "Fetch all symbols."
   (tide-send-command "SYMBOL_LOCATIONS" `(:prefix ,prefix) cb))
