@@ -2,17 +2,7 @@
 ;; location := line: number, offset: number
 
 (require 'dash)
-
-(defun goto-line-offset (line offset)
-  "LINE and OFFSET are both 1-indexed."
-  (goto-char (point-min))
-  (forward-line (1- line))
-  (forward-char (1- offset)))
-
-(defun get-line-offset-pos (line offset)
-  (save-excursion
-    (goto-line-offset line offset)
-    (point)))
+(require 'tsunami-util)
 
 (cl-defstruct edit-span begin end text)
 
@@ -25,10 +15,11 @@
                         (edit-span-begin b)))))
 
 (defun tsunami--edit-span-from-code-edit (code-edit)
-  (let* ((start (plist-get code-edit :start))
-         (end (plist-get code-edit :end))
-         (start-pos (get-line-offset-pos (plist-get start :line) (plist-get start :offset)))
-         (end-pos (get-line-offset-pos (plist-get end :line) (plist-get end :offset))))
+  (-let* (((&plist :start start
+                   :end end)
+           code-edit)
+          (start-pos (get-line-offset-pos (plist-get start :line) (plist-get start :offset)))
+          (end-pos (get-line-offset-pos (plist-get end :line) (plist-get end :offset))))
     (make-edit-span :begin start-pos :end end-pos :text (plist-get code-edit :newText))))
 
 (defun tsunami--apply-edit-span (edit-span)

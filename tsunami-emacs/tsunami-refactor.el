@@ -2,6 +2,7 @@
 (require 'helm)
 (require 's)
 (require 'tsunami-code-edit)
+(require 'tsunami-data-util)
 (require 'tsunami-refactor-util)
 (require 'deferred)
 
@@ -36,24 +37,6 @@
   (interactive)
   (let ((destination-file (tsunami--helm-read-file-in-project "Select destination module:")))
     (message destination-file)))
-
-(defun tsunami--get-buffer-text-for-range (range)
-  (let ((start (1+ (plist-get range :start)))
-        (end (1+ (plist-get range :end))))
-    (buffer-substring start end)))
-
-(defun tsunami--get-plain-text-for-range (range)
-  (let ((text (tsunami--get-buffer-text-for-range range)))
-    (progn
-      (set-text-properties 0 (length text) nil text)
-      text)))
-
-(defun tsunami--get-folded-plain-text-for-range (range)
-  (let* ((raw-text (tsunami--get-plain-text-for-range range))
-         (lines (s-split "\n" raw-text)))
-    (if (< 1 (length lines))
-        (concat (first lines) " ... " (s-trim-left (car (last lines))))
-      (first lines))))
 
 (defun tsunami--get-containing-expression-ranges ()
   (let* ((file (buffer-file-name (current-buffer)))
