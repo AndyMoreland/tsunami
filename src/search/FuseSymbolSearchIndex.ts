@@ -16,7 +16,7 @@ export class FuseSymbolSearchIndex implements SymbolSearchIndex {
             results = [...results, ...indexer.getDefinitionIndex().values()];
         });
 
-        const index = new fuse(results, {
+        const index = new (fuse as any)(results, {
             keys: ["text"],
             threshold: 0.8
         });
