@@ -175,6 +175,21 @@ export function convertPositionToLocation(sourceFile: ts.SourceFile, position: n
     };
 }
 
+/**
+ * Visits all nodes contained by `node`.
+ * Return false to short-circuit.
+ */
+export function visitAllNodesInTree(node: ts.Node, visitor: (node: ts.Node) => boolean) {
+    const visitNode = function(node: ts.Node) {
+        const descendFurther = visitor(node);
+        if (descendFurther) {
+            ts.forEachChild(node, visitNode);
+        }
+    };
+
+    ts.forEachChild(node, visitNode);
+}
+
 export function getNodesContainingPoint(sourceFile: ts.SourceFile, point: number) {
     const results: ts.Node[] = [];
 
