@@ -3,10 +3,14 @@ import { CodeEdit } from "../protocol/types";
 import * as ts from "typescript";
 
 export function withoutNode(sourceFile: ts.SourceFile, node: ts.Node): CodeEdit {
+    return replaceNode(sourceFile, node, "");
+}
+
+export function replaceNode(sourceFile: ts.SourceFile, node: ts.Node, newText: string): CodeEdit {
     return {
         start: convertPositionToLocation(sourceFile, node.getStart()),
         end: convertPositionToLocation(sourceFile, node.getEnd()),
-        newText: ""
+        newText
     };
 }
 
