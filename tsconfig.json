@@ -7,7 +7,7 @@
     "sourceMap": false,
     "noImplicitReturns": true,
     "strictNullChecks": true,
-    "lib": ["dom", "es6"]
+    "lib": ["dom", "es6", "es2015.promise"]
   },
   "exclude": [
     "node_modules",
