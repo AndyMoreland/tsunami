@@ -47,11 +47,11 @@
 
 ;;; Memoize tsunami--helm-displayed-candidates vs tsunami--matching-symbols
 (defun tsunami--get-helm-candidates ()
-  (if (eq tsunami--helm-rendered-symbols tsunami--matching-symbols)
-      tsunami--helm-displayed-candidates
-    (with-current-buffer tsunami--helm-target-buffer
-      (setq tsunami--helm-rendered-symbols tsunami--matching-symbols
-            tsunami--helm-displayed-candidates (mapcar (lambda (candidate) (tsunami--symbol-to-helm-tuple candidate)) tsunami--matching-symbols)))))
+  (with-current-buffer (or tsunami--helm-target-buffer (current-buffer))
+    (if (eq tsunami--helm-rendered-symbols (tsunami--get-matching-symbols))
+        tsunami--helm-displayed-candidates
+      (setq tsunami--helm-rendered-symbols (tsunami--get-matching-symbols)
+            tsunami--helm-displayed-candidates (mapcar (lambda (candidate) (tsunami--symbol-to-helm-tuple candidate)) (tsunami--get-matching-symbols))))))
 
 ;; (defun tsunami--symbols-helm-source (actions)
 ;;   "Define helm source for tsunami symbols."
@@ -67,7 +67,7 @@
 
 (defun tsunami--symbols-helm-source (actions)
   "Define helm source for tsunami symbols."
-  (helm-build-sync-source "Tsunami Symbols Source"
+  (helm-build-sync-source (concat "Tsunami Symbols Source: " (tide-project-name))
     :candidates #'tsunami--get-helm-candidates
     :volatile t
     :fuzzy-match t

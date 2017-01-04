@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-(defvar tsunami--matching-symbols nil)
+(defvar tsunami--matching-symbols (make-hash-table :test 'equal))
 (defvar helm-alive-p)
 
 (require 's)
@@ -42,11 +42,14 @@
 (require 'tsunami-helm)
 (require 'tsunami-synchronization)
 
+(defun tsunami--get-matching-symbols ()
+  (gethash (tide-project-name) tsunami--matching-symbols))
+
 (defun tsunami--invalidate-symbols-cache ()
   "Invalidate the symbols cache."
   (tsunami--command:fetch-all-symbols "foo"
                                       (lambda (symbols)
-                                        (setq tsunami--matching-symbols (tsunami--parse-symbols-response symbols))
+                                        (puthash (tide-project-name) (tsunami--parse-symbols-response symbols) tsunami--matching-symbols)
                                         (and (helm-alive-p) (progn
                                                               (message "Updating helm")
                                                               (helm-update))))))
@@ -78,7 +81,7 @@
 (defun tsunami--exact-matching-symbols (symbol-name)
   (-filter (lambda (def)
              (equal (plist-get def :name) symbol-name))
-           tsunami--matching-symbols))
+           (tsunami--get-matching-symbols)))
 
 (defun tsunami--module-imported-wildcard-p (module-name)
   "Returns nil or string alias for MODULE-NAME"
