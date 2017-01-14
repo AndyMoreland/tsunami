@@ -1,19 +1,18 @@
-export interface FormatOptions {
-    indentSize?: number;
-}
+export type FormatOptions = Partial<InitializedFormatOptions>;
 
 export interface InitializedFormatOptions {
     indentSize: number;
+    trailingCommaInObjectLiterals: boolean;
 }
 
 const DefaultFormatOptions: InitializedFormatOptions = {
-    indentSize: 2
+    indentSize: 4,
+    trailingCommaInObjectLiterals: false
 };
 
 export function buildFormatOptions(overrides: FormatOptions = {}): InitializedFormatOptions {
-    return Object.assign(
-        {},
-        DefaultFormatOptions,
-        overrides
-    );
+    return {
+        ...DefaultFormatOptions,
+        ...overrides
+    };
 }

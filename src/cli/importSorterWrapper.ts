@@ -23,13 +23,16 @@ function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
 const args = yargs.usage("Usage: $0 --indent-size [num] <files>")
     .number("indent-size")
     .default("indent-size", 2)
+    .boolean("trailing-comma-in-object-literals")
+    .default("trailing-comma-in-object-literals", false)
     .argv;
 
 args._.forEach(async (input) => {
     const matches = await promiseGlob(input);
     matches.forEach(async (filename) => {
         const editor = new ImportEditor(new SimpleImportBlockFormatter({
-            indentSize: (args as any).indentSize
+            indentSize: (args as any).indentSize,
+            trailingCommaInObjectLiterals: (args as any).trailingCommaInObjectLiterals
         }));
         const sourceFile = await getSourceFileFor(filename);
         const importBlock = ImportBlockBuilder.fromFile(sourceFile).build();

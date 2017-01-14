@@ -1,5 +1,5 @@
+import { FormatOptions, buildFormatOptions } from "../formatting/FormatOptions";
 import * as path from "path";
-import log from "../log";
 import { ImportBlock } from "./ImportBlock";
 import { ImportBlockFormatter, ImportBlockFormatterOptions } from "./ImportBlockFormatter";
 import { ImportRecord, ImportStatementType } from "./ImportStatement";
@@ -50,7 +50,17 @@ function getLocalModuleSpecifier(localPath: string, importRecord: ImportRecord):
 }
 
 export class SimpleImportBlockFormatter implements ImportBlockFormatter {
-    constructor(private options?: ImportBlockFormatterOptions) {}
+    constructor(private options: ImportBlockFormatterOptions) {}
+
+    public static withDefaultOptions(): SimpleImportBlockFormatter {
+        return SimpleImportBlockFormatter.withOptions({});
+    }
+
+    public static withOptions(options: FormatOptions): SimpleImportBlockFormatter {
+        return new SimpleImportBlockFormatter(
+            buildFormatOptions(options)
+        );
+    }
 
     private getIndentSize() {
         return (this.options && this.options.indentSize) || 4;
@@ -96,8 +106,9 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                 const newlineOrSpace = multilineFormat ? "\n" : " ";
                 const bindingsJoinStr = multilineFormat ? ",\n" + this.getIndentSpaces() : ", ";
                 const leadingIndent = multilineFormat ? this.getIndentSpaces() : "";
+                const trailingComma = (multilineFormat && this.options.trailingCommaInObjectLiterals) ? "," : "";
                 // tslint:disable-next-line
-                const symbols = sortedBindings.length > 0 ? `{${newlineOrSpace}${leadingIndent}${sortedStringBindings.join(bindingsJoinStr)}${newlineOrSpace}}` : null;
+                const symbols = sortedBindings.length > 0 ? `{${newlineOrSpace}${leadingIndent}${sortedStringBindings.join(bindingsJoinStr)}${trailingComma}${newlineOrSpace}}` : null;
                 const bindings = [defaultName, symbols].filter(x => x != null).join(", ");
                 ret.push(`import ${bindings} from "${localSpecifier}"`);
             }

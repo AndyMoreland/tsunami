@@ -25,7 +25,7 @@ function expectMatches(editor: ImportEditor, fileName: string): void {
 }
 
 describe("ImportEditor", () => {
-    const editor = new ImportEditor(new SimpleImportBlockFormatter());
+    const editor = new ImportEditor(SimpleImportBlockFormatter.withDefaultOptions());
 
     it("should order global before scope before project imports",
        () => expectMatches(editor, "global-scope-project"));

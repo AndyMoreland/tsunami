@@ -46,7 +46,7 @@ export class MoveSymbolCommandDefinition implements CommandDefinition<MoveSymbol
         }
 
         const edits: CodeEditGroup[] = [];
-        const editor = new ImportEditor(new SimpleImportBlockFormatter());
+        const editor = new ImportEditor(SimpleImportBlockFormatter.withDefaultOptions());
         const fromModuleSpecifier = assertAbsolute(fromFilename).replace(/\.tsx?/g, "") as ModuleSpecifier;
         const toModuleSpecifier = assertAbsolute(toFilename).replace(/\.tsx?/g, "") as ModuleSpecifier;
         const fileNames = await context.getProject().getFileNames();

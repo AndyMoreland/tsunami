@@ -25,6 +25,8 @@ const args = yargs.usage("Usage: $0 --indent-size [num] --from module#symbol --t
     .string("to")
     .number("indent-size")
     .default("indent-size", 2)
+    .boolean("trailing-comma-in-object-literals")
+    .default("trailing-comma-in-object-literals", false)
     .argv;
 
 const [fromModule, fromSymbol] = ((args as any).from).split("#") as string[];
@@ -37,7 +39,8 @@ args._.forEach(async (input) => {
     await Bluebird.all(matches.map(async (filename) => {
         let edited = false;
         const editor = new ImportEditor(new SimpleImportBlockFormatter({
-            indentSize: (args as any).indentSize
+            indentSize: (args as any).indentSize,
+            trailingCommaInObjectLiterals: (args as any).trailingCommaInObjectLiterals
         }));
         const sourceFile = await getSourceFileFor(filename);
         const oldBlock = ImportBlockBuilder.fromFile(sourceFile).build();
@@ -56,7 +59,6 @@ args._.forEach(async (input) => {
         }
 
         if (edited) {
-            debugger;
             const edits = editor.applyImportBlockToFile(sourceFile, builder.build());
             await applyCodeEdits(filename, edits);
             n++;

@@ -18,7 +18,7 @@ function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
 }
 
 process.argv.slice(2).forEach((filename) => {
-    const editor = new ImportEditor(new SimpleImportBlockFormatter());
+    const editor = new ImportEditor(SimpleImportBlockFormatter.withDefaultOptions());
     getSourceFileFor(filename).then(sourceFile => {
         const importBlock = ImportBlockBuilder.fromFile(sourceFile)
             .addNamespaceSpecifier("react" as ModuleSpecifier, "React").build();

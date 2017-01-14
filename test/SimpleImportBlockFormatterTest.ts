@@ -23,26 +23,26 @@ function expectMatches(formatter: ImportBlockFormatter, fileName: string): void 
 
 describe("SimpleImportBlockFormatter", () => {
     it("should order global before scope before project imports",
-       () => expectMatches(new SimpleImportBlockFormatter(), "global-scope-project"));
+       () => expectMatches(SimpleImportBlockFormatter.withDefaultOptions(), "global-scope-project"));
 
     it("should order farthest-to-closest in project imports",
-       () => expectMatches(new SimpleImportBlockFormatter(), "farthest-to-closest"));
+       () => expectMatches(SimpleImportBlockFormatter.withDefaultOptions(), "farthest-to-closest"));
 
     it("should preserve multi-line imports properly",
-       () => expectMatches(new SimpleImportBlockFormatter(), "multiLine"));
+       () => expectMatches(SimpleImportBlockFormatter.withDefaultOptions(), "multiLine"));
 
     it("should replace single-quotes in module specifiers with double",
-       () => expectMatches(new SimpleImportBlockFormatter(), "moduleSpecifierQuotes"));
+       () => expectMatches(SimpleImportBlockFormatter.withDefaultOptions(), "moduleSpecifierQuotes"));
 
     it("should sort named bindings alphabetically",
-       () => expectMatches(new SimpleImportBlockFormatter(), "alphabetical-bindings"));
+       () => expectMatches(SimpleImportBlockFormatter.withDefaultOptions(), "alphabetical-bindings"));
 
     it("should collapse multiple import statements from the same module",
-       () => expectMatches(new SimpleImportBlockFormatter(), "multiple-imports"));
+       () => expectMatches(SimpleImportBlockFormatter.withDefaultOptions(), "multiple-imports"));
 
     it("should properly rewrite aliased default imports",
-       () => expectMatches(new SimpleImportBlockFormatter(), "default-imports"));
+       () => expectMatches(SimpleImportBlockFormatter.withDefaultOptions(), "default-imports"));
 
     it("should do nothing to files without imports",
-       () => expectMatches(new SimpleImportBlockFormatter(), "no-imports"));
+       () => expectMatches(SimpleImportBlockFormatter.withDefaultOptions(), "no-imports"));
 });
