@@ -2,11 +2,16 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as tsu from "@derander/tsunami";
+import { ConfigDeserializer } from "./ConfigDeserializer";
 import { TsunamiExtension } from "./TsunamiExtension";
+import { TsunamiPlugin } from "./TsunamiPlugin";
 import { ImportSymbolCommand } from "./commands/ImportSymbolCommand";
+import { ReformatImportsCommand } from "./commands/ReformatImportsCommand";
 import { ReindexProjectCommand } from "./commands/ReindexProjectCommand";
 import { TsunamiCodeActionProvider } from "./plugins/TsunamiCodeActionProvider";
 import { TsunamiCodeCompletionProvider } from "./plugins/TsunamiCodeCompletionProvider";
+import { TsunamiFormatImportsOnSavePlugin } from "./plugins/TsunamiFormatImportsOnSavePlugin";
+import { TsunamiImportFormattingProvider } from "./plugins/TsunamiImportFormattingProvider";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const projectRoot = vscode.workspace.rootPath;
@@ -22,27 +27,36 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         return;
     }
 
-    const config = vscode.workspace.getConfiguration("tsunami").get("namespaceImports", {});
-    const importConfig =  { namespaceAliases: new Map<any, string>() }; // FIXME bogus types
-    Object.keys(config).forEach(k => importConfig.namespaceAliases.set(k, config[k]));
+    const configDeserializer = new ConfigDeserializer();
+    const config = configDeserializer.deserializeConfig(vscode.workspace.getConfiguration("tsunami"));
     const project = await tsu.TsProject.fromRootDir(projectRoot);
     const tsunami = new tsu.Tsunami(
         project,
         tsu.buildFormatOptions(),
-        importConfig
+        config.importConfig
     );
+
+    const formattingProvider = new TsunamiImportFormattingProvider();
+
+    const plugins: TsunamiPlugin[] = [
+        new TsunamiCodeCompletionProvider(tsunami.getContext()),
+        new TsunamiCodeActionProvider(),
+        formattingProvider,
+    ];
+
+    if (config.formatImportsOnSave) {
+        plugins.push(new TsunamiFormatImportsOnSavePlugin(formattingProvider));
+    }
 
     const extension = new TsunamiExtension(
         tsunami.getContext(),
+        plugins,
         [
-            new TsunamiCodeCompletionProvider(tsunami.getContext()),
-            new TsunamiCodeActionProvider()
+            new ReindexProjectCommand(tsunami),
         ],
         [
-            new ReindexProjectCommand(tsunami)
-        ],
-        [
-            new ImportSymbolCommand(tsunami.getContext())
+            new ImportSymbolCommand(tsunami.getContext()),
+            new ReformatImportsCommand(tsunami.getContext()),
         ]
     );
 

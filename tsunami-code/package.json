@@ -14,7 +14,8 @@
         "onLanguage:typescript",
         "onLanguage:typescriptreact",
         "onCommand:tsunami.importSymbol",
-        "onCommand:tsunami.reindexProject"
+        "onCommand:tsunami.reindexProject",
+        "onCommand:tsunami.reformatImports"
     ],
     "main": "./out/src/extension.js",
     "contributes": {
@@ -26,6 +27,10 @@
             {
                 "command": "tsunami.reindexProject",
                 "title": "(tsu) Reindex Exports"
+            },
+            {
+                "command": "tsunami.reformatImports",
+                "title": "(tsu) Reformat Imports"
             }
         ],
         "keybindings": [
@@ -44,6 +49,11 @@
                     "type": "object",
                     "default": {},
                     "description": "Import exports from modules with a namespace alias instead of symbol-by-symbol"
+                },
+                "tsunami.formatImportsOnSave": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When true, format imports of typescript files when they are saved"
                 }
             }
         }

@@ -43,7 +43,7 @@ export class ImportSymbolCommand implements VscodeTextEditorCommand {
             results = exactMatchResults;
         }
 
-        return (results.length === 1) ? results[0] : await vs.window.showQuickPick(results);
+        return (results.length === 1) ? Promise.resolve(results[0]) : Promise.resolve(vs.window.showQuickPick(results));
     }
 
     private async editImportBlock(editor: vs.TextEditor, definition: tsu.Definition): Promise<void> {

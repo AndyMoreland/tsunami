@@ -27,3 +27,12 @@ export function applyCodeEdit(editBuilder: vscode.TextEditorEdit, edit: tsu.Code
         edit.end.offset - 1
     ), edit.newText);
 }
+
+export function applyTextEdit(editBuilder: vscode.TextEditorEdit, edit: vscode.TextEdit): void {
+    editBuilder.replace(new vscode.Range(
+        edit.range.start.line,
+        edit.range.start.character,
+        edit.range.end.line,
+        edit.range.end.character
+    ), edit.newText);
+}
