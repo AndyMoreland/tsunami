@@ -79,13 +79,14 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
         const ret: string[] = [];
         const hasBindings = importRecord.importClause.defaultName != null || importRecord.importClause.namedBindings.length > 0;
         const localSpecifier = getLocalModuleSpecifier(localPath, importRecord);
+        const quote = this.options.useDoubleQuotes ? "\"" : "'";
 
         if (importRecord.namespaceImport == null && !hasBindings)  {
-            ret.push(`import "${localSpecifier}"`);
+            ret.push(`import ${quote}${localSpecifier}${quote}`);
         } else {
             if (importRecord.namespaceImport != null) {
                 const alias = importRecord.namespaceImport.alias;
-                ret.push(`import * as ${alias} from "${localSpecifier}"`);
+                ret.push(`import * as ${alias} from ${quote}${localSpecifier}${quote}`);
             }
 
             if (hasBindings) {
@@ -110,7 +111,7 @@ export class SimpleImportBlockFormatter implements ImportBlockFormatter {
                 // tslint:disable-next-line
                 const symbols = sortedBindings.length > 0 ? `{${newlineOrSpace}${leadingIndent}${sortedStringBindings.join(bindingsJoinStr)}${trailingComma}${newlineOrSpace}}` : null;
                 const bindings = [defaultName, symbols].filter(x => x != null).join(", ");
-                ret.push(`import ${bindings} from "${localSpecifier}"`);
+                ret.push(`import ${bindings} from ${quote}${localSpecifier}${quote}`);
             }
         }
 

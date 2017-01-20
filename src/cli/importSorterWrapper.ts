@@ -25,6 +25,8 @@ const args = yargs.usage("Usage: $0 --indent-size [num] <files>")
     .default("indent-size", 2)
     .boolean("trailing-comma-in-object-literals")
     .default("trailing-comma-in-object-literals", false)
+    .boolean("use-double-quotes")
+    .default("use-double-quotes", true)
     .argv;
 
 args._.forEach(async (input) => {
@@ -32,7 +34,8 @@ args._.forEach(async (input) => {
     matches.forEach(async (filename) => {
         const editor = new ImportEditor(new SimpleImportBlockFormatter({
             indentSize: (args as any).indentSize,
-            trailingCommaInObjectLiterals: (args as any).trailingCommaInObjectLiterals
+            trailingCommaInObjectLiterals: (args as any).trailingCommaInObjectLiterals,
+            useDoubleQuotes: (args as any).useDoubleQuotes,
         }));
         const sourceFile = await getSourceFileFor(filename);
         const importBlock = ImportBlockBuilder.fromFile(sourceFile).build();

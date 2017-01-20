@@ -27,6 +27,8 @@ const args = yargs.usage("Usage: $0 --indent-size [num] --from module#symbol --t
     .default("indent-size", 2)
     .boolean("trailing-comma-in-object-literals")
     .default("trailing-comma-in-object-literals", false)
+    .boolean("use-double-quotes")
+    .default("use-double-quotes", true)
     .argv;
 
 const [fromModule, fromSymbol] = ((args as any).from).split("#") as string[];
@@ -40,7 +42,8 @@ args._.forEach(async (input) => {
         let edited = false;
         const editor = new ImportEditor(new SimpleImportBlockFormatter({
             indentSize: (args as any).indentSize,
-            trailingCommaInObjectLiterals: (args as any).trailingCommaInObjectLiterals
+            trailingCommaInObjectLiterals: (args as any).trailingCommaInObjectLiterals,
+            useDoubleQuotes: (args as any).useDoubleQuotes,
         }));
         const sourceFile = await getSourceFileFor(filename);
         const oldBlock = ImportBlockBuilder.fromFile(sourceFile).build();
