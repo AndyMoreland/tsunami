@@ -2,7 +2,7 @@
     "name": "tsunami-code",
     "displayName": "tsunami-code",
     "description": "Tsunami integration for vscode",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "publisher": "derander",
     "engines": {
         "vscode": "^1.5.0"
@@ -68,7 +68,7 @@
         "@types/mocha": "^2.2.32",
         "@types/node": "^6.0.40",
         "mocha": "^2.3.3",
-        "typescript": "^2.0.3",
+        "typescript": "^2.1.4",
         "vsce": "1.15.0",
         "vscode": "^1.0.0"
     },
