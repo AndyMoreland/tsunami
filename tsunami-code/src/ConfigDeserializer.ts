@@ -33,9 +33,7 @@ export class ConfigDeserializer {
         return {
             importConfig,
             formatOptions: {
-                indentSize: rawConfig.get(
-                    "indentSize",
-                ),
+                indentSize: defaultConfig.formatOptions.indentSize,
                 trailingCommaInObjectLiterals: rawConfig.get(
                     "trailingCommaInObjectLiterals",
                     defaultConfig.formatOptions.trailingCommaInObjectLiterals
