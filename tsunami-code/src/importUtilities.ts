@@ -5,7 +5,8 @@ export function addImportToFile(
     sourceFile: ts.SourceFile,
     namespaceAliases: Map<any, string>,
     moduleSpecifier: any,
-    symbolName: string
+    symbolName: string,
+    options: tsu.InitializedFormatOptions
 ): tsu.CodeEdit[] {
     const builder = tsu.ImportBlockBuilder.fromFile(sourceFile);
     if (namespaceAliases.has(moduleSpecifier)) {
@@ -20,6 +21,6 @@ export function addImportToFile(
         );
     }
 
-    return (new tsu.ImportEditor(new tsu.SimpleImportBlockFormatter()))
+    return (new tsu.ImportEditor(new tsu.SimpleImportBlockFormatter(options)))
         .applyImportBlockToFile(sourceFile, builder.build());
 }

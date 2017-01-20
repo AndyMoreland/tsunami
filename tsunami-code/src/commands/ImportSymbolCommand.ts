@@ -54,7 +54,8 @@ export class ImportSymbolCommand implements VscodeTextEditorCommand {
             sourceFile,
             this.context.getImportConfig().namespaceAliases,
             moduleSpecifier,
-            definition.text!
+            definition.text!,
+            this.context.getFormatOptions()
         );
 
         editor.edit((editBuilder) => applyCodeEdit(editBuilder, edits[0]));

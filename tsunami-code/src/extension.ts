@@ -28,15 +28,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }
 
     const configDeserializer = new ConfigDeserializer();
-    const config = configDeserializer.deserializeConfig(vscode.workspace.getConfiguration("tsunami"));
+    const config = configDeserializer.deserializeConfig(
+        vscode.workspace.getConfiguration("tsunami"),
+        {
+            tabSize: vscode.workspace.getConfiguration("editor").get("tabSize", 2)
+        }
+    );
+    console.log("Deserialized config: ", config);
     const project = await tsu.TsProject.fromRootDir(projectRoot);
     const tsunami = new tsu.Tsunami(
         project,
-        tsu.buildFormatOptions(),
+        tsu.buildFormatOptions(config.formatOptions),
         config.importConfig
     );
 
-    const formattingProvider = new TsunamiImportFormattingProvider();
+    const formattingProvider = new TsunamiImportFormattingProvider(tsunami.getContext());
 
     const plugins: TsunamiPlugin[] = [
         new TsunamiCodeCompletionProvider(tsunami.getContext()),

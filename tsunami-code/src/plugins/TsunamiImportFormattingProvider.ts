@@ -6,6 +6,10 @@ import { TsunamiPlugin } from "../TsunamiPlugin";
 import { toTextEdit } from "../util";
 
 export class TsunamiImportFormattingProvider implements vs.DocumentFormattingEditProvider, TsunamiPlugin {
+    constructor(
+        private tsunamiContext: TsunamiContext
+    ) {}
+
     bindToContext(context: vs.ExtensionContext): void {
         vs.languages.registerDocumentFormattingEditProvider(TS_MODE, this);
     }
@@ -14,9 +18,12 @@ export class TsunamiImportFormattingProvider implements vs.DocumentFormattingEdi
         const sourceFile = ts.createSourceFile(document.fileName, document.getText(), ts.ScriptTarget.ES5, true);
         const newBlock = ImportBlockBuilder.fromFile(sourceFile).build();
 
-        const editor = new ImportEditor(new SimpleImportBlockFormatter({
-            indentSize: options.tabSize
-        }));
+        const editor = new ImportEditor(new SimpleImportBlockFormatter(
+            {
+                ...this.tsunamiContext.getFormatOptions(),
+                indentSize: options.tabSize
+            }
+        ));
 
         return editor.applyImportBlockToFile(sourceFile, newBlock).map(toTextEdit);
     }

@@ -24,7 +24,8 @@ class ExternalSymbolCompletionItem extends vs.CompletionItem {
             sourceFile,
             this.context.getImportConfig().namespaceAliases,
             moduleSpecifier,
-            this.definition.text!
+            this.definition.text!,
+            this.context.getFormatOptions()
         );
 
         return edits.map(toTextEdit);

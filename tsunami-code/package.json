@@ -54,6 +54,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "When true, format imports of typescript files when they are saved"
+                },
+                "tsunami.formatUseDoubleQuotes": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "[formatting] Use double quotes when emitting quote"
                 }
             }
         }
