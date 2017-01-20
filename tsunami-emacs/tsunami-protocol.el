@@ -52,5 +52,9 @@
    "MOVE_SYMBOL"
    `(:fromFilename ,from-filename :toFilename ,to-filename :symbolName ,symbol-name)))
 
+(defun tsunami--command:move-file (from-filename to-filename)
+  (tide-send-command-sync
+   "MOVE_FILE"
+   `(:fromFilename ,from-filename :toFilename ,to-filename)))
 
 (provide 'tsunami-protocol)
