@@ -38,6 +38,12 @@
                                 :endOffset ,end-offset
                                 :insertString ,new-text)))
 
+(defun tsunami--command:tsunami-change-request (file start-pos end-pos insert-string)
+  (tide-send-command "tsunami-change" `(:file ,file
+                                        :startPos ,start-pos
+                                        :endPos ,end-pos
+                                        :insertString ,insert-string)))
+
 (defun tsunami--command:save-to-request (filename tmpfile)
   (tide-send-command "saveto" `(:file ,filename
                                 :tmpfile ,tmpfile)))

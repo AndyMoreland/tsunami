@@ -1,4 +1,4 @@
-import { ChangeCommandDefinition } from "../commands/ChangeCommand";
+import { ChangeCommand, ChangeCommandDefinition } from "../commands/ChangeCommand";
 import { FetchSymbolLocationsDefinition } from "../commands/FetchSymbolLocations";
 import { GetContainingExpressionsDefinition } from "../commands/GetContainingExpressions";
 import { GetContainingScopesDefinition } from "../commands/GetContainingScopes";
@@ -9,6 +9,7 @@ import { OrganizeImportsCommandDefinition } from "../commands/OrganizeImportsCom
 import { ReloadCommandDefinition } from "../commands/ReloadCommand";
 import { SaveToCommandDefinition } from "../commands/SaveToCommand";
 import { buildFormatOptions } from "../formatting/FormatOptions";
+import { ChangeCommandTransformer } from "../transformers/ChangeCommandTransformer";
 import { Tsunami } from "../Tsunami";
 import log, { logWithCallback } from "../log";
 import { TsProject } from "../tsProject";
@@ -34,6 +35,10 @@ const nonterminalCommandDefinitions = [
     new SaveToCommandDefinition()
 ];
 
+const transformers = [
+    new ChangeCommandTransformer()
+];
+
 let projectConfig = process.cwd();
 
 log("Attempting to start server.");
@@ -46,7 +51,8 @@ try {
                 buildFormatOptions(),
                 { namespaceAliases: new Map() },
                 terminalCommandDefinitions,
-                nonterminalCommandDefinitions
+                nonterminalCommandDefinitions,
+                transformers
             );
             await tsunami.initialize();
             log("Done with .initialize");

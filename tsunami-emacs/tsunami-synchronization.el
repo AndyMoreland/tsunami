@@ -15,14 +15,22 @@
   (setq tsunami-before-change-end-offset (tsunami--get-column-at-pos end)))
 
 ;; TODO these line numbers are incorrect for deletion. Need to use the tsunami-before-change-beginning variables.
+;; (defun tsunami-after-change-function (beginning end old-length)
+;;   (let ((new-text (buffer-substring beginning end)))
+;;     (tsunami--command:change-request (buffer-file-name)
+;;                                      (line-number-at-pos beginning)
+;;                                      (1+ (tsunami--get-column-at-pos beginning))
+;;                                      tsunami-before-change-end-line
+;;                                      (1+ tsunami-before-change-end-offset)
+;;                                      new-text)))
+
+
 (defun tsunami-after-change-function (beginning end old-length)
   (let ((new-text (buffer-substring beginning end)))
-    (tsunami--command:change-request (buffer-file-name)
-                                     (line-number-at-pos beginning)
-                                     (1+ (tsunami--get-column-at-pos beginning))
-                                     tsunami-before-change-end-line
-                                     (1+ tsunami-before-change-end-offset)
-                                     new-text)))
+    (tsunami--command:tsunami-change-request (buffer-file-name)
+                                             beginning
+                                             (+ beginning old-length) ; perhaps should be +1
+                                             new-text)))
 
 
 (defun tsunami-view-server-view-of-file ()
@@ -50,14 +58,14 @@
   (interactive)
   (setq-local tsunami-change-syncing-mode t)
   (advice-add 'tide-send-command :override 'tsunami-send-command)
-  (add-hook 'before-change-functions 'tsunami-before-change-function nil t)
+  ; (add-hook 'before-change-functions 'tsunami-before-change-function nil t)
   (add-hook 'after-change-functions 'tsunami-after-change-function nil t))
 
 (defun tsunami-stop-syncing ()
   (interactive)
   (setq-local tsunami-change-syncing-mode nil)
   (advice-remove 'tide-send-command 'tsunami-send-command)
-  (remove-hook 'before-change-functions 'tsunami-before-change-function t)
+  ;;(remove-hook 'before-change-functions 'tsunami-before-change-function t)
   (remove-hook 'after-change-functions 'tsunami-after-change-function t))
 
 (provide 'tsunami-synchronization)

@@ -1,5 +1,3 @@
-import { ImportConfig } from "./config/ImportConfig";
-import { ProjectIndexer } from "./ProjectIndexer";
 import * as JSONStream from "JSONStream";
 import * as p from "child_process";
 import * as es from "event-stream";
@@ -7,12 +5,17 @@ import * as ts from "typescript";
 import { BenchmarkingCommandInvoker } from "./BenchmarkingCommandInvoker";
 import { Command, CommandDefinition } from "./Command";
 import { CommandInvoker } from "./CommandInvoker";
+import { CommandTransformerInvoker } from "./CommandTransformerInvoker";
 import { TsunamiContext } from "./Context";
 import { MutableTsunamiContext } from "./MutableTsunamiContext";
+import { ProjectIndexer } from "./ProjectIndexer";
 import { getErrorOutputForCommand } from "./Response";
 import { SimpleCommandInvoker } from "./SimpleCommandInvoker";
+import { SimpleCommandTransformerInvoker } from "./SimpleCommandTransformerInvoker";
+import { ImportConfig } from "./config/ImportConfig";
 import { InitializedFormatOptions } from "./formatting/FormatOptions";
 import log from "./log";
+import { CommandTransformer } from "./transformers/CommandTransformer";
 import { TsProject } from "./tsProject";
 import { CallbackFunction, UnknownObject } from "./types";
 import { writeOutputToStdOut } from "./utilities/ioUtils";
@@ -28,6 +31,7 @@ function parseCommand(data: {[index: string]: any}): Command {
 export class Tsunami {
     private terminalInvoker: CommandInvoker;
     private nonterminalInvoker: CommandInvoker;
+    private commandTransformerInvoker: CommandTransformerInvoker;
     private documentRegistry: ts.DocumentRegistry;
     private context: TsunamiContext;
     private projectIndexer: ProjectIndexer;
@@ -38,6 +42,7 @@ export class Tsunami {
         private importConfig: ImportConfig,
         terminalCommandDefinitions: CommandDefinition<any, any>[] = [],
         nonterminalCommandDefinitions: CommandDefinition<any, any>[] = [],
+        transformers: CommandTransformer<any, any>[] = [],
         context?: TsunamiContext
     ) {
         this.terminalInvoker = new BenchmarkingCommandInvoker(new SimpleCommandInvoker(terminalCommandDefinitions));
@@ -50,6 +55,7 @@ export class Tsunami {
             writeOutputToStdOut,
             this.documentRegistry
         );
+        this.commandTransformerInvoker = new SimpleCommandTransformerInvoker(this.context, transformers);
         this.projectIndexer = new ProjectIndexer(tsProject, this.context);
     }
 
@@ -99,6 +105,11 @@ export class Tsunami {
                 writeOutputToStdOut<string>(getErrorOutputForCommand(command, e));
             }
             cb();
+        } else if (this.commandTransformerInvoker.canTransform(command)) {
+            this.commandTransformerInvoker.transform(command).then(newCommand => {
+                log("Proxying transformed command: ", JSON.stringify(newCommand, null, 2));
+                cb(null, JSON.stringify(newCommand) + "\n");
+            });
         } else {
             if (this.nonterminalInvoker.isInvokableCommand(command)) {
                 // log("Wiretapping command with tsunami.");
