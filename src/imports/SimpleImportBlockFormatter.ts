@@ -1,3 +1,4 @@
+import { pathToModuleSpecifier } from "../utilities/filenameUtils";
 import { FormatOptions, buildFormatOptions } from "../formatting/FormatOptions";
 import * as path from "path";
 import { ImportBlock } from "./ImportBlock";
@@ -43,7 +44,7 @@ function getLocalModuleSpecifier(localPath: string, importRecord: ImportRecord):
     const type = importRecord.type;
 
     if (type === ImportStatementType.PROJECT_RELATIVE) {
-        return getPrefixedRelativePath(localPath, importRecord.moduleSpecifier);
+        return pathToModuleSpecifier(getPrefixedRelativePath(localPath, importRecord.moduleSpecifier));
     } else {
         return importRecord.moduleSpecifier;
     }

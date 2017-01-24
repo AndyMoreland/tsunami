@@ -32,7 +32,9 @@ export interface ImportRecord {
 }
 
 export function getTypeOfModuleSpecifier(moduleSpecifier: string): ImportStatementType {
-    if (moduleSpecifier.charAt(0) === "." || moduleSpecifier.charAt(0) === path.sep) {
+    if (
+        moduleSpecifier.charAt(0) === "." || moduleSpecifier.charAt(0) === path.sep || path.isAbsolute(moduleSpecifier)
+    ) {
         return ImportStatementType.PROJECT_RELATIVE;
     } else if (moduleSpecifier.charAt(0) === "@") {
         return ImportStatementType.SCOPED_NODE;

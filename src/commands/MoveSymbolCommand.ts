@@ -18,7 +18,7 @@ export interface MoveSymbolCommand extends Command {
 }
 
 function assertAbsolute(filename: string): AbsoluteFilename {
-    if (!filename.startsWith(path.sep)) {
+    if (!path.isAbsolute(filename)) {
         throw new Error("Must pass absolute filename.");
     }
 

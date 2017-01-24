@@ -1,7 +1,7 @@
-import { addImportToFile } from "../importUtilities";
 import * as ts from "typescript";
 import * as vs from "vscode";
 import * as tsu from "@derander/tsunami";
+import { addImportToFile } from "../importUtilities";
 import { applyCodeEdit, toPrettyModuleSpecifier } from "../util";
 import { VscodeTextEditorCommand } from "./VscodeCommand";
 

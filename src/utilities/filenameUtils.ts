@@ -9,3 +9,7 @@ export function fileNameToModuleSpecifier(fileName: string): string {
         return fileName;
     }
 }
+
+export function pathToModuleSpecifier(path: string): string {
+    return path.replace(/\\/g, "/");
+}
