@@ -13,6 +13,7 @@ export class ConfigDeserializer {
                 useDoubleQuotes: true,
             },
             formatImportsOnSave: false,
+            enableCompletionProvider: true,
         };
     };
 
@@ -43,7 +44,8 @@ export class ConfigDeserializer {
                     defaultConfig.formatOptions.useDoubleQuotes
                 ),
             },
-            formatImportsOnSave: rawConfig.get("formatImportsOnSave", defaultConfig.formatImportsOnSave)
+            formatImportsOnSave: rawConfig.get("formatImportsOnSave", defaultConfig.formatImportsOnSave),
+            enableCompletionProvider: rawConfig.get("enableCompletionProvider", defaultConfig.enableCompletionProvider),
         };
     }
 }

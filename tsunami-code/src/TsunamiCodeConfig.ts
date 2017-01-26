@@ -1,3 +1,4 @@
+
 import { InitializedFormatOptions } from "@derander/tsunami";
 
 export interface TsunamiCodeConfig {
@@ -6,4 +7,5 @@ export interface TsunamiCodeConfig {
     };
     formatImportsOnSave: boolean;
     formatOptions: InitializedFormatOptions;
+    enableCompletionProvider: boolean;
 }

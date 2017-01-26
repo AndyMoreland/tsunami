@@ -59,6 +59,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "[formatting] Use double quotes when emitting quote"
+                },
+                "tsunami.enableCompletionProvider": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable showing importable symbols in the completion dropdown"
                 }
             }
         }

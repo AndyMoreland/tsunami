@@ -1,3 +1,4 @@
+import { compact } from "./collectionsUtilities";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -44,11 +45,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const formattingProvider = new TsunamiImportFormattingProvider(tsunami.getContext());
 
-    const plugins: TsunamiPlugin[] = [
-        new TsunamiCodeCompletionProvider(tsunami.getContext()),
+    const plugins: TsunamiPlugin[] = compact([
+        config.enableCompletionProvider ? new TsunamiCodeCompletionProvider(tsunami.getContext()) : undefined!,
         new TsunamiCodeActionProvider(),
         formattingProvider,
-    ];
+    ]);
 
     if (config.formatImportsOnSave) {
         plugins.push(new TsunamiFormatImportsOnSavePlugin(formattingProvider));
