@@ -6,11 +6,11 @@ import { TsunamiContext } from "../Context";
 import { getExpressionsContainingPoint } from "../ExpressionTree";
 import { findIdenticalNodes } from "../FindIdenticalNodes";
 import { getScopesContainingPoint } from "../ScopeTree";
-import { Refactoring, RefactoringResult } from "./Refactoring";
+import { RefactoringOption, RefactoringResult } from "./RefactoringOption";
 import { RefactoringContext } from "./RefactoringContext";
 import { RefactoringProvider, RefactoringProviderResult } from "./RefactoringProvider";
 
-export class ExtractLocalRefactoring implements Refactoring {
+export class ExtractLocalRefactoring implements RefactoringOption {
     constructor(
         private document: ts.SourceFile,
         private target: number

@@ -1,10 +1,10 @@
 import * as ts from "typescript";
 import { RegionSpan } from "../protocol/types";
 import { TsunamiContext } from "../Context";
-import { Refactoring } from "./Refactoring";
+import { RefactoringOption } from "./RefactoringOption";
 
 export interface RefactoringProviderResult {
-    refactorings: Refactoring[];
+    refactorings: RefactoringOption[];
 }
 
 export interface RefactoringProvider {

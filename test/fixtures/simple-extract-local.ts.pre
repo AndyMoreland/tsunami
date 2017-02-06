@@ -1,0 +1,15 @@
+function foo() {
+    const x = [1, 2, 3, 4, 5, 6, 7];
+
+    x.map(y => y + 3);
+    // identical mod whitespace
+    x.map(
+        y => y + 3
+    );
+    // different
+    x.map(
+        y => y + 1
+    );
+    // different
+    x.map(y => y + 2);
+}

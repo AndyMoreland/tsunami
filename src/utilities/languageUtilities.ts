@@ -180,9 +180,14 @@ export function convertPositionToLocation(sourceFile: ts.SourceFile, position: n
  * Return false to short-circuit.
  */
 export function visitAllNodesInTree(node: ts.Node, visitor: (node: ts.Node) => boolean) {
+    let shouldContinue = true;
     const visitNode = function(node: ts.Node) {
-        const descendFurther = visitor(node);
-        if (descendFurther) {
+        if (!shouldContinue) {
+            return;
+        }
+
+        shouldContinue = visitor(node);
+        if (shouldContinue) {
             ts.forEachChild(node, visitNode);
         }
     };
@@ -217,4 +222,25 @@ export function getMemberNames(node: ts.ClassDeclaration): string[] {
     });
 
     return result;
+}
+
+export function findNodeMatching(
+    rootNode: ts.Node,
+    pattern: string | RegExp,
+    kind: ts.SyntaxKind
+): ts.Node | undefined {
+    let matchingNode = undefined;
+
+    visitAllNodesInTree(rootNode, node => {
+        if (((typeof pattern === "string" && node.getText().indexOf(pattern) > 0)
+             || node.getText().match(pattern as RegExp))
+            && node.kind === kind) {
+            matchingNode = node;
+            return false;
+        }
+
+        return true;
+    });
+
+    return matchingNode;
 }

@@ -42,6 +42,9 @@
 (require 'tsunami-helm)
 (require 'tsunami-synchronization)
 
+
+(tide-def-permanent-buffer-local tsunami-buffer-tmp-file nil)
+
 (defun tsunami--invalidate-symbols-cache ()
   "Invalidate the symbols cache."
   (tsunami--command:fetch-all-symbols "foo"
@@ -194,6 +197,20 @@
     (if (= 1 (length exact-matches))
         (tsunami--import-and-complete-symbol (-first-item exact-matches))
       (tsunami--helm '(("Import `RET'" . tsunami--import-and-complete-symbol)) arg symbol))))
+
+(defun tsunami--sync-buffer-contents (&optional cb)
+  (when cb
+    (message "With callback!"))
+  (if tide-buffer-dirty
+      (progn
+        (when (not tsunami-buffer-tmp-file)
+          (setq tsunami-buffer-tmp-file (make-temp-file "tsunami")))
+        (write-region nil nil tsunami-buffer-tmp-file nil 'no-message)
+        (tide-send-command "tsunami_reload"
+                           `(:file ,buffer-file-name :tmpfile ,tsunami-buffer-tmp-file)
+                           cb))
+    (when cb
+      (apply cb '()))))
 
 (defun helm-tsunami-symbols (&optional arg)
   (interactive "P")

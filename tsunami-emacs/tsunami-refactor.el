@@ -116,13 +116,16 @@
 (defun tsunami-refactor-organize-imports ()
   "Organize the current file's imports."
   (interactive)
-  (tsunami--command:organize-imports (buffer-file-name (current-buffer))
-                                     (lambda (response)
-                                       (if (tide-response-success-p response)
-                                           (let ((code-edits (plist-get response :body)))
-                                             (tsunami--apply-code-edits code-edits)
-                                             (message "Organized imports."))
-                                         (message "Failed to organize imports.")))))
+  (tsunami--sync-buffer-contents
+   (lambda (&optional _response)
+     (progn (message "Done syncing!")
+            (tsunami--command:organize-imports (buffer-file-name (current-buffer))
+                                               (lambda (response)
+                                                 (if (tide-response-success-p response)
+                                                     (let ((code-edits (plist-get response :body)))
+                                                       (tsunami--apply-code-edits code-edits)
+                                                       (message "Organized imports."))
+                                                   (message "Failed to organize imports."))))))))
 
 (defun tsunami-refactor-implement-interface ()
   "Implement the interface at point"

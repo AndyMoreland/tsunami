@@ -15,7 +15,7 @@ export const RefactoringResult = {
     }
 }
 
-export interface Refactoring {
+export interface RefactoringOption {
     label: string;
     execute(context: RefactoringContext, globalContext: TsunamiContext): Promise<RefactoringResult>;
 }

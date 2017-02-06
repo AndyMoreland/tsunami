@@ -35,9 +35,9 @@ export class MutableTsunamiContext implements TsunamiContext {
 
     public getSourceFileForSync(filename: string, sourceFileName?: string): ts.SourceFile {
         const file = fs.readFileSync(sourceFileName || filename);
-        let sourceText = file.toString();
+        const sourceText = file.toString();
         this.fileVersionMap.set(filename, 1);
-        let sourceFile = this.documentRegistry.acquireDocument(
+        const sourceFile = this.documentRegistry.acquireDocument(
             filename,
             this.project.getCompilerOptions(),
             ts.ScriptSnapshot.fromString(sourceText), "" + this.fileVersionMap.get(filename));

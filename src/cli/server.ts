@@ -8,6 +8,7 @@ import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
 import { OrganizeImportsCommandDefinition } from "../commands/OrganizeImportsCommand";
 import { ReloadCommandDefinition } from "../commands/ReloadCommand";
 import { SaveToCommandDefinition } from "../commands/SaveToCommand";
+import { TsunamiReloadCommandDefinition } from "../commands/TsunamiReloadCommand";
 import { buildFormatOptions } from "../formatting/FormatOptions";
 import { Tsunami } from "../Tsunami";
 import log, { logWithCallback } from "../log";
@@ -23,15 +24,16 @@ const terminalCommandDefinitions = [
     new OrganizeImportsCommandDefinition(),
     new GetContainingExpressionsDefinition(),
     new GetContainingScopesDefinition(),
-    new GetPropertiesOfSymbolDefinition(),
+    new GetPropertiesOfSymbolDefinition(w),
     new MoveSymbolCommandDefinition(),
-    new ImplementInterfaceCommandDefinition()
+    new ImplementInterfaceCommandDefinition(),
+    new TsunamiReloadCommandDefinition(),
 ];
 
 const nonterminalCommandDefinitions = [
     new ReloadCommandDefinition(),
     new ChangeCommandDefinition(),
-    new SaveToCommandDefinition()
+    new SaveToCommandDefinition(),
 ];
 
 let projectConfig = process.cwd();
