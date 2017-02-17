@@ -146,25 +146,39 @@
         (mark-sexp)
         (copy-region-as-kill (point) (mark))))))
 
+(defun tsunami--apply-code-edit-groups (code-edit-groups)
+  (with-atomic-undo
+   (save-excursion
+     (-each code-edit-groups
+       (lambda (code-edit-group)
+         (let ((file (plist-get code-edit-group :file))
+               (code-edits (plist-get code-edit-group :edits)))
+           (with-current-buffer (find-file-noselect file)
+             (tsunami--apply-code-edits code-edits)
+             (basic-save-buffer))))))))
+
 (defun tsunami-move-symbol (arg)
   (interactive "P")
   (let* ((symbol-name (read-from-minibuffer "SymbolName: " (thing-at-point 'symbol)))
          (from-filename (if arg
                             (tsunami--helm-read-file-in-project "From: ")
                           (buffer-file-name)))
-         (to-filename (tsunami--helm-read-file-in-project "To: "))
+         (to-filename (file-truename (tsunami--helm-read-file-in-project "To: ")))
          (response (tsunami--command:move-symbol from-filename to-filename symbol-name)))
     (if (tide-response-success-p response)
         (let ((code-edit-groups (plist-get response :body)))
-          (with-atomic-undo
-           (save-excursion
-             (-each code-edit-groups
-               (lambda (code-edit-group)
-                 (let ((file (plist-get code-edit-group :file))
-                       (code-edits (plist-get code-edit-group :edits)))
-                   (with-current-buffer (find-file-noselect file)
-                     (tsunami--apply-code-edits code-edits)
-                     (basic-save-buffer))))))))
+          (tsunami--apply-code-edit-groups code-edit-groups))
+      (error "Failed to move symbol"))))
+
+(defun tsunami-rename-file ()
+  (interactive)
+  (let* ((from-filename (buffer-file-name))
+         (to-filename (file-truename (read-file-name "Rename to: ")))
+         (response (tsunami--command:move-file from-filename to-filename)))
+    (if (tide-response-success-p response)
+        (let ((code-edit-groups (plist-get response :body)))
+          (tsunami--apply-code-edit-groups code-edit-groups)
+          (tsunami--rename-file-and-buffer to-filename))
       (error "Failed to move symbol"))))
 
 (provide 'tsunami-refactor)

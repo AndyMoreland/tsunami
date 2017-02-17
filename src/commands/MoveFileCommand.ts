@@ -34,10 +34,6 @@ export class MoveFileCommandDefinition implements CommandDefinition<MoveFileComm
             throw new Error(`File ${fromFilename} does not exist`);
         }
 
-        if (!fs.existsSync(toFilename)) {
-            throw new Error(`File ${toFilename} does not exist`);
-        }
-
         const edits: CodeEditGroup[] = [];
         const editor = new ImportEditor(SimpleImportBlockFormatter.withDefaultOptions());
         const fromModuleSpecifier = assertAbsolute(fromFilename).replace(/\.tsx?/g, "") as ModuleSpecifier;
