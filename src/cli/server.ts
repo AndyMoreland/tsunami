@@ -4,6 +4,7 @@ import { GetContainingExpressionsDefinition } from "../commands/GetContainingExp
 import { GetContainingScopesDefinition } from "../commands/GetContainingScopes";
 import { GetPropertiesOfSymbolDefinition } from "../commands/GetPropertiesOfSymbol";
 import { ImplementInterfaceCommandDefinition } from "../commands/ImplementInterface";
+import { MoveFileCommandDefinition } from "../commands/MoveFileCommand";
 import { MoveSymbolCommandDefinition } from "../commands/MoveSymbolCommand";
 import { OrganizeImportsCommandDefinition } from "../commands/OrganizeImportsCommand";
 import { ReloadCommandDefinition } from "../commands/ReloadCommand";
@@ -25,6 +26,7 @@ const terminalCommandDefinitions = [
     new GetContainingScopesDefinition(),
     new GetPropertiesOfSymbolDefinition(),
     new MoveSymbolCommandDefinition(),
+    new MoveFileCommandDefinition(),
     new ImplementInterfaceCommandDefinition()
 ];
 

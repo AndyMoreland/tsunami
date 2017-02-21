@@ -29,6 +29,25 @@ export function rewriteSymbolImportInFile(
     }
 }
 
+export function rewriteModuleImportInFile(
+    sourceFile: ts.SourceFile,
+    editor: ImportEditor,
+    fromModuleSpecifier: ModuleSpecifier,
+    toModuleSpecifier: ModuleSpecifier
+): CodeEditGroup | undefined {
+    const currentBlock = ImportBlockBuilder.fromFile(sourceFile).build();
+    if (currentBlock.importRecords[fromModuleSpecifier] != null) {
+        const newBlock = ImportBlockBuilder.from(currentBlock)
+            .renameModule(fromModuleSpecifier, toModuleSpecifier)
+            .build();
+
+        const edits = editor.applyImportBlockToFile(sourceFile, newBlock);
+        return { file: sourceFile.fileName, edits };
+    } else {
+        return undefined;
+    }
+}
+
 export function findNodeForSymbolName(sourceFile: ts.SourceFile, symbolName: string): ts.Node | undefined {
     return (sourceFile.statements || sourceFile.endOfFileToken).find(node => {
         if (node.kind === ts.SyntaxKind.ClassDeclaration) {

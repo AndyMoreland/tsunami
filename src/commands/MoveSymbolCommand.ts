@@ -6,6 +6,7 @@ import { SimpleImportBlockFormatter } from "../imports/SimpleImportBlockFormatte
 import { CodeEditGroup } from "../protocol/types";
 import { appendNode, withoutNode } from "../utilities/editUtils";
 import { findNodeForSymbolName, rewriteSymbolImportInFile } from "../utilities/moveSymbolUtils";
+import { assertAbsolute } from "../utilities/validation";
 import { Command, CommandDefinition } from "../Command";
 import { TsunamiContext } from "../Context";
 
@@ -15,14 +16,6 @@ export interface MoveSymbolCommand extends Command {
         toFilename: string;
         symbolName: string;
     };
-}
-
-function assertAbsolute(filename: string): AbsoluteFilename {
-    if (!path.isAbsolute(filename)) {
-        throw new Error("Must pass absolute filename.");
-    }
-
-    return filename as AbsoluteFilename;
 }
 
 export class MoveSymbolCommandDefinition implements CommandDefinition<MoveSymbolCommand, CodeEditGroup[]> {

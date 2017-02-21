@@ -212,12 +212,14 @@ _i_ organize imports
 _r_ rename symbol
 _m_ move symbol
 _f_ reformat
+_w_ wrap tsx expression in parens
   "
   ("i" tsunami-refactor-organize-imports)
   ("l" tsunami-refactor-extract-local)
   ("r" tide-rename-symbol)
   ("m" tsunami-move-symbol)
-  ("f" tide-format))
+  ("f" tide-format)
+  ("w" wrap-react-render-in-parens))
 
 (define-minor-mode tsunami-mode
   "Toggle tsunami-mode" ;; doc
