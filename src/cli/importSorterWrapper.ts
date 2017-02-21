@@ -27,11 +27,15 @@ const args = yargs.usage("Usage: $0 --indent-size [num] <files>")
     .default("trailing-comma-in-object-literals", false)
     .boolean("use-double-quotes")
     .default("use-double-quotes", true)
-    .argv;
+    .boolean("changes-are-failure")
+    .default("changes-are-failure", false)
+      .argv;
 
-args._.forEach(async (input) => {
+let changesWereMade = false;
+
+const promises = args._.map(async (input) => {
     const matches = await promiseGlob(input);
-    matches.forEach(async (filename) => {
+    await Promise.all(matches.map(async (filename) => {
         const editor = new ImportEditor(new SimpleImportBlockFormatter({
             indentSize: (args as any).indentSize,
             trailingCommaInObjectLiterals: (args as any).trailingCommaInObjectLiterals,
@@ -40,7 +44,13 @@ args._.forEach(async (input) => {
         const sourceFile = await getSourceFileFor(filename);
         const importBlock = ImportBlockBuilder.fromFile(sourceFile).build();
         const edits = editor.applyImportBlockToFile(sourceFile, importBlock);
-        await applyCodeEdits(filename, edits);
+        changesWereMade = changesWereMade || await applyCodeEdits(filename, edits);
         console.log("Edited: ", filename);
-    });
+    }));
+});
+
+Bluebird.all(promises).then(() => {
+    if ((args as any).changesAreFailure && changesWereMade) {
+        process.exit(1);
+    }
 });

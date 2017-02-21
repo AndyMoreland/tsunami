@@ -54,10 +54,17 @@ export function applyCodeEditsInMemory(fileContents: string, sortedCodeEdits: Co
     return result;
 }
 
-/* Assumes codeEdits are sorted end-to-start of file. */
-export function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Bluebird<void> {
-    return readFilePromise(path).then(buffer => {
-        return writeFilePromise(path, applyCodeEditsInMemory(buffer.toString(), sortedCodeEdits));
+/**
+ * Assumes codeEdits are sorted end-to-start of file.
+ * Return true if changes were made.
+ */
+export async function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Bluebird<boolean> {
+    return readFilePromise(path).then(async buffer => {
+        const original = buffer.toString();
+        const modified = applyCodeEditsInMemory(original, sortedCodeEdits);
+        await writeFilePromise(path, modified);
+
+        return modified !== original;
     });
 }
 

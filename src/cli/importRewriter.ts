@@ -35,7 +35,7 @@ const [fromModule, fromSymbol] = ((args as any).from).split("#") as string[];
 const [toModule, toSymbol] = ((args as any).to).split("#") as string[];
 
 console.log(`Rewriting ${fromModule}.${fromSymbol} -> ${toModule}.${toSymbol}`);
-args._.forEach(async (input) => {
+const promises = args._.map(async (input) => {
     let n = 0;
     const matches = await promiseGlob(input);
     await Bluebird.all(matches.map(async (filename) => {
@@ -63,7 +63,6 @@ args._.forEach(async (input) => {
 
         if (edited) {
             const edits = editor.applyImportBlockToFile(sourceFile, builder.build());
-            await applyCodeEdits(filename, edits);
             n++;
         }
     }));
