@@ -44,13 +44,15 @@ const promises = args._.map(async (input) => {
         const sourceFile = await getSourceFileFor(filename);
         const importBlock = ImportBlockBuilder.fromFile(sourceFile).build();
         const edits = editor.applyImportBlockToFile(sourceFile, importBlock);
-        changesWereMade = changesWereMade || await applyCodeEdits(filename, edits);
+        const madeChanges = await applyCodeEdits(filename, edits);
+        changesWereMade = changesWereMade || madeChanges;
         console.log("Edited: ", filename);
     }));
 });
 
 Bluebird.all(promises).then(() => {
     if ((args as any).changesAreFailure && changesWereMade) {
+        console.error("Failure: imports were out of order.");
         process.exit(1);
     }
 });
