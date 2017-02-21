@@ -44,7 +44,9 @@ const promises = args._.map(async (input) => {
         const sourceFile = await getSourceFileFor(filename);
         const importBlock = ImportBlockBuilder.fromFile(sourceFile).build();
         const edits = editor.applyImportBlockToFile(sourceFile, importBlock);
-        changesWereMade = changesWereMade || await applyCodeEdits(filename, edits);
+        if (!changesWereMade && await applyCodeEdits(filename, edits)) {
+            changesWereMade = true;
+        }
         console.log("Edited: ", filename);
     }));
 });
