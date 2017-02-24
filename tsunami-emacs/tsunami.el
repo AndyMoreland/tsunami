@@ -41,6 +41,7 @@
 (require 'tsunami-navigation)
 (require 'tsunami-helm)
 (require 'tsunami-synchronization)
+(require 'tsunami-code-fix)
 
 (defun tsunami--get-matching-symbols ()
   (gethash (tide-project-name) tsunami--matching-symbols))
@@ -225,6 +226,7 @@ _f_ reformat
   :lighter " tsu" ;; lighter
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "M-<return>") 'tsunami-import-symbol-at-point)
+            (define-key map (kbd "M-S-<return>") 'tsunami-get-code-fixes)
             (define-key map (kbd "C-c C-i") 'helm-tsunami-symbols)
             (define-key map (kbd "M-.") 'tsunami-jump-to-definition)
             (define-key map (kbd "C-c C-r") 'tsunami-refactor-hydra/body)
