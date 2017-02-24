@@ -77,7 +77,7 @@ export class MutableTsunamiContext implements TsunamiContext {
         }
 
         const sourceText = fileText == null ? (await readFilePromise(filename)).toString() : fileText;
-        this.fileVersionMap.set(filename, this.fileVersionMap.get(filename) + 1);
+        this.fileVersionMap.set(filename, this.fileVersionMap.get(filename)! + 1);
         const sourceFile = this.documentRegistry.updateDocument(filename,
                                                                 this.project.getCompilerOptions(),
                                                                 ts.ScriptSnapshot.fromString(sourceText),
