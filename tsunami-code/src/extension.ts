@@ -47,7 +47,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const plugins: TsunamiPlugin[] = compact([
         config.enableCompletionProvider ? new TsunamiCodeCompletionProvider(tsunami.getContext()) : undefined!,
-        new TsunamiCodeActionProvider(),
+        config.enableImportCodeAction ?  new TsunamiCodeActionProvider() : undefined!,
         formattingProvider,
     ]);
 

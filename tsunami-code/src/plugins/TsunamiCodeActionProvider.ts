@@ -21,7 +21,7 @@ export class TsunamiCodeActionProvider implements vscode.CodeActionProvider, Tsu
             const symbol = document.getText(wordRange);
             return [
                 {
-                    title: "Import " + symbol,
+                    title: "(tsu) Import " + symbol,
                     command: "tsunami.importSymbol",
                     arguments: [symbol]
                 }

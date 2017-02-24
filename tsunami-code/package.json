@@ -64,6 +64,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable showing importable symbols in the completion dropdown"
+                },
+                "tsunami.enableImportCodeAction": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable showing code action to import missing symbol"
                 }
             }
         }

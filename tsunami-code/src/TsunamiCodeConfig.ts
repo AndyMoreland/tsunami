@@ -8,4 +8,5 @@ export interface TsunamiCodeConfig {
     formatImportsOnSave: boolean;
     formatOptions: InitializedFormatOptions;
     enableCompletionProvider: boolean;
+    enableImportCodeAction: boolean;
 }

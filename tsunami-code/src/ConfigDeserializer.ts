@@ -14,6 +14,7 @@ export class ConfigDeserializer {
             },
             formatImportsOnSave: false,
             enableCompletionProvider: true,
+            enableImportCodeAction: true,
         };
     };
 
@@ -46,6 +47,7 @@ export class ConfigDeserializer {
             },
             formatImportsOnSave: rawConfig.get("formatImportsOnSave", defaultConfig.formatImportsOnSave),
             enableCompletionProvider: rawConfig.get("enableCompletionProvider", defaultConfig.enableCompletionProvider),
+            enableImportCodeAction: rawConfig.get("enableImportCodeAction", defaultConfig.enableImportCodeAction),
         };
     }
 }
