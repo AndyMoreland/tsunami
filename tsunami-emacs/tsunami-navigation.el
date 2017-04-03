@@ -32,9 +32,9 @@
                                            (tide-command:type-definition 'tsunami--jump-to-definition-and-retry)
                                          (tide-command:definition 'tsunami--jump-to-definition-and-retry))))))
 
-(defun tsunami-references ()
-  (interactive)
-  (let ((reference-window (tide-references)))
+(defun tsunami-references (&optional arg)
+  (interactive "P")
+  (let ((reference-window (tide-references arg)))
     (when reference-window
       (select-window reference-window))))
 
