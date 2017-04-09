@@ -52,11 +52,13 @@
    "MOVE_SYMBOL"
    `(:fromFilename ,from-filename :toFilename ,to-filename :symbolName ,symbol-name)))
 
-(defun tsunami--command:get-code-fixes (filename pos-start pos-end error-codes)
+(defun tsunami--command:get-code-fixes (filename startLine startOffset endLine endOffset error-codes)
   (tide-send-command-sync
    "getCodeFixes" `(:file ,filename
-                    :startPosition ,pos-start
-                    :endPosition ,pos-end
+                    :startLine ,startLine
+                    :startOffset ,startOffset
+                    :endLine ,endLine
+                    :endOffset ,endOffset
                     :errorCodes ,error-codes)))
 
 
