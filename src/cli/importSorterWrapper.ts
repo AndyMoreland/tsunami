@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --harmony
 /// <reference path="../../typings/node/node.d.ts" />
 
 import * as Bluebird from "bluebird";
