@@ -6,7 +6,7 @@ import { Response } from "../Response";
 import log from "../log";
 
 const readFilePromise = Bluebird.promisify(fs.readFile);
-const writeFilePromise = Bluebird.promisify<void, string, string>(fs.writeFile);
+const writeFilePromise = Bluebird.promisify<void, string, string>(fs.writeFile as any);
 
 export function writeOutput<T>(stream: NodeJS.WritableStream, response: Response<T>) {
     let output = JSON.stringify(response);
