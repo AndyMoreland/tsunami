@@ -55,6 +55,10 @@
                                                               (message "Updating helm")
                                                               (helm-update))))))
 
+(defun tsunami-clear-project-symbols-cache ()
+  (interactive)
+  (remhash (tide-project-name) tsunami--matching-symbols))
+
 (defun tsunami--get-module-name-for-import-for-symbol (symbol)
   (let ((symbol-filename (plist-get (tsunami--location-of-symbol symbol) :filename)))
     (if (tsunami--is-from-external-module-p symbol)
@@ -213,12 +217,14 @@ _i_ organize imports
 _r_ rename symbol
 _m_ move symbol
 _f_ reformat
+_w_ wrap
   "
   ("i" tsunami-refactor-organize-imports)
   ("l" tsunami-refactor-extract-local)
   ("r" tide-rename-symbol)
   ("m" tsunami-move-symbol)
-  ("f" tide-format))
+  ("f" tide-format)
+  ("w" wrap-react-render-in-parens))
 
 (define-minor-mode tsunami-mode
   "Toggle tsunami-mode" ;; doc

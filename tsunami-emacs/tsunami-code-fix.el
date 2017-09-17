@@ -1,7 +1,5 @@
 (require 'tsunami-protocol)
 
-(-map (lambda (e) (flycheck-error-fix-data e)) flycheck-current-errors)
-
 ;; from gnu.org
 (defun tsunami--find-overlays-specifying (prop)
   (let ((overlays (overlays-at (point)))
@@ -21,7 +19,12 @@
 
 (defun tsunami-get-code-fixes ()
   (interactive)
-  (if-let ((response (tsunami--command:get-code-fixes (buffer-file-name) (point) (1+ (point)) (tsunami--get-error-codes-at-point)))
+  (if-let ((response (tsunami--command:get-code-fixes (buffer-file-name)
+                                                      (1- (line-number-at-pos (point)))
+                                                      (1- (current-column))
+                                                      (1- (line-number-at-pos (point)))
+                                                      (current-column)
+                                                      (tsunami--get-error-codes-at-point)))
            (_ (tide-response-success-p response))
            (body (tsunami--get-response-body response))
            (first-fix (first body))
