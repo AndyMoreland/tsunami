@@ -165,13 +165,13 @@ async function processImplementInterface(context: TsunamiContext, filename: stri
 
     console.log("First declaration types: ");
     console.log(props.map(
-        prop => checker.typeToString(checker.getTypeAtLocation(prop.getDeclarations()[0]))
+        prop => checker.typeToString(checker.getTypeAtLocation(prop.getDeclarations()![0]))
     ));
 
     console.log("Call signatures: ");
     console.log(props.map(
-        prop => checker.getTypeAtLocation(prop.getDeclarations()[0]).getCallSignatures()[0].getParameters().map(
-            param => [param.getName(), checker.typeToString(checker.getTypeAtLocation(param.getDeclarations()[0]))]
+        prop => checker.getTypeAtLocation(prop.getDeclarations()![0]).getCallSignatures()[0].getParameters().map(
+            param => [param.getName(), checker.typeToString(checker.getTypeAtLocation(param.getDeclarations()![0]))]
         )
     ));
 

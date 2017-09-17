@@ -16,7 +16,7 @@ export interface ImplementInterfaceCommand extends Command {
 function emitCallSignature(checker: ts.TypeChecker, signature: ts.Signature): string {
     const nameAndTypeTuples = signature.getParameters().map(param => [
         param.getName(),
-        checker.typeToString(checker.getTypeAtLocation(param.getDeclarations()[0]))
+        checker.typeToString(checker.getTypeAtLocation(param.getDeclarations()![0]))
     ]);
 
     const returnType = checker.typeToString(signature.getReturnType());
@@ -61,7 +61,7 @@ export class ImplementInterfaceCommandDefinition implements CommandDefinition<Im
         const methodDescriptors = props.filter(prop => !childNames.has(prop.getName())).map(
             prop => {
                 let result = prop.getName();
-                const propType = checker.getTypeAtLocation(prop.getDeclarations()[0]);
+                const propType = checker.getTypeAtLocation(prop.getDeclarations()![0]);
 
                 if (isCallableType(propType)) {
                     result += emitCallSignature(checker, propType.getCallSignatures()[0]);

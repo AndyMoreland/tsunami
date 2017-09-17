@@ -15,7 +15,7 @@ import { TsProject } from "../tsProject";
 
 /* HACK */
 process.on("uncaughtException", (err: any) => {
-    logWithCallback((e: any, data: any) => process.exit(), err);
+    logWithCallback((e?: NodeJS.ErrnoException) => process.exit(), err);
 });
 
 const terminalCommandDefinitions = [

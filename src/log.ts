@@ -10,7 +10,7 @@ export default function log(...args: any[]): void {
     }
 }
 
-export function logWithCallback(cb: Function, ...args: any[]): void {
+export function logWithCallback(cb: (err?: NodeJS.ErrnoException) => void, ...args: any[]): void {
     if (LOGGING_ENABLED) {
         fs.appendFile(TSUNAMI_LOG_FILE, "\n\n" + "[" + process.pid + "]: " + args.join(", "), cb);
     } else {

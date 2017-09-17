@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/bluebird": "^3.5.11",
     "JSONStream": "^1.0.7",
     "bluebird": "^3.3.1",
     "deepcopy": "0.6.3",
@@ -24,7 +25,7 @@
     "fuzzaldrin-plus": "^0.3.1",
     "glob": "^7.0.0",
     "resolve": "^1.1.7",
-    "typescript": "^2.2.1",
+    "typescript": "^2.5.2",
     "yargs": "6.0.0"
   },
   "devDependencies": {
