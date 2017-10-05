@@ -160,10 +160,10 @@ export class FileIndexer {
             );
         }
 
-        node.getChildren().forEach(child => {
+        node.getChildren().forEach(async child => {
             if (child.kind === ts.SyntaxKind.AsteriskToken) {
                 const dirname = path.dirname(this.sourceFile.fileName);
-                /* HACK: assumes .d.ts because we're only operating in libraries, really. */
+
                 if (
                     node.moduleSpecifier != null &&
                     this.getSourceFileForAbsolutePath !== undefined
@@ -173,44 +173,56 @@ export class FileIndexer {
                         .replace(/"|'/g, "");
                     const recursivePaths = [
                         path.join(dirname, specifier) + ".d.ts",
-                        path.join(dirname, specifier, "index") + ".d.ts"
+                        path.join(dirname, specifier, "index") + ".d.ts",
+                        path.join(dirname, specifier) + ".ts",
+                        path.join(dirname, specifier) + ".tsx",
+                        path.join(dirname, specifier, "index") + ".ts",
+                        path.join(dirname, specifier, "index") + ".tsx",
                     ];
                     for (let recursivePath of recursivePaths) {
-                        log(
-                            `[${this.moduleSpecifier}] ${this.sourceFile
-                                .fileName} -> ${recursivePath}`
-                        );
-                        if (!fs.existsSync(recursivePath)) {
-                            continue;
-                        }
-                        const subindexPromise = this.getSourceFileForAbsolutePath(
-                            recursivePath
-                        )
-                            .then(async sourceFile => {
-                                const indexer = new FileIndexer(
-                                    this.moduleSpecifier,
-                                    sourceFile,
-                                    this.getSourceFileForAbsolutePath
-                                );
-                                await indexer.indexFile();
-                                const recursiveIndex = indexer.getDefinitionIndex();
-                                this.addIndex(recursiveIndex);
-                            })
-                            .catch(e => {
-                                log(
-                                    "Failed to index recursive module: ",
-                                    recursivePath,
-                                    e,
-                                    e.stack
-                                );
-                            });
-                        promises.push(subindexPromise);
+                        promises.push(this.indexRecursivePath(recursivePath));
                     }
                 }
             }
         });
 
         return Promise.resolve(Bluebird.all(promises).thenReturn());
+    }
+
+    private async indexRecursivePath(recursivePath: string): Promise<void> {
+        if (
+            !fs.existsSync(recursivePath) ||
+            !this.getSourceFileForAbsolutePath
+        ) {
+            return;
+        }
+
+        log(
+            `[${this.moduleSpecifier}] ${this.sourceFile
+                .fileName} -> ${recursivePath}`
+        );
+
+        try {
+            const sourceFile = await this.getSourceFileForAbsolutePath(
+                recursivePath
+            );
+            const indexer = new FileIndexer(
+                this.moduleSpecifier,
+                sourceFile,
+                this.getSourceFileForAbsolutePath
+            );
+            await indexer.indexFile();
+            const recursiveIndex = indexer.getDefinitionIndex();
+            log("indexed recursive path", recursivePath, JSON.stringify(indexer.getDefinitionIndex));
+            this.addIndex(recursiveIndex);
+        } catch (e) {
+            log(
+                "Failed to index recursive module: ",
+                recursivePath,
+                e,
+                e.stack
+            );
+        }
     }
 
     private indexExportSpecifier(node: ts.ExportSpecifier): void {
@@ -233,7 +245,7 @@ export class FileIndexer {
         );
     }
 
-    public indexNode = (node: ts.Node): Promise<void> => {
+    private indexNode = (node: ts.Node): Promise<void> => {
         if (isExportedNode(node)) {
             return Promise.resolve(this.indexExportedSymbol(node));
         } else if (node.kind === ts.SyntaxKind.ExportDeclaration) {
@@ -241,7 +253,7 @@ export class FileIndexer {
         }
 
         return Promise.resolve<void>(null!);
-    }
+    };
 
     public indexFile(): Promise<void> {
         this.index = new Map<string, Definition>();

@@ -6,27 +6,77 @@ import { ModuleName } from "./imports/ImportStatement";
 import log from "./log";
 import { TsProject } from "./tsProject";
 
+/**
+ * Strip @types/ from module names
+ */
+function getModuleName(rawModuleName: string): string {
+    if (rawModuleName.startsWith("@types/")) {
+        return rawModuleName.substring("@types/".length);
+    }
+
+    return rawModuleName;
+}
+
 export class ProjectIndexer {
-    constructor(
-        private project: TsProject,
-        private context: TsunamiContext
-    ) {}
+    constructor(private project: TsProject, private context: TsunamiContext) {}
 
     public async indexProject(): Promise<void> {
         await Bluebird.all([
             this.indexProjectFiles(),
-            this.indexDependenciesOfProject()
+            this.indexDependenciesOfProject(),
+            this.indexMappedFiles()
         ]);
+    }
+
+    private async indexMappedFiles(): Promise<void> {
+        const paths = this.project.getCompilerOptions().paths;
+        log("[map] Indexing mapped files", JSON.stringify(paths, null, 2));
+
+        if (paths) {
+            await Promise.all(
+                Object.keys(paths).map(path => {
+                    if (path !== "*" && paths[path].length === 1) {
+                        this.indexPath(path, paths[path][0]);
+                    }
+                })
+            );
+        }
+    }
+
+    private async indexPath(path: string, target: string): Promise<void> {
+        // Special case simple rewrites to index files
+        log("[map] Indexing path: ", path, target);
+
+        try {
+            if (!path.includes("*")) {
+                await this.context.getSourceFileFor(target);
+                const sourceFile = await this.context.updateSourceFileFor(
+                    target
+                ); // FIXME: Why?????????
+                log("[map] Found non-* including path: ", path);
+                const indexer = new FileIndexer(
+                    getModuleName(path) as ModuleName,
+                    sourceFile,
+                    fileName => this.context.getSourceFileFor(fileName)
+                );
+                this.context.moduleIndexerMap.set(path, indexer);
+                return indexer.indexFile();
+            }
+        } catch (e) {
+            log("[map]", e);
+        }
     }
 
     private async indexProjectFiles(): Promise<void> {
         const files = await this.project.getFileNames();
 
         log(JSON.stringify(files, null, 2));
-        const promises = files.map(file => this.context.getSourceFileFor(file).then(() => {
-            log("Indexing: ", file);
-            return this.context.reloadFile(file);
-        }));
+        const promises = files.map(file =>
+            this.context.getSourceFileFor(file).then(() => {
+                log("Indexing: ", file);
+                return this.context.reloadFile(file);
+            })
+        );
 
         await Bluebird.all(promises);
         log("Finished starting server.");
@@ -58,12 +108,15 @@ export class ProjectIndexer {
         }
     }
 
-    private async indexDefinitionFile(moduleName: string, filename: string): Promise<void> {
+    private async indexDefinitionFile(
+        moduleName: string,
+        filename: string
+    ): Promise<void> {
         await this.context.getSourceFileFor(filename);
         const sourceFile = await this.context.updateSourceFileFor(filename); // FIXME: Why?????????
         log("Indexing definition file:", sourceFile.fileName, moduleName);
         const indexer = new FileIndexer(
-            moduleName as ModuleName,
+            getModuleName(moduleName) as ModuleName,
             sourceFile,
             fileName => this.context.getSourceFileFor(fileName)
         );
