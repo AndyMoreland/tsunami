@@ -1,37 +1,54 @@
 {
-  "name": "@derander/tsunami",
-  "version": "0.7.1",
-  "description": "Refactoring layer for tide-mode",
-  "main": "lib/src/index.js",
-  "typings": "lib/src/index.d.ts",
-  "scripts": {
-    "test": "mocha --require ts-node/register --recursive test/*",
-    "build": "tsc",
-    "prepublish": "tsc --declaration"
-  },
-  "bin": {
-    "tsunami-imports": "./lib/src/cli/importSorterWrapper.js"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@types/bluebird": "^3.5.11",
-    "JSONStream": "^1.0.7",
-    "bluebird": "^3.3.1",
-    "deepcopy": "0.6.3",
-    "event-stream": "^3.3.2",
-    "find-root": "1.0.0",
-    "fuzzaldrin": "^2.1.0",
-    "fuzzaldrin-plus": "^0.3.1",
-    "glob": "^7.0.0",
-    "resolve": "^1.1.7",
-    "typescript": "^2.5.2",
-    "yargs": "6.0.0"
-  },
-  "devDependencies": {
-    "chai": "3.5.0",
-    "gaze-run-interrupt": "1.0.1",
-    "mocha": "3.0.2",
-    "ts-node": "^2.0.0"
-  }
+    "name": "@derander/tsunami",
+    "version": "0.7.1",
+    "description": "Refactoring layer for tide-mode",
+    "main": "lib/src/index.js",
+    "typings": "lib/src/index.d.ts",
+    "scripts": {
+        "test": "./node_modules/.bin/jest",
+        "test:watch": "./node_modules/.bin/jest --watch",
+        "build": "tsc",
+        "prepublish": "tsc --declaration"
+    },
+    "bin": {
+        "tsunami-imports": "./lib/src/cli/importSorterWrapper.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@types/bluebird": "^3.5.14",
+        "@types/glob": "^5.0.33",
+        "@types/jest": "^21.1.2",
+        "@types/node": "^8.0.32",
+        "@types/yargs": "^8.0.2",
+        "JSONStream": "^1.0.7",
+        "bluebird": "^3.3.1",
+        "deepcopy": "0.6.3",
+        "event-stream": "^3.3.2",
+        "find-root": "1.0.0",
+        "fuzzaldrin": "^2.1.0",
+        "fuzzaldrin-plus": "^0.3.1",
+        "glob": "^7.0.0",
+        "jest": "^21.2.1",
+        "resolve": "^1.1.7",
+        "typescript": "^2.5.2",
+        "yargs": "6.0.0"
+    },
+    "devDependencies": {
+        "chai": "3.5.0",
+        "gaze-run-interrupt": "1.0.1",
+        "mocha": "3.0.2",
+        "ts-node": "^2.0.0"
+    },
+    "jest": {
+        "transform": {
+            ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+        },
+        "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx)$",
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js"
+        ]
+    }
 }

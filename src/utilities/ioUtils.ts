@@ -58,7 +58,7 @@ export function applyCodeEditsInMemory(fileContents: string, sortedCodeEdits: Co
  * Assumes codeEdits are sorted end-to-start of file.
  * Return true if changes were made.
  */
-export async function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Bluebird<boolean> {
+export async function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Promise<boolean> {
     return readFilePromise(path).then(async buffer => {
         const original = buffer.toString();
         const modified = applyCodeEditsInMemory(original, sortedCodeEdits);

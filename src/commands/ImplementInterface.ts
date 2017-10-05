@@ -33,7 +33,7 @@ export class ImplementInterfaceCommandDefinition implements CommandDefinition<Im
         return command.command === "IMPLEMENT_INTERFACE";
     }
 
-    public async processor(context: TsunamiContext, command: ImplementInterfaceCommand): Bluebird<CodeEdit | null> {
+    public async processor(context: TsunamiContext, command: ImplementInterfaceCommand): Promise<CodeEdit | null> {
         const { filename, position } = command.arguments;
         log("Implementing interface in: ", filename, position);
         const program = await context.getProgram();

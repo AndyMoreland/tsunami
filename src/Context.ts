@@ -1,5 +1,4 @@
 import { ImportConfig } from "./config/ImportConfig";
-import * as Promise from "bluebird";
 import * as ts from "typescript";
 import { FileIndexer } from "./FileIndexer";
 import { Definition } from "./Indexer";

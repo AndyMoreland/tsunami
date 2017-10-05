@@ -223,6 +223,7 @@ _w_ wrap
   ("l" tsunami-refactor-extract-local)
   ("r" tide-rename-symbol)
   ("m" tsunami-move-symbol)
+  ("e" tide-refactor)
   ("f" tide-format)
   ("w" wrap-react-render-in-parens))
 
@@ -232,9 +233,9 @@ _w_ wrap
   :lighter " tsu" ;; lighter
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "M-<return>") 'tsunami-import-symbol-at-point)
-            (define-key map (kbd "M-S-<return>") 'tsunami-get-code-fixes)
+            (define-key map (kbd "M-S-<return>") 'tide-fix)
             (define-key map (kbd "C-c C-i") 'helm-tsunami-symbols)
-            (define-key map (kbd "M-.") 'tsunami-jump-to-definition)
+            (define-key map (kbd "M-.") 'tide-jump-to-definition)
             (define-key map (kbd "C-c C-r") 'tsunami-refactor-hydra/body)
             (define-key map (kbd "M-q") 'tsunami-get-function-info)
             (define-key tide-mode-map (kbd "M-.") 'tsunami-jump-to-definition)

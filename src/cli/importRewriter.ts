@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/// <reference path="../../typings/node/node.d.ts" />
 
 import * as Bluebird from "bluebird";
 import * as fs from "fs";

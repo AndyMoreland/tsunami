@@ -1,5 +1,3 @@
-/// <reference path="../../typings/node/node.d.ts" />
-
 import * as fs from "fs";
 import * as ts from "typescript";
 import { AbsoluteFilename } from "../imports/ImportStatement";

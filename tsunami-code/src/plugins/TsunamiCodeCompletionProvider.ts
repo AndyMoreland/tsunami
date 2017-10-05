@@ -62,7 +62,7 @@ export class TsunamiCodeCompletionProvider implements vs.CompletionItemProvider,
         document: vs.TextDocument,
         position: vs.Position,
         token: vs.CancellationToken
-    ): Bluebird<vs.CompletionItem[]> {
+    ): Promise<vs.CompletionItem[]> {
         const matches = await this.context.getMatchingSymbols(
             document.getText(document.getWordRangeAtPosition(position))
         );
