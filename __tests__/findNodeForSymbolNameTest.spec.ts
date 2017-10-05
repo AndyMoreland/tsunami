@@ -1,5 +1,4 @@
 import { findNodeForSymbolName } from "../src/utilities/moveSymbolUtils";
-import { expect } from "chai";
 import * as fs from "fs";
 import * as ts from "typescript";
 import * as path from "path";
@@ -22,5 +21,5 @@ describe("findNodeForSymbolName", () => {
     const exportedFunctionNode = findNodeForSymbolName(fileWithExportedSybmols, "exportedFunction");
 
     it("should find exported function nodes",
-       () => expect(exportedFunctionNode).to.exist);
+       () => expect(exportedFunctionNode).not.toBeNull());
 });

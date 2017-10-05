@@ -1,5 +1,4 @@
 import { mergeImportRecords, ModuleSpecifier, ImportStatementType, ImportRecord } from "../src/imports/ImportStatement";
-import { expect } from "chai";
 
 declare function describe(foo: string, cb: Function): void;
 declare function it(foo: string, cb: Function): void;
@@ -53,8 +52,8 @@ describe("mergeImportRecords", () => {
 
         it ("should accumulate different symbols", () => {
             const bindings = merged.record.importClause.namedBindings;
-            expect(bindings).to.contain({ symbolName: "symbol-1" });
-            expect(bindings).to.contain({ symbolName: "symbol-2" });
+            expect(bindings).toContainEqual({ symbolName: "symbol-1" });
+            expect(bindings).toContainEqual({ symbolName: "symbol-2" });
         });
     });
 
@@ -63,9 +62,9 @@ describe("mergeImportRecords", () => {
 
         it ("should contain the aliased symbol and the default alias", () => {
             const bindings = merged.record.importClause.namedBindings;
-            expect(bindings).to.contain({ symbolName: "symbol-1" });
-            expect(bindings.length).to.eql(1);
-            expect(merged.record.importClause.defaultName).to.eql("default-alias");
+            expect(bindings).toContainEqual({ symbolName: "symbol-1" });
+            expect(bindings.length).toEqual(1);
+            expect(merged.record.importClause.defaultName).toEqual("default-alias");
         });
     });
 
@@ -74,10 +73,10 @@ describe("mergeImportRecords", () => {
 
         it ("should contain the aliased namespace and the symbol import", () => {
             const bindings = merged.record.importClause.namedBindings;
-            expect(bindings).to.contain({ symbolName: "symbol-1" });
-            expect(bindings.length).to.eql(1);
-            expect(merged.record.namespaceImport).to.not.be.null;
-            expect(merged.record.namespaceImport!.alias).to.eql("namespace-alias");
+            expect(bindings).toContainEqual({ symbolName: "symbol-1" });
+            expect(bindings.length).toEqual(1);
+            expect(merged.record.namespaceImport).not.toBe(null);
+            expect(merged.record.namespaceImport!.alias).toEqual("namespace-alias");
         });
     });
 });

@@ -6,9 +6,14 @@ import { Response } from "../Response";
 import log from "../log";
 
 const readFilePromise = Bluebird.promisify(fs.readFile);
-const writeFilePromise = Bluebird.promisify<void, string, string>(fs.writeFile as any);
+const writeFilePromise = Bluebird.promisify<void, string, string>(
+    fs.writeFile as any
+);
 
-export function writeOutput<T>(stream: NodeJS.WritableStream, response: Response<T>) {
+export function writeOutput<T>(
+    stream: NodeJS.WritableStream,
+    response: Response<T>
+): Promise<void> {
     let output = JSON.stringify(response);
     let outputLength = output.length;
 
@@ -17,16 +22,16 @@ export function writeOutput<T>(stream: NodeJS.WritableStream, response: Response
     stream.write("Content-Length: " + outputLength + "\n\n");
     stream.write(output + "\n");
 
-    return Bluebird.resolve<void>(null!);
+    return Promise.resolve<void>(null!);
 }
 
-export function writeOutputToStdOut<T>(response: Response<T>) {
+export function writeOutputToStdOut<T>(response: Response<T>): Promise<void> {
     return writeOutput(process.stdout, response);
 }
 
 /** Line x (0-indexed) starts at character return[x] */
 function getLineStartIndex(file: string): number[] {
-    let index = -1 ;
+    let index = -1;
     const indices: number[] = [0];
 
     // tslint:disable-next-line
@@ -37,7 +42,10 @@ function getLineStartIndex(file: string): number[] {
     return indices;
 }
 
-export function applyCodeEditsInMemory(fileContents: string, sortedCodeEdits: CodeEdit[]): string {
+export function applyCodeEditsInMemory(
+    fileContents: string,
+    sortedCodeEdits: CodeEdit[]
+): string {
     let result = fileContents;
     const lineIndex = getLineStartIndex(result);
 
@@ -58,7 +66,10 @@ export function applyCodeEditsInMemory(fileContents: string, sortedCodeEdits: Co
  * Assumes codeEdits are sorted end-to-start of file.
  * Return true if changes were made.
  */
-export async function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]): Promise<boolean> {
+export async function applyCodeEdits(
+    path: string,
+    sortedCodeEdits: CodeEdit[]
+): Promise<boolean> {
     return readFilePromise(path).then(async buffer => {
         const original = buffer.toString();
         const modified = applyCodeEditsInMemory(original, sortedCodeEdits);
@@ -68,8 +79,11 @@ export async function applyCodeEdits(path: string, sortedCodeEdits: CodeEdit[]):
     });
 }
 
-export function globPromise(pattern: string, options: glob.IOptions): Promise<string[]> {
-    return new Bluebird<string[]>((resolve, reject) => {
+export function globPromise(
+    pattern: string,
+    options: glob.IOptions
+): Promise<string[]> {
+    return new Promise<string[]>((resolve, reject) => {
         glob(pattern, options, (err, matches) => {
             if (err) {
                 reject(err);

@@ -1,4 +1,3 @@
-import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
@@ -18,7 +17,7 @@ function expectMatches(formatter: ImportBlockFormatter, fileName: string): void 
     const result = formatter.formatImportBlock(path.join(__dirname, "fixtures"), ImportBlockBuilder.fromFile(sourceFile).build());
 
     /* Account for trailing \n in fixture file */
-    expect(result.trim()).to.eql(fs.readFileSync(path.join(__dirname, "fixtures", `${fileName}.ts.post`)).toString().trim());
+    expect(result.trim()).toEqual(fs.readFileSync(path.join(__dirname, "fixtures", `${fileName}.ts.post`)).toString().trim());
 }
 
 describe("SimpleImportBlockFormatter", () => {
