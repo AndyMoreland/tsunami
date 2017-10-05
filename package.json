@@ -17,6 +17,8 @@
     "license": "ISC",
     "dependencies": {
         "@types/bluebird": "^3.5.14",
+        "@types/fuzzaldrin": "^2.1.0",
+        "@types/fuzzaldrin-plus": "^0.0.1",
         "@types/glob": "^5.0.33",
         "@types/jest": "^21.1.2",
         "@types/node": "^8.0.32",
