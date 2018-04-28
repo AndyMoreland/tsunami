@@ -97,7 +97,7 @@ export class ProjectIndexer {
                         promises.push(this.indexDefinitionFile(dep, typings));
                     }
                 } catch (e) {
-                    log("Failed to index: ", dep);
+                    log("Failed to index: ", dep, e);
                 }
             });
 
