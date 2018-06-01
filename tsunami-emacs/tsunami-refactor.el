@@ -167,4 +167,11 @@
                      (basic-save-buffer))))))))
       (error "Failed to move symbol"))))
 
+(defun tsunami-style-file ()
+  (interactive)
+  (let* ((current (buffer-file-name))
+         (cleaned (replace-regexp-in-string "\\.tsx?$" "" current))
+         (new-name (concat cleaned ".scss")))
+    (find-file-other-window new-name)))
+
 (provide 'tsunami-refactor)

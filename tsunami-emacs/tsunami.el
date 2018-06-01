@@ -218,6 +218,7 @@ _r_ rename symbol
 _m_ move symbol
 _f_ reformat
 _w_ wrap
+_s_ style file
   "
   ("i" tsunami-refactor-organize-imports)
   ("l" tsunami-refactor-extract-local)
@@ -225,6 +226,7 @@ _w_ wrap
   ("m" tsunami-move-symbol)
   ("e" tide-refactor)
   ("f" tide-format)
+  ("s" tsunami-style-file)
   ("w" wrap-react-render-in-parens))
 
 (define-minor-mode tsunami-mode

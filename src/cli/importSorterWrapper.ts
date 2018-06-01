@@ -21,7 +21,9 @@ function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
 
 const args = yargs.usage("Usage: $0 --indent-size [num] <files>")
     .number("indent-size")
-    .default("indent-size", 2)
+      .default("indent-size", 2)
+      .number("max-line-length")
+      .default("max-line-length", 140)
     .boolean("trailing-comma-in-object-literals")
     .default("trailing-comma-in-object-literals", false)
     .boolean("use-double-quotes")
