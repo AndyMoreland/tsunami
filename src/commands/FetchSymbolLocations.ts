@@ -21,7 +21,7 @@ export class FetchSymbolLocationsDefinition implements CommandDefinition<FetchSy
         return command.command === "SYMBOL_LOCATIONS";
     }
 
-    public async processor(context: TsunamiContext, command: FetchSymbolLocationsCommand): Promise<FetchSymbolLocationsResponseBody> {
+    public async processor(context: TsunamiContext, _command: FetchSymbolLocationsCommand): Promise<FetchSymbolLocationsResponseBody> {
         let symbolLocations: SymbolLocation[] = [];
 
         for (let definition of context.getIndexedDefinitions()) {

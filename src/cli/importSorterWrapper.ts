@@ -13,7 +13,7 @@ import { applyCodeEdits } from "../utilities/ioUtils";
 const promiseGlob = Bluebird.promisify<string[], string>(glob);
 const readFilePromise = Bluebird.promisify(fs.readFile);
 
-function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
+async function getSourceFileFor(filename: string): Promise<ts.SourceFile> {
     return Promise.resolve(readFilePromise(filename)).then(buffer => {
         return ts.createSourceFile(filename, buffer.toString(), ts.ScriptTarget.ES5, true);
     });
