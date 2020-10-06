@@ -154,10 +154,12 @@ export class FileIndexer {
     private indexExportDeclaration(node: ts.ExportDeclaration): Promise<void> {
         const promises: Promise<void>[] = [];
 
-        if (node.exportClause && node.exportClause.elements) {
-            node.exportClause.elements.forEach(specifier =>
-                this.indexExportSpecifier(specifier as ts.ExportSpecifier)
-            );
+        if (node.exportClause && node.exportClause) {
+            node.exportClause
+                .getChildren()
+                .forEach(specifier =>
+                    this.indexExportSpecifier(specifier as ts.ExportSpecifier)
+                );
         }
 
         node.getChildren().forEach(async child => {
@@ -177,7 +179,7 @@ export class FileIndexer {
                         path.join(dirname, specifier) + ".ts",
                         path.join(dirname, specifier) + ".tsx",
                         path.join(dirname, specifier, "index") + ".ts",
-                        path.join(dirname, specifier, "index") + ".tsx",
+                        path.join(dirname, specifier, "index") + ".tsx"
                     ];
                     for (let recursivePath of recursivePaths) {
                         promises.push(this.indexRecursivePath(recursivePath));
@@ -198,8 +200,9 @@ export class FileIndexer {
         }
 
         log(
-            `[${this.moduleSpecifier}] ${this.sourceFile
-                .fileName} -> ${recursivePath}`
+            `[${this.moduleSpecifier}] ${
+                this.sourceFile.fileName
+            } -> ${recursivePath}`
         );
 
         try {
@@ -213,7 +216,11 @@ export class FileIndexer {
             );
             await indexer.indexFile();
             const recursiveIndex = indexer.getDefinitionIndex();
-            log("indexed recursive path", recursivePath, JSON.stringify(indexer.getDefinitionIndex));
+            log(
+                "indexed recursive path",
+                recursivePath,
+                JSON.stringify(indexer.getDefinitionIndex)
+            );
             this.addIndex(recursiveIndex);
         } catch (e) {
             log(

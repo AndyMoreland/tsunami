@@ -17,7 +17,7 @@ import { TsProject } from "./tsProject";
 import { CallbackFunction, UnknownObject } from "./types";
 import { writeOutputToStdOut } from "./utilities/ioUtils";
 
-function parseCommand(data: {[index: string]: any}): Command {
+function parseCommand(data: { [index: string]: any }): Command {
     if (data["command"] !== undefined && data["seq"] !== undefined) {
         return data as Command;
     } else {
@@ -40,16 +40,22 @@ export class Tsunami {
         nonterminalCommandDefinitions: CommandDefinition<any, any>[] = [],
         context?: TsunamiContext
     ) {
-        this.terminalInvoker = new BenchmarkingCommandInvoker(new SimpleCommandInvoker(terminalCommandDefinitions));
-        this.nonterminalInvoker = new BenchmarkingCommandInvoker(new SimpleCommandInvoker(nonterminalCommandDefinitions));
-        this.documentRegistry = ts.createDocumentRegistry(true);
-        this.context = context || new MutableTsunamiContext(
-            this.tsProject,
-            this.formatOptions,
-            this.importConfig,
-            writeOutputToStdOut,
-            this.documentRegistry
+        this.terminalInvoker = new BenchmarkingCommandInvoker(
+            new SimpleCommandInvoker(terminalCommandDefinitions)
         );
+        this.nonterminalInvoker = new BenchmarkingCommandInvoker(
+            new SimpleCommandInvoker(nonterminalCommandDefinitions)
+        );
+        this.documentRegistry = ts.createDocumentRegistry(true);
+        this.context =
+            context ||
+            new MutableTsunamiContext(
+                this.tsProject,
+                this.formatOptions,
+                this.importConfig,
+                writeOutputToStdOut,
+                this.documentRegistry
+            );
         this.projectIndexer = new ProjectIndexer(tsProject, this.context);
     }
 
@@ -73,19 +79,25 @@ export class Tsunami {
             .pipe(es.map(this.processPotentialTsunamiCommand))
             .pipe(tsserver.stdin);
 
-        tsserver.stdout.pipe(process.stdout);
-        tsserver.stdout
-            .pipe(es.map((data: any, cb: CallbackFunction<any>) => {
-                log(data);
-                cb(null, data);
-            }));
+        if (tsserver.stdout) {
+            tsserver.stdout.pipe(process.stdout);
+            tsserver.stdout.pipe(
+                es.map((data: any, cb: CallbackFunction<any>) => {
+                    log(data);
+                    cb(null, data);
+                })
+            );
+        }
     }
 
     public async buildInitialProjectIndex(): Promise<void> {
         await this.projectIndexer.indexProject();
     }
 
-    private processPotentialTsunamiCommand = (data: UnknownObject, cb: CallbackFunction<string>) => {
+    private processPotentialTsunamiCommand = (
+        data: UnknownObject,
+        cb: CallbackFunction<string>
+    ) => {
         // log("Incoming command: ", JSON.stringify(data, null, 2));
         let command = parseCommand(data);
 
@@ -95,8 +107,14 @@ export class Tsunami {
                 this.terminalInvoker.invoke(this.context, command);
             } catch (e) {
                 /* Prevents propagation of command to tsserver.stdin */
-                log("Error processing tsunami command: ", JSON.stringify(command, null, 2), e.stack);
-                writeOutputToStdOut<string>(getErrorOutputForCommand(command, e));
+                log(
+                    "Error processing tsunami command: ",
+                    JSON.stringify(command, null, 2),
+                    e.stack
+                );
+                writeOutputToStdOut<string>(
+                    getErrorOutputForCommand(command, e)
+                );
             }
             cb();
         } else {
@@ -105,12 +123,16 @@ export class Tsunami {
                 try {
                     this.nonterminalInvoker.invoke(this.context, command);
                 } catch (e) {
-                    log("Error wiretapping tsunami command: ", JSON.stringify(command, null, 2), e);
+                    log(
+                        "Error wiretapping tsunami command: ",
+                        JSON.stringify(command, null, 2),
+                        e
+                    );
                 }
             }
             // log("Proxying to tsserver: ", JSON.stringify(command, null, 2));
             /* Pass the re-string-form'd object straight through. */
             cb(null, JSON.stringify(command) + "\n");
         }
-    }
+    };
 }

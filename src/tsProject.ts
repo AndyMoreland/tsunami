@@ -37,6 +37,7 @@ export class TsProject {
             );
             return new TsProject(tsconfigFolder, config);
         } catch (e) {
+            console.error("Failed to initialize project: ", e);
             throw new Error("Failed to initialize project: " + e);
         }
     }

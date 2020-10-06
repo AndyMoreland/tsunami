@@ -1,4 +1,3 @@
-import * as Bluebird from "bluebird";
 import { Command } from "./Command";
 import { CommandInvoker } from "./CommandInvoker";
 import { TsunamiContext } from "./Context";
@@ -13,6 +12,7 @@ export class BenchmarkingCommandInvoker implements CommandInvoker {
 
     public async invoke(context: TsunamiContext, command: Command): Promise<void> {
         const startTime = process.hrtime();
+
         try {
             await this.delegate.invoke(context, command);
         } finally {

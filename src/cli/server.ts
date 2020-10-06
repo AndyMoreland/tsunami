@@ -15,7 +15,7 @@ import { TsProject } from "../tsProject";
 
 /* HACK */
 process.on("uncaughtException", (err: any) => {
-    logWithCallback((e?: NodeJS.ErrnoException) => process.exit(), err);
+    logWithCallback(e => process.exit(), err);
 });
 
 const terminalCommandDefinitions = [
@@ -50,7 +50,8 @@ try {
             );
             await tsunami.initialize();
             log("Done with .initialize");
-        }).catch(e => log(e));
+        })
+        .catch(e => log(e));
 } catch (e) {
     log("Failed to start server.", e);
 }

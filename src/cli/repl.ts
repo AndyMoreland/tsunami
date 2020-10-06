@@ -50,7 +50,8 @@ async function processTypeQuery(context: TsunamiContext, fileName: string, pos: 
     fileName = path.resolve(fileName);
     const program = await context.getProgram();
     const sourceFile = program.getSourceFile(fileName);
-    const nodes = getNodesContainingPoint(sourceFile, pos);
+    // FIXME weird !
+    const nodes = getNodesContainingPoint(sourceFile!, pos);
     const checker = program.getTypeChecker();
     nodes.forEach(node => {
         try {
@@ -143,7 +144,8 @@ async function processImplementInterface(context: TsunamiContext, filename: stri
     console.log("Implement interface at location ", position, " in file ", filename);
     const program = await context.getProgram();
     const sourceFile = await program.getSourceFile(filename);
-    const containingNodes = getNodesContainingPoint(sourceFile, position);
+    // weird !
+    const containingNodes = getNodesContainingPoint(sourceFile!, position);
     const checker = program.getTypeChecker();
 
     const expressions = containingNodes.filter(

@@ -1,6 +1,5 @@
 import * as ts from "typescript";
 import { Location } from "../protocol/types";
-import log from "../log";
 
 /* Taken from typescript compiler because they are not exported. */
 
