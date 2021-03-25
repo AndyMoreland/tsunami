@@ -97,7 +97,7 @@ export class MutableTsunamiContext implements TsunamiContext {
         const project = this.getProject();
         let files = await project.getAllFilenames();
         files = files.map(f => path.resolve(project.getRoot(), f));
-        console.log(project.getCompilerOptions());
+        log(project.getCompilerOptions());
         const program = ts.createProgram(
             files,
             project.getCompilerOptions(),
